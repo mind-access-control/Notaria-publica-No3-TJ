@@ -32,66 +32,76 @@ export default function HomePage() {
       {/* Hero Section */}
       <section
         id="inicio"
-        className="py-12 sm:py-16 lg:py-32 bg-gradient-to-br from-background to-card"
+        className="relative py-16 sm:py-20 lg:py-32 bg-gradient-to-br from-slate-50 via-white to-slate-100 overflow-hidden"
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
-              <div className="space-y-4">
-                <Badge
-                  variant="secondary"
-                  className="text-primary-foreground bg-primary text-xs sm:text-sm"
-                >
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23059669%22%20fill-opacity%3D%220.03%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="space-y-8 lg:space-y-10 text-center lg:text-left">
+              <div className="space-y-6">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></div>
                   Servicios Notariales Profesionales
-                </Badge>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-foreground text-balance leading-tight">
-                  Tu Notaría de Confianza en{" "}
-                  <span className="text-primary">Tijuana</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-slate-900 leading-tight tracking-tight">
+                  Tu Notaría de{" "}
+                  <span className="relative">
+                    <span className="text-emerald-600">Confianza</span>
+                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"></div>
+                  </span>
+                  <br />
+                  <span className="text-slate-700">en Tijuana</span>
                 </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-muted-foreground text-pretty leading-relaxed">
-                  Más de 20 años brindando servicios notariales con la más alta
-                  calidad, rapidez y profesionalismo. Tu tranquilidad es nuestra
+                <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-2xl">
+                  Más de{" "}
+                  <span className="font-semibold text-emerald-600">
+                    20 años
+                  </span>{" "}
+                  brindando servicios notariales con la más alta calidad,
+                  rapidez y profesionalismo. Tu tranquilidad es nuestra
                   prioridad.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl">
-                <Link href="/simulador" className="cursor-pointer">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl">
+                <Link href="/simulador" className="group cursor-pointer">
                   <Button
                     size="lg"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0"
                   >
-                    <Calculator className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <Calculator className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                     Simular Aranceles
                   </Button>
                 </Link>
-                <Link href="/citas" className="cursor-pointer">
+                <Link href="/citas" className="group cursor-pointer">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent cursor-pointer"
+                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                   >
-                    <Calendar className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <Calendar className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                     Agendar Cita
                   </Button>
                 </Link>
-                <Link href="/formatos" className="cursor-pointer">
+                <Link href="/formatos" className="group cursor-pointer">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent cursor-pointer"
+                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                   >
-                    <FileText className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <FileText className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                     Descargar Formatos
                   </Button>
                 </Link>
-                <Link href="/portal-cliente" className="cursor-pointer">
+                <Link href="/portal-cliente" className="group cursor-pointer">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent cursor-pointer"
+                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                   >
-                    <Shield className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <Shield className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                     Consulta Expediente
                   </Button>
                 </Link>
@@ -99,12 +109,30 @@ export default function HomePage() {
             </div>
 
             <div className="relative order-first lg:order-last">
-              <div className="aspect-square bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl flex items-center justify-center p-4">
-                <img
-                  src="/professional-notary-office-building-in-tijuana-mex.jpg"
-                  alt="Notaría Pública No. 3 Tijuana"
-                  className="w-full h-full object-cover rounded-xl shadow-2xl"
-                />
+              <div className="relative">
+                {/* Decorative Elements */}
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-20 blur-xl"></div>
+                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full opacity-10 blur-xl"></div>
+
+                {/* Main Image Container */}
+                <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border border-slate-200">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-3xl"></div>
+                  <img
+                    src="/professional-notary-office-building-in-tijuana-mex.jpg"
+                    alt="Notaría Pública No. 3 Tijuana"
+                    className="relative w-full h-auto object-cover rounded-2xl shadow-lg"
+                  />
+
+                  {/* Overlay Badge */}
+                  <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-slate-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-slate-700">
+                        Desde 2004
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -112,27 +140,41 @@ export default function HomePage() {
       </section>
 
       {/* Key Differentiators */}
-      <section className="py-12 sm:py-16 bg-card">
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-white to-slate-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              ¿Por qué elegir nuestra notaría?
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+              Nuestros Valores
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+              ¿Por qué elegir{" "}
+              <span className="relative">
+                <span className="text-emerald-600">nuestra notaría</span>?
+                <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"></div>
+              </span>
             </h2>
-            <p className="text-muted-foreground text-base sm:text-lg">
-              Nos diferenciamos por nuestro compromiso con la excelencia
+            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              Nos diferenciamos por nuestro compromiso inquebrantable con la
+              excelencia y la confianza
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <Users className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
+              <CardHeader className="pb-6 pt-8">
+                <div className="relative mx-auto mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                   Atención Personalizada
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
+              <CardContent className="pb-8">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                   Cada cliente recibe atención dedicada y asesoría especializada
                 </p>
               </CardContent>
