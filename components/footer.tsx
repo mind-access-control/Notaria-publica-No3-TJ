@@ -171,10 +171,27 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center">
-          <p className="text-muted-foreground text-sm">
-            © 2024 Notaría Pública No. 3 Tijuana. Todos los derechos reservados.
-          </p>
+        <div className="border-t border-border mt-8 pt-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-muted-foreground text-sm">
+              © 2024 Notaría Pública No. 3 Tijuana. Todos los derechos
+              reservados.
+            </p>
+            <div className="flex gap-6 text-sm">
+              <Link
+                href="/aviso-privacidad"
+                className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-3 py-1 rounded"
+              >
+                Aviso de Privacidad
+              </Link>
+              <Link
+                href="/terminos-condiciones"
+                className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-3 py-1 rounded"
+              >
+                Términos y Condiciones
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,6 +1,52 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+
+// Declaraciones de tipos para Speech Recognition
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+  }
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -858,14 +904,15 @@ export function AIChatbot() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const [position, setPosition] = useState({ x: 24, y: 24 }); // Posición inicial
   const [emojiSearch, setEmojiSearch] = useState("");
   const [selectedEmojiCategory, setSelectedEmojiCategory] = useState("faces");
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [recognition, setRecognition] = useState<any>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -874,6 +921,79 @@ export function AIChatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Inicializar Speech Recognition
+  useEffect(() => {
+    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
+      const SpeechRecognition =
+        (window as any).webkitSpeechRecognition ||
+        (window as any).SpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = "es-ES"; // Español
+      recognitionInstance.maxAlternatives = 1;
+
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+        setTranscript("");
+      };
+
+      recognitionInstance.onresult = (event: any) => {
+        let finalTranscript = "";
+        let interimTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          setTranscript(finalTranscript);
+          setInputMessage(finalTranscript);
+        } else {
+          setTranscript(interimTranscript);
+        }
+      };
+
+      recognitionInstance.onerror = (event: any) => {
+        console.error("Error de reconocimiento de voz:", event.error);
+        setIsListening(false);
+        setIsRecording(false);
+
+        // Mostrar mensaje de error al usuario
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          text: `❌ Error en el reconocimiento de voz: ${event.error}. Por favor, intenta escribir tu mensaje.`,
+          sender: "bot",
+          timestamp: new Date(),
+          reactions: { thumbsUp: 0, thumbsDown: 0 },
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+      recognitionRef.current = recognitionInstance;
+    } else {
+      console.warn("Speech Recognition no está soportado en este navegador");
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const generateBotResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
@@ -1021,87 +1141,40 @@ export function AIChatbot() {
   };
 
   const startVoiceRecording = () => {
-    setIsRecording(true);
-    // Simular grabación de voz
-    setTimeout(() => {
-      setIsRecording(false);
-      const voiceMessage: Message = {
+    if (!recognitionRef.current) {
+      const errorMessage: Message = {
         id: Date.now().toString(),
-        text: "🎤 Mensaje de voz: 'Hola, necesito información sobre testamentos'",
-        sender: "user",
+        text: "❌ El reconocimiento de voz no está disponible en tu navegador. Por favor, escribe tu mensaje.",
+        sender: "bot",
         timestamp: new Date(),
-        type: "voice",
+        reactions: { thumbsUp: 0, thumbsDown: 0 },
       };
-      setMessages((prev) => [...prev, voiceMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
 
-      // Respuesta del bot
-      setTimeout(() => {
-        const botResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: botResponses.testamento,
-          sender: "bot",
-          timestamp: new Date(),
-          reactions: { thumbsUp: 0, thumbsDown: 0 },
-        };
-        setMessages((prev) => [...prev, botResponse]);
-      }, 1500);
-    }, 3000);
+    if (isListening) {
+      // Si ya está escuchando, detener
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      setIsListening(false);
+      return;
+    }
+
+    setIsRecording(true);
+    setTranscript("");
+    recognitionRef.current.start();
+  };
+
+  const stopVoiceRecording = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+    }
   };
 
   const handleQuickQuestion = (question: string) => {
     sendMessage(question);
   };
-
-  // Funciones de drag and drop
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (
-      e.target === e.currentTarget ||
-      (e.target as HTMLElement).closest('[data-draggable="true"]')
-    ) {
-      setIsDragging(true);
-      const rect = chatRef.current?.getBoundingClientRect();
-      if (rect) {
-        setDragOffset({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        });
-      }
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-
-      // Limitar dentro de la ventana
-      const maxX = window.innerWidth - 384; // Ancho del chat
-      const maxY = window.innerHeight - 500; // Altura del chat
-
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY)),
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.userSelect = "none";
-    }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.userSelect = "";
-    };
-  }, [isDragging, dragOffset]);
 
   // Cerrar emoji picker al hacer click fuera
   useEffect(() => {
@@ -1128,12 +1201,8 @@ export function AIChatbot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl cursor-pointer"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl"
         size="icon"
-        style={{
-          transform: isDragging ? "scale(1.1)" : "scale(1)",
-          transition: "transform 0.2s ease",
-        }}
       >
         <MessageCircle className="h-6 w-6" />
       </Button>
@@ -1143,23 +1212,16 @@ export function AIChatbot() {
   return (
     <Card
       ref={chatRef}
-      className={`fixed z-50 w-[500px] shadow-2xl border-border transition-all select-none ${
+      className={`fixed bottom-6 right-6 z-50 w-[500px] shadow-2xl border-border transition-all duration-300 ${
         isMinimized ? "h-16" : "h-[700px]"
-      } ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
-      style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        transform: isDragging ? "scale(1.02)" : "scale(1)",
-      }}
-      onMouseDown={handleMouseDown}
+      }`}
     >
-      <CardHeader
-        className="flex flex-row items-center justify-between space-y-0 pb-4 bg-white border-b border-slate-200 rounded-t-lg cursor-grab active:cursor-grabbing"
-        data-draggable="true"
-      >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-white border-b border-slate-200 rounded-t-lg">
         <CardTitle className="text-lg font-semibold flex items-center gap-3 text-slate-800">
           <div className="relative">
-            <Bot className="h-5 w-5 text-slate-600" />
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+              <Bot className="h-4 w-4 text-white" />
+            </div>
           </div>
           <span>Asistente Notaria 3</span>
         </CardTitle>
@@ -1196,7 +1258,7 @@ export function AIChatbot() {
       {!isMinimized && (
         <CardContent className="p-0 flex flex-col h-[580px] bg-slate-50">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent bg-gradient-to-b from-slate-50 to-white">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -1208,8 +1270,8 @@ export function AIChatbot() {
                   <div
                     className={`rounded-2xl p-4 text-sm ${
                       message.sender === "user"
-                        ? "bg-blue-500 text-white ml-8 shadow-sm"
-                        : "bg-slate-100 text-slate-800 mr-8 shadow-sm"
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-8 shadow-md"
+                        : "bg-white text-slate-800 mr-8 shadow-sm border border-slate-200"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -1349,7 +1411,7 @@ export function AIChatbot() {
           )}
 
           {/* Input */}
-          <div className="p-3 border-t border-slate-200 bg-white">
+          <div className="p-3 border-t border-slate-200 bg-gradient-to-r from-white to-slate-50">
             {/* Emoji Picker */}
             {showEmojiPicker && (
               <div
@@ -1426,34 +1488,41 @@ export function AIChatbot() {
             )}
 
             {/* Input en una sola fila horizontal */}
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-10 w-10 ${
-                  isRecording
-                    ? "bg-red-100 text-red-600"
+                className={`h-10 w-10 transition-all duration-200 ${
+                  isRecording || isListening
+                    ? "bg-red-100 text-red-600 animate-pulse"
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
                 onClick={startVoiceRecording}
-                disabled={isRecording}
-                title="Grabar mensaje de voz"
+                title={
+                  isRecording || isListening
+                    ? "Detener grabación"
+                    : "Grabar mensaje de voz"
+                }
               >
-                {isRecording ? (
+                {isRecording || isListening ? (
                   <MicOff className="h-4 w-4" />
                 ) : (
                   <Mic className="h-4 w-4" />
                 )}
               </Button>
               <Input
-                placeholder={isRecording ? "🎤 Grabando..." : "Message..."}
+                placeholder={
+                  isRecording || isListening
+                    ? "🎤 Escuchando..."
+                    : "Escribe tu mensaje..."
+                }
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) =>
                   e.key === "Enter" && sendMessage(inputMessage)
                 }
-                className="flex-1 h-10 border-slate-300 focus:border-blue-500 text-sm"
-                disabled={isRecording}
+                className="flex-1 h-10 border-0 focus:ring-0 focus:outline-none text-sm bg-transparent"
+                disabled={isRecording || isListening}
               />
               <Button
                 variant="ghost"
@@ -1467,8 +1536,10 @@ export function AIChatbot() {
               <Button
                 size="icon"
                 onClick={() => sendMessage(inputMessage)}
-                disabled={!inputMessage.trim() || isTyping || isRecording}
-                className="h-10 w-10 text-slate-600 hover:bg-slate-100"
+                disabled={
+                  !inputMessage.trim() || isTyping || isRecording || isListening
+                }
+                className="h-10 w-10 bg-blue-500 hover:bg-blue-600 text-white disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
                 title="Enviar mensaje"
               >
                 <Send className="h-4 w-4" />
