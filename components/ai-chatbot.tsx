@@ -1840,7 +1840,7 @@ export function AIChatbot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl"
+        className="fixed bottom-6 right-3 sm:right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -1851,8 +1851,8 @@ export function AIChatbot() {
   return (
     <Card
       ref={chatRef}
-      className={`fixed bottom-6 right-6 z-50 w-[500px] shadow-2xl border-border transition-all duration-300 ${
-        isMinimized ? "h-16" : "h-[700px]"
+      className={`fixed bottom-6 right-3 sm:right-6 z-50 w-[calc(100vw-3rem)] max-w-[500px] shadow-2xl border-border transition-all duration-300 ${
+        isMinimized ? "h-16" : "h-[min(700px,calc(100vh-6rem))]"
       }`}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-white border-b border-slate-200 rounded-t-lg">
@@ -1895,7 +1895,7 @@ export function AIChatbot() {
       </CardHeader>
 
       {!isMinimized && (
-        <CardContent className="p-0 flex flex-col h-[580px] bg-slate-50">
+        <CardContent className="p-0 flex flex-col h-[calc(100%-4rem)] bg-slate-50">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent bg-gradient-to-b from-slate-50 to-white">
             {messages.map((message) => (
@@ -2214,12 +2214,12 @@ export function AIChatbot() {
             )}
 
             {/* Input en una sola fila horizontal */}
-            <div className="flex gap-2 items-center bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
+            <div className="flex gap-1 sm:gap-2 items-center bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
               <Button
                 variant="ghost"
                 size="icon"
                 type="button"
-                className={`h-10 w-10 transition-all duration-200 ${
+                className={`h-8 w-8 sm:h-10 sm:w-10 transition-all duration-200 ${
                   isRecording || isListening
                     ? "bg-red-100 text-red-600 animate-pulse"
                     : "text-slate-600 hover:bg-slate-100"
@@ -2273,7 +2273,7 @@ export function AIChatbot() {
                   }
                 }}
                 disabled={isTyping}
-                className={`h-10 w-10 transition-all duration-200 ${
+                className={`h-8 w-8 sm:h-10 sm:w-10 transition-all duration-200 ${
                   isSpeaking
                     ? "bg-green-100 text-green-600 animate-pulse"
                     : "text-slate-600 hover:bg-slate-100"
@@ -2303,13 +2303,13 @@ export function AIChatbot() {
                     }
                   }
                 }}
-                className="flex-1 h-10 border-0 focus:ring-0 focus:outline-none text-sm bg-transparent"
+                className="flex-1 h-8 sm:h-10 border-0 focus:ring-0 focus:outline-none text-sm bg-transparent"
                 disabled={isRecording || isListening}
               />
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 text-slate-600 hover:bg-slate-100"
+                className="h-8 w-8 sm:h-10 sm:w-10 text-slate-600 hover:bg-slate-100"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 title="Emojis"
               >
@@ -2321,7 +2321,7 @@ export function AIChatbot() {
                 disabled={
                   !inputMessage.trim() || isTyping || isRecording || isListening
                 }
-                className="h-10 w-10 bg-blue-500 hover:bg-blue-600 text-white disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
+                className="h-8 w-8 sm:h-10 sm:w-10 bg-blue-500 hover:bg-blue-600 text-white disabled:bg-slate-300 disabled:text-slate-500 transition-colors"
                 title="Enviar mensaje"
               >
                 <Send className="h-4 w-4" />
