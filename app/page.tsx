@@ -118,7 +118,7 @@ export default function HomePage() {
                 <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border border-slate-200">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-3xl"></div>
                   <img
-                    src="/professional-notary-office-building-in-tijuana-mex.jpg"
+                    src="/notaria3image.png"
                     alt="Notaría Pública No. 3 Tijuana"
                     className="relative w-full h-auto object-cover rounded-2xl shadow-lg"
                   />
