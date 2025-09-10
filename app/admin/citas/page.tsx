@@ -285,6 +285,12 @@ export default function GestionCitas() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState<Date>(new Date());
   const [filtroEstado, setFiltroEstado] = useState<string>("todos");
   const [filtroNotario, setFiltroNotario] = useState<string>("todos");
+  const [mostrarDialogSala, setMostrarDialogSala] = useState(false);
+  const [salaSeleccionada, setSalaSeleccionada] = useState<Sala | null>(null);
+  const [modoEdicionSala, setModoEdicionSala] = useState(false);
+  const [enviandoCita, setEnviandoCita] = useState<string | null>(null);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState("");
 
   const handleCrearCita = () => {
     const nuevaCita: Cita = {
@@ -356,6 +362,91 @@ export default function GestionCitas() {
   const handleCambiarEstado = (id: string, nuevoEstado: string) => {
     setCitas((prev) =>
       prev.map((c) => (c.id === id ? { ...c, estado: nuevoEstado as any } : c))
+    );
+  };
+
+  const handleEnviarCita = async (cita: Cita, metodo: "email" | "whatsapp") => {
+    setEnviandoCita(cita.id);
+
+    // Simular envío
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    setEnviandoCita(null);
+    setMensajeConfirmacion(
+      `Cita enviada por ${
+        metodo === "email" ? "correo electrónico" : "WhatsApp"
+      }`
+    );
+    setMostrarConfirmacion(true);
+
+    setTimeout(() => {
+      setMostrarConfirmacion(false);
+    }, 3000);
+  };
+
+  const handleCrearSala = () => {
+    const nuevaSala: Sala = {
+      id: `sala_${Date.now()}`,
+      nombre: "",
+      capacidad: 4,
+      ubicacion: "",
+      equipamiento: [],
+      disponibilidad: {},
+      activa: true,
+    };
+    setSalaSeleccionada(nuevaSala);
+    setModoEdicionSala(false);
+    setMostrarDialogSala(true);
+  };
+
+  const handleEditarSala = (sala: Sala) => {
+    setSalaSeleccionada(sala);
+    setModoEdicionSala(true);
+    setMostrarDialogSala(true);
+  };
+
+  const handleGuardarSala = () => {
+    if (salaSeleccionada) {
+      if (modoEdicionSala) {
+        setSalas((prev) =>
+          prev.map((s) => (s.id === salaSeleccionada.id ? salaSeleccionada : s))
+        );
+      } else {
+        setSalas((prev) => [...prev, salaSeleccionada]);
+      }
+      setMostrarDialogSala(false);
+      setSalaSeleccionada(null);
+      setModoEdicionSala(false);
+    }
+  };
+
+  const handleEliminarSala = (id: string) => {
+    setSalas((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const verificarDisponibilidadSala = (
+    salaId: string,
+    fecha: string,
+    hora: string
+  ) => {
+    const sala = salas.find((s) => s.id === salaId);
+    if (!sala) return false;
+
+    // Verificar si hay citas en esa sala, fecha y hora
+    const citasEnEsaHora = citas.filter(
+      (cita) =>
+        cita.sala.id === salaId &&
+        cita.fecha === fecha &&
+        cita.hora === hora &&
+        cita.estado !== "cancelada"
+    );
+
+    return citasEnEsaHora.length === 0;
+  };
+
+  const obtenerSalasDisponibles = (fecha: string, hora: string) => {
+    return salas.filter(
+      (sala) => sala.activa && verificarDisponibilidadSala(sala.id, fecha, hora)
     );
   };
 
@@ -600,14 +691,36 @@ export default function GestionCitas() {
                         </div>
                       </div>
                       <div className="flex space-x-2 ml-4">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditarCita(cita)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEnviarCita(cita, "email")}
+                          disabled={enviandoCita === cita.id}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEnviarCita(cita, "whatsapp")}
+                          disabled={enviandoCita === cita.id}
+                        >
                           <Send className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEliminarCita(cita.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                         <Select
                           value={cita.estado}
@@ -644,6 +757,13 @@ export default function GestionCitas() {
 
           {/* Tab Salas */}
           <TabsContent value="salas" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Gestión de Salas</h2>
+              <Button onClick={handleCrearSala}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Sala
+              </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {salas.map((sala) => (
                 <Card key={sala.id}>
@@ -682,12 +802,22 @@ export default function GestionCitas() {
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEditarSala(sala)}
+                      >
                         <Edit className="h-4 w-4 mr-2" />
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEliminarSala(sala.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
@@ -884,7 +1014,7 @@ export default function GestionCitas() {
                       <Input
                         id="costo"
                         type="number"
-                        value={citaSeleccionada.costo}
+                        value={citaSeleccionada.costo || ""}
                         onChange={(e) =>
                           setCitaSeleccionada((prev) =>
                             prev
@@ -892,6 +1022,7 @@ export default function GestionCitas() {
                               : null
                           )
                         }
+                        placeholder="0"
                       />
                     </div>
                     <div>
@@ -962,7 +1093,7 @@ export default function GestionCitas() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
+                    <div className="md:col-span-2">
                       <Label htmlFor="sala">Sala</Label>
                       <Select
                         value={citaSeleccionada.sala.id}
@@ -988,13 +1119,25 @@ export default function GestionCitas() {
                           <SelectValue placeholder="Seleccionar sala" />
                         </SelectTrigger>
                         <SelectContent>
-                          {salas.map((sala) => (
+                          {obtenerSalasDisponibles(
+                            citaSeleccionada.fecha,
+                            citaSeleccionada.hora
+                          ).map((sala) => (
                             <SelectItem key={sala.id} value={sala.id}>
-                              {sala.nombre} ({sala.capacidad} personas)
+                              {sala.nombre} ({sala.capacidad} personas) -{" "}
+                              {sala.ubicacion}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {obtenerSalasDisponibles(
+                        citaSeleccionada.fecha,
+                        citaSeleccionada.hora
+                      ).length === 0 && (
+                        <p className="text-sm text-red-600 mt-1">
+                          No hay salas disponibles para esta fecha y hora
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="prioridad">Prioridad</Label>
@@ -1047,6 +1190,129 @@ export default function GestionCitas() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog para crear/editar sala */}
+        <Dialog open={mostrarDialogSala} onOpenChange={setMostrarDialogSala}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {modoEdicionSala ? "Editar Sala" : "Crear Nueva Sala"}
+              </DialogTitle>
+              <DialogDescription>
+                Configura la información de la sala
+              </DialogDescription>
+            </DialogHeader>
+
+            {salaSeleccionada && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="salaNombre">Nombre de la Sala</Label>
+                    <Input
+                      id="salaNombre"
+                      value={salaSeleccionada.nombre}
+                      onChange={(e) =>
+                        setSalaSeleccionada((prev) =>
+                          prev ? { ...prev, nombre: e.target.value } : null
+                        )
+                      }
+                      placeholder="Ej: Sala Principal"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="salaCapacidad">Capacidad</Label>
+                    <Input
+                      id="salaCapacidad"
+                      type="number"
+                      value={salaSeleccionada.capacidad}
+                      onChange={(e) =>
+                        setSalaSeleccionada((prev) =>
+                          prev
+                            ? { ...prev, capacidad: Number(e.target.value) }
+                            : null
+                        )
+                      }
+                      placeholder="4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="salaUbicacion">Ubicación</Label>
+                    <Input
+                      id="salaUbicacion"
+                      value={salaSeleccionada.ubicacion}
+                      onChange={(e) =>
+                        setSalaSeleccionada((prev) =>
+                          prev ? { ...prev, ubicacion: e.target.value } : null
+                        )
+                      }
+                      placeholder="Ej: Planta Baja"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="salaActiva"
+                      checked={salaSeleccionada.activa}
+                      onChange={(e) =>
+                        setSalaSeleccionada((prev) =>
+                          prev ? { ...prev, activa: e.target.checked } : null
+                        )
+                      }
+                    />
+                    <Label htmlFor="salaActiva">Sala activa</Label>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="salaEquipamiento">
+                    Equipamiento (separado por comas)
+                  </Label>
+                  <Input
+                    id="salaEquipamiento"
+                    value={salaSeleccionada.equipamiento.join(", ")}
+                    onChange={(e) =>
+                      setSalaSeleccionada((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              equipamiento: e.target.value
+                                .split(",")
+                                .map((item) => item.trim())
+                                .filter((item) => item.length > 0),
+                            }
+                          : null
+                      )
+                    }
+                    placeholder="Ej: Proyector, Pizarra, Sistema de audio"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setMostrarDialogSala(false)}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleGuardarSala}>
+                <Settings className="h-4 w-4 mr-2" />
+                Guardar Sala
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Toast de confirmación */}
+        {mostrarConfirmacion && (
+          <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4">
+            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">{mensajeConfirmacion}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

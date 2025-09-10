@@ -225,64 +225,11 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Accesos Rápidos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card
-          className="cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => (window.location.href = "/admin/expedientes")}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expedientes</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalExpedientes}</div>
-            <p className="text-xs text-muted-foreground">
-              {expedientesCompletados} completados, {expedientesPendientes}{" "}
-              pendientes
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => (window.location.href = "/admin/citas")}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Citas</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{citasHoy}</div>
-            <p className="text-xs text-muted-foreground">
-              {citasPendientes} pendientes de confirmación
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => (window.location.href = "/admin/usuarios")}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{usuariosActivos}</div>
-            <p className="text-xs text-muted-foreground">
-              {usuariosActivos} usuarios activos
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Tabs para otras funcionalidades */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Resumen</TabsTrigger>
           <TabsTrigger value="reportes">Reportes</TabsTrigger>
-          <TabsTrigger value="tramites">Trámites</TabsTrigger>
           <TabsTrigger value="configuracion">Configuración</TabsTrigger>
         </TabsList>
 
@@ -458,49 +405,6 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Trámites Tab */}
-        <TabsContent value="tramites" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuración de Trámites</CardTitle>
-              <CardDescription>
-                Gestiona los tipos de trámites disponibles
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    "Testamentos",
-                    "Compraventas",
-                    "Poderes",
-                    "Donaciones",
-                    "Fideicomisos",
-                    "Sociedades",
-                  ].map((tramite) => (
-                    <div
-                      key={tramite}
-                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    >
-                      <h3 className="font-medium">{tramite}</h3>
-                      <p className="text-sm text-gray-600">
-                        Configurar requisitos
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => (window.location.href = "/admin/tramites")}
-                  className="w-full"
-                >
-                  Gestionar Trámites
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Configuración Tab */}

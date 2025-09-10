@@ -53,12 +53,6 @@ const navigationItems = [
     description: "Programación de citas",
   },
   {
-    title: "OCR",
-    href: "/admin/ocr",
-    icon: Eye,
-    description: "Reconocimiento óptico",
-  },
-  {
     title: "Formatos",
     href: "/admin/formatos",
     icon: Wand2,

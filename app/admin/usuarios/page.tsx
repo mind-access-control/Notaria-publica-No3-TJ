@@ -63,6 +63,7 @@ interface Usuario {
   expedientesAsignados: number;
   tareasPendientes: number;
   especialidades: string[];
+  foto?: string;
   horarioTrabajo: {
     inicio: string;
     fin: string;
@@ -261,6 +262,9 @@ export default function GestionUsuarios() {
   const [modoEdicion, setModoEdicion] = useState(false);
   const [filtroRol, setFiltroRol] = useState<string>("todos");
   const [busqueda, setBusqueda] = useState("");
+  const [nuevaEspecialidad, setNuevaEspecialidad] = useState("");
+  const [mostrarAgregarEspecialidad, setMostrarAgregarEspecialidad] =
+    useState(false);
 
   const handleCrearUsuario = () => {
     const nuevoUsuario: Usuario = {
@@ -332,6 +336,53 @@ export default function GestionUsuarios() {
             : u
         )
       );
+    }
+  };
+
+  const handleAgregarEspecialidad = () => {
+    if (nuevaEspecialidad.trim() && usuarioSeleccionado) {
+      setUsuarioSeleccionado((prev) =>
+        prev
+          ? {
+              ...prev,
+              especialidades: [
+                ...prev.especialidades,
+                nuevaEspecialidad.trim(),
+              ],
+            }
+          : null
+      );
+      setNuevaEspecialidad("");
+      setMostrarAgregarEspecialidad(false);
+    }
+  };
+
+  const handleEliminarEspecialidad = (especialidad: string) => {
+    if (usuarioSeleccionado) {
+      setUsuarioSeleccionado((prev) =>
+        prev
+          ? {
+              ...prev,
+              especialidades: prev.especialidades.filter(
+                (e) => e !== especialidad
+              ),
+            }
+          : null
+      );
+    }
+  };
+
+  const handleCambiarFoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && usuarioSeleccionado) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setUsuarioSeleccionado((prev) =>
+          prev ? { ...prev, foto: result } : null
+        );
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -443,8 +494,16 @@ export default function GestionUsuarios() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      {getRolIcon(usuario.rol)}
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                      {usuario.foto ? (
+                        <img
+                          src={usuario.foto}
+                          alt={`${usuario.nombre} ${usuario.apellidoPaterno}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        getRolIcon(usuario.rol)
+                      )}
                     </div>
                     <div>
                       <CardTitle className="text-lg">
@@ -675,16 +734,110 @@ export default function GestionUsuarios() {
                         <Badge
                           key={index}
                           variant="outline"
-                          className="cursor-pointer"
+                          className="cursor-pointer hover:bg-red-50"
+                          onClick={() =>
+                            handleEliminarEspecialidad(especialidad)
+                          }
                         >
                           {especialidad} ×
                         </Badge>
                       )
                     )}
-                    <Button size="sm" variant="outline">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar
-                    </Button>
+                    {!mostrarAgregarEspecialidad ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setMostrarAgregarEspecialidad(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar
+                      </Button>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          placeholder="Nueva especialidad"
+                          value={nuevaEspecialidad}
+                          onChange={(e) => setNuevaEspecialidad(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleAgregarEspecialidad();
+                            }
+                          }}
+                          className="w-48"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={handleAgregarEspecialidad}
+                          disabled={!nuevaEspecialidad.trim()}
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setMostrarAgregarEspecialidad(false);
+                            setNuevaEspecialidad("");
+                          }}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Foto de perfil */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Foto de Perfil</h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                      {usuarioSeleccionado.foto ? (
+                        <img
+                          src={usuarioSeleccionado.foto}
+                          alt="Foto de perfil"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-8 w-8 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCambiarFoto}
+                        className="hidden"
+                        id="foto-input"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          document.getElementById("foto-input")?.click()
+                        }
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        {usuarioSeleccionado.foto
+                          ? "Cambiar foto"
+                          : "Agregar foto"}
+                      </Button>
+                      {usuarioSeleccionado.foto && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setUsuarioSeleccionado((prev) =>
+                              prev ? { ...prev, foto: undefined } : null
+                            )
+                          }
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar foto
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
