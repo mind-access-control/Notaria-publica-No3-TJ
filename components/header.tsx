@@ -85,6 +85,13 @@ export function Header() {
                 Agendar Cita
               </Button>
             </Link>
+            <Link
+              href="/admin/login"
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              title="Acceso Administrativo"
+            >
+              Admin
+            </Link>
           </div>
 
           <div className="md:hidden">

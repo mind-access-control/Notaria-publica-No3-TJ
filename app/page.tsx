@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,15 +21,37 @@ import {
   Mail,
   BookOpen,
   Play,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { TramiteModal } from "@/components/tramite-modal";
+import { PromotionalBanner } from "@/components/promotional-banner";
+import { FloatingCTA } from "@/components/floating-cta";
+import { useState } from "react";
 
 export default function HomePage() {
+  const [isTramiteModalOpen, setIsTramiteModalOpen] = useState(false);
+  const [preselectedTramite, setPreselectedTramite] = useState<
+    string | undefined
+  >(undefined);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
+      {/* Banner Promocional */}
+      <PromotionalBanner
+        onOpenTramiteModal={() => {
+          setPreselectedTramite(undefined);
+          setIsTramiteModalOpen(true);
+        }}
+        onOpenSpecificTramite={(tramiteId) => {
+          setPreselectedTramite(tramiteId);
+          setIsTramiteModalOpen(true);
+        }}
+      />
 
       {/* Hero Section */}
       <section
@@ -66,10 +90,19 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl">
+                <Button
+                  size="lg"
+                  onClick={() => setIsTramiteModalOpen(true)}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0"
+                >
+                  <HelpCircle className="mr-3 h-5 w-5" />
+                  ¿Qué trámite necesitas?
+                </Button>
                 <Link href="/simulador" className="group cursor-pointer">
                   <Button
                     size="lg"
-                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0"
+                    variant="outline"
+                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                   >
                     <Calculator className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                     Simular Aranceles
@@ -542,6 +575,24 @@ export default function HomePage() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Modal de Trámite */}
+      <TramiteModal
+        isOpen={isTramiteModalOpen}
+        onClose={() => {
+          setIsTramiteModalOpen(false);
+          setPreselectedTramite(undefined);
+        }}
+        preselectedTramite={preselectedTramite}
+      />
+
+      {/* CTA Flotante */}
+      <FloatingCTA
+        onOpenTramiteModal={() => {
+          setPreselectedTramite(undefined);
+          setIsTramiteModalOpen(true);
+        }}
+      />
     </div>
   );
 }
