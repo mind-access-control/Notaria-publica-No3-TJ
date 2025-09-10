@@ -89,53 +89,23 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 max-w-2xl">
                 <Button
                   size="lg"
                   onClick={() => setIsTramiteModalOpen(true)}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0"
+                  className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0 text-lg py-6"
                 >
-                  <HelpCircle className="mr-3 h-5 w-5" />
+                  <HelpCircle className="mr-3 h-6 w-6" />
                   ¿Qué trámite necesitas?
                 </Button>
-                <Link href="/simulador" className="group cursor-pointer">
+                <Link href="/citas" className="group cursor-pointer flex-1">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 text-lg py-6"
                   >
-                    <Calculator className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
-                    Simular Aranceles
-                  </Button>
-                </Link>
-                <Link href="/citas" className="group cursor-pointer">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-                  >
-                    <Calendar className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
+                    <Calendar className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform" />
                     Agendar Cita
-                  </Button>
-                </Link>
-                <Link href="/formatos" className="group cursor-pointer">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-                  >
-                    <FileText className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
-                    Descargar Formatos
-                  </Button>
-                </Link>
-                <Link href="/portal-cliente" className="group cursor-pointer">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-                  >
-                    <Shield className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
-                    Consulta Expediente
                   </Button>
                 </Link>
               </div>
@@ -193,7 +163,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
               <CardHeader className="pb-6 pt-8">
                 <div className="relative mx-auto mb-6">
@@ -209,90 +179,46 @@ export default function HomePage() {
               <CardContent className="pb-8">
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                   Cada cliente recibe atención dedicada y asesoría especializada
+                  para su trámite específico
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
-                  Agenda de Citas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Reserva tu cita en línea de manera rápida y sencilla
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
-                  Descarga de Formatos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Obtén los documentos necesarios para tu trámite
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <Shield className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
-                  Consulta Expediente
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Consulta el estatus de tu expediente en tiempo real
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
+            <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
+              <CardHeader className="pb-6 pt-8">
+                <div className="relative mx-auto mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Clock className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                   Tiempos Rápidos
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
+              <CardContent className="pb-8">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                   Procesos eficientes que respetan tu tiempo y urgencias
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <Shield className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
+            <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
+              <CardHeader className="pb-6 pt-8">
+                <div className="relative mx-auto mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                   Asesoría Sin Costo
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
+              <CardContent className="pb-8">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                   Consulta inicial gratuita para orientarte en tu trámite
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-border hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <CreditCard className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-base sm:text-lg">
-                  Todas las Tarjetas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Aceptamos todos los métodos de pago para tu comodidad
+                  específico
                 </p>
               </CardContent>
             </Card>
@@ -300,43 +226,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Quick Access Tools */}
+      {/* Cómo Funciona */}
       <section className="py-12 sm:py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Herramientas y Servicios
+              ¿Cómo Funciona Nuestro Proceso?
             </h2>
             <p className="text-muted-foreground text-base sm:text-lg">
-              Accede rápidamente a nuestros servicios digitales
+              Un proceso simple y transparente para tu trámite notarial
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
               <CardHeader className="text-center pb-4">
-                <Calculator className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <HelpCircle className="h-8 w-8 text-white" />
+                </div>
                 <CardTitle className="text-lg sm:text-xl">
-                  Simulador de Aranceles
+                  1. Selecciona tu Trámite
                 </CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Calcula el costo estimado de tu trámite notarial
+                  Indica qué tipo de trámite necesitas realizar
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
-                <Link href="/simulador" className="cursor-pointer">
-                  <Button className="w-full bg-primary hover:bg-primary/90 cursor-pointer">
-                    Calcular Costos
-                  </Button>
-                </Link>
+                <Button
+                  onClick={() => setIsTramiteModalOpen(true)}
+                  className="w-full bg-primary hover:bg-primary/90 cursor-pointer"
+                >
+                  Elegir Trámite
+                </Button>
               </CardContent>
             </Card>
 
             <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
               <CardHeader className="text-center pb-4">
-                <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-white" />
+                </div>
                 <CardTitle className="text-lg sm:text-xl">
-                  Agenda de Citas
+                  2. Agenda tu Cita
                 </CardTitle>
                 <CardDescription className="text-sm sm:text-base">
                   Reserva tu cita en línea de manera rápida y sencilla
@@ -353,151 +284,20 @@ export default function HomePage() {
 
             <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
               <CardHeader className="text-center pb-4">
-                <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
                 <CardTitle className="text-lg sm:text-xl">
-                  Descarga de Formatos
+                  3. Completa tu Trámite
                 </CardTitle>
                 <CardDescription className="text-sm sm:text-base">
-                  Obtén los documentos necesarios para tu trámite
+                  Te guiamos paso a paso para completar tu documento legal
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
-                <Link href="/formatos" className="cursor-pointer">
+                <Link href="/continuar-tramite" className="cursor-pointer">
                   <Button className="w-full bg-primary hover:bg-primary/90 cursor-pointer">
-                    Ver Formatos
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
-              <CardHeader className="text-center pb-4">
-                <Shield className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
-                <CardTitle className="text-lg sm:text-xl">
-                  Consulta Expediente
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Consulta el estatus de tu expediente en tiempo real
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Link href="/portal-cliente" className="cursor-pointer">
-                  <Button className="w-full bg-primary hover:bg-primary/90 cursor-pointer">
-                    Consultar Expediente
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Preview */}
-      <section id="servicios" className="py-16 bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Nuestros Servicios Principales
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Servicios notariales completos para todas tus necesidades
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Compraventa de Inmuebles",
-                desc: "Escrituración segura de propiedades",
-              },
-              { title: "Testamentos", desc: "Protege el futuro de tu familia" },
-              {
-                title: "Poderes Notariales",
-                desc: "Representación legal confiable",
-              },
-              {
-                title: "Constitución de Sociedades",
-                desc: "Formaliza tu empresa",
-              },
-              { title: "Divorcios", desc: "Trámites matrimoniales" },
-              {
-                title: "Reconocimiento de Firmas",
-                desc: "Validación de documentos",
-              },
-            ].map((service, index) => (
-              <Card
-                key={index}
-                className="border-border hover:shadow-md transition-shadow"
-              >
-                <CardHeader>
-                  <CardTitle className="text-lg">{service.title}</CardTitle>
-                  <CardDescription>{service.desc}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-
-          <div className="text-center mt-8">
-            <Link href="/servicios" className="cursor-pointer">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent cursor-pointer"
-              >
-                Ver Todos los Servicios
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Educational Content Preview */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              Centro de Conocimiento
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Mantente informado con nuestro contenido educativo
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
-              <CardHeader className="text-center pb-4">
-                <BookOpen className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
-                <CardTitle className="text-lg sm:text-xl">
-                  Blog Educativo
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Artículos informativos y guías prácticas sobre servicios
-                  notariales
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Link href="/blog" className="cursor-pointer">
-                  <Button className="w-full bg-primary hover:bg-primary/90 cursor-pointer">
-                    Leer Artículos
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
-              <CardHeader className="text-center pb-4">
-                <Play className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-4" />
-                <CardTitle className="text-lg sm:text-xl">
-                  Videos del Notario
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Explicaciones breves sobre temas legales importantes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <Link href="/blog?tab=videos" className="cursor-pointer">
-                  <Button className="w-full bg-primary hover:bg-primary/90 cursor-pointer">
-                    Ver Videos
+                    Comenzar
                   </Button>
                 </Link>
               </CardContent>
@@ -542,31 +342,31 @@ export default function HomePage() {
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            ¿Necesitas Asesoría Legal?
+            ¿Necesitas Asesoría sobre tu Trámite?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Contáctanos hoy mismo y recibe atención personalizada
+            Contáctanos hoy mismo y recibe orientación personalizada para tu
+            trámite específico
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contacto" className="cursor-pointer">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="bg-background text-foreground hover:bg-background/90 cursor-pointer"
-              >
-                <Phone className="mr-2 h-5 w-5" />
-                Llamar Ahora
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={() => setIsTramiteModalOpen(true)}
+              className="bg-background text-foreground hover:bg-background/90 cursor-pointer"
+            >
+              <HelpCircle className="mr-2 h-5 w-5" />
+              Seleccionar Trámite
+            </Button>
             <Link href="/contacto" className="cursor-pointer">
               <Button
                 size="lg"
                 variant="outline"
                 className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent cursor-pointer"
               >
-                <Mail className="mr-2 h-5 w-5" />
-                Enviar Mensaje
+                <Phone className="mr-2 h-5 w-5" />
+                Llamar Ahora
               </Button>
             </Link>
           </div>

@@ -247,6 +247,162 @@ export function ExpedienteDigital({
       }
     }
   }, [datosCodificados, expedienteId]);
+
+  // Función para cargar expediente desde base de datos simulada
+  const cargarExpedienteDesdeBD = (id: string) => {
+    // Simulación de base de datos de expedientes
+    const expedientesBD = {
+      "EXP-001": {
+        datosPersonales: {
+          nombre: "Juan Carlos",
+          apellidoPaterno: "García",
+          apellidoMaterno: "López",
+          fechaNacimiento: "1985-03-15",
+          lugarNacimiento: "Tijuana, Baja California",
+          estadoCivil: "Casado",
+          ocupacion: "Ingeniero",
+          domicilio: {
+            codigoPostal: "22000",
+            colonia: "Zona Centro",
+            municipio: "Tijuana",
+            estado: "Baja California",
+            calle: "Revolución",
+            numero: "123",
+          },
+          telefono: "6641234567",
+          email: "juan.garcia@email.com",
+          curp: "GALJ850315HBCRPN01",
+          rfc: "GALJ850315ABC",
+        },
+        documentos: [
+          {
+            id: "doc1",
+            nombre: "INE",
+            tipo: "Identificación Oficial",
+            archivo: null,
+            subido: true,
+            fechaSubida: new Date("2024-01-15"),
+          },
+          {
+            id: "doc2",
+            nombre: "Comprobante de Domicilio",
+            tipo: "Comprobante de Domicilio",
+            archivo: null,
+            subido: true,
+            fechaSubida: new Date("2024-01-16"),
+          },
+        ],
+        progreso: 75,
+      },
+      "EXP-002": {
+        datosPersonales: {
+          nombre: "María Elena",
+          apellidoPaterno: "Rodríguez",
+          apellidoMaterno: "González",
+          fechaNacimiento: "1990-07-22",
+          lugarNacimiento: "Mexicali, Baja California",
+          estadoCivil: "Soltera",
+          ocupacion: "Abogada",
+          domicilio: {
+            codigoPostal: "22010",
+            colonia: "Colonia Altamira",
+            municipio: "Tijuana",
+            estado: "Baja California",
+            calle: "Av. Universidad",
+            numero: "456",
+          },
+          telefono: "6649876543",
+          email: "maria.rodriguez@email.com",
+          curp: "ROGM900722HBCRPN02",
+          rfc: "ROGM900722DEF",
+        },
+        documentos: [
+          {
+            id: "doc1",
+            nombre: "INE",
+            tipo: "Identificación Oficial",
+            archivo: null,
+            subido: true,
+            fechaSubida: new Date("2024-01-18"),
+          },
+        ],
+        progreso: 45,
+      },
+      "EXP-003": {
+        datosPersonales: {
+          nombre: "Carlos Alberto",
+          apellidoPaterno: "Martínez",
+          apellidoMaterno: "Hernández",
+          fechaNacimiento: "1978-11-08",
+          lugarNacimiento: "Ensenada, Baja California",
+          estadoCivil: "Divorciado",
+          ocupacion: "Empresario",
+          domicilio: {
+            codigoPostal: "22020",
+            colonia: "Colonia Del Mar",
+            municipio: "Tijuana",
+            estado: "Baja California",
+            calle: "Blvd. Agua Caliente",
+            numero: "789",
+          },
+          telefono: "6645551234",
+          email: "carlos.martinez@email.com",
+          curp: "MAHC781108HBCRPN03",
+          rfc: "MAHC781108GHI",
+        },
+        documentos: [
+          {
+            id: "doc1",
+            nombre: "INE",
+            tipo: "Identificación Oficial",
+            archivo: null,
+            subido: true,
+            fechaSubida: new Date("2024-01-10"),
+          },
+          {
+            id: "doc2",
+            nombre: "Comprobante de Domicilio",
+            tipo: "Comprobante de Domicilio",
+            archivo: null,
+            subido: true,
+            fechaSubida: new Date("2024-01-11"),
+          },
+          {
+            id: "doc3",
+            nombre: "Acta de Nacimiento",
+            tipo: "Acta de Nacimiento",
+            archivo: null,
+            subido: true,
+            fechaSubida: new Date("2024-01-12"),
+          },
+        ],
+        progreso: 90,
+      },
+    };
+
+    const expediente = expedientesBD[id as keyof typeof expedientesBD];
+    if (expediente) {
+      setDatosPersonales(expediente.datosPersonales);
+      setDocumentos(expediente.documentos);
+      setProgreso(expediente.progreso);
+      console.log("Expediente cargado desde base de datos:", expediente);
+    } else {
+      console.log("Expediente no encontrado en base de datos:", id);
+    }
+  };
+
+  // Cargar expediente desde BD si no hay datos en localStorage
+  useEffect(() => {
+    if (expedienteId && !datosCodificados) {
+      const expedienteGuardado = localStorage.getItem(
+        `expediente_${expedienteId}`
+      );
+      if (!expedienteGuardado) {
+        cargarExpedienteDesdeBD(expedienteId);
+      }
+    }
+  }, [expedienteId, datosCodificados]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 

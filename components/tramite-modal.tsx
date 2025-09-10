@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,7 +66,7 @@ const tramites = [
     description: "Protege el futuro de tu familia",
     color: "bg-red-50 border-red-200 text-red-700",
     iconColor: "text-red-600",
-    estimatedCost: "$2,500 - $4,000",
+    estimatedCost: "$3,200",
     timeRequired: "1-2 horas",
     keywords: [
       "testamento",
@@ -89,7 +90,7 @@ const tramites = [
     description: "Escrituración segura de propiedades",
     color: "bg-blue-50 border-blue-200 text-blue-700",
     iconColor: "text-blue-600",
-    estimatedCost: "$15,000 - $50,000",
+    estimatedCost: "$25,000",
     timeRequired: "2-4 horas",
     keywords: [
       "compraventa",
@@ -115,7 +116,7 @@ const tramites = [
     description: "Transferencia gratuita de bienes",
     color: "bg-pink-50 border-pink-200 text-pink-700",
     iconColor: "text-pink-600",
-    estimatedCost: "$3,000 - $8,000",
+    estimatedCost: "$4,500",
     timeRequired: "1-2 horas",
     keywords: ["donación", "regalo", "donar", "transferir", "ceder"],
     requirements: [
@@ -132,7 +133,7 @@ const tramites = [
     description: "Intercambio de propiedades",
     color: "bg-orange-50 border-orange-200 text-orange-700",
     iconColor: "text-orange-600",
-    estimatedCost: "$8,000 - $25,000",
+    estimatedCost: "$12,000",
     timeRequired: "2-3 horas",
     keywords: ["permuta", "intercambio", "cambio", "trueque", "canje"],
     requirements: [
@@ -149,7 +150,7 @@ const tramites = [
     description: "Financiamiento para vivienda",
     color: "bg-indigo-50 border-indigo-200 text-indigo-700",
     iconColor: "text-indigo-600",
-    estimatedCost: "$8,000 - $20,000",
+    estimatedCost: "$12,000",
     timeRequired: "2-3 horas",
     keywords: [
       "crédito",
@@ -175,7 +176,7 @@ const tramites = [
     description: "Préstamo de dinero con garantía",
     color: "bg-cyan-50 border-cyan-200 text-cyan-700",
     iconColor: "text-cyan-600",
-    estimatedCost: "$2,000 - $5,000",
+    estimatedCost: "$3,000",
     timeRequired: "1-2 horas",
     keywords: ["mutuo", "préstamo", "dinero", "garantía", "intereses"],
     requirements: [
@@ -192,7 +193,7 @@ const tramites = [
     description: "Reconocimiento formal de deuda",
     color: "bg-yellow-50 border-yellow-200 text-yellow-700",
     iconColor: "text-yellow-600",
-    estimatedCost: "$1,000 - $3,000",
+    estimatedCost: "$1,800",
     timeRequired: "30-60 minutos",
     keywords: ["adeudo", "deuda", "reconocimiento", "obligación", "pagar"],
     requirements: [
@@ -208,7 +209,7 @@ const tramites = [
     description: "Herencia testamentaria e intestamentaria",
     color: "bg-amber-50 border-amber-200 text-amber-700",
     iconColor: "text-amber-600",
-    estimatedCost: "$5,000 - $15,000",
+    estimatedCost: "$8,500",
     timeRequired: "2-4 horas",
     keywords: [
       "adjudicación",
@@ -231,7 +232,7 @@ const tramites = [
     description: "Formaliza tu empresa",
     color: "bg-purple-50 border-purple-200 text-purple-700",
     iconColor: "text-purple-600",
-    estimatedCost: "$8,000 - $25,000",
+    estimatedCost: "$15,000",
     timeRequired: "2-3 horas",
     keywords: [
       "sociedad",
@@ -256,7 +257,7 @@ const tramites = [
     description: "División de propiedad en común",
     color: "bg-slate-50 border-slate-200 text-slate-700",
     iconColor: "text-slate-600",
-    estimatedCost: "$5,000 - $15,000",
+    estimatedCost: "$8,500",
     timeRequired: "2-3 horas",
     keywords: ["copropiedad", "liquidación", "división", "común", "partir"],
     requirements: [
@@ -273,7 +274,7 @@ const tramites = [
     description: "Transferencia de derechos patrimoniales",
     color: "bg-violet-50 border-violet-200 text-violet-700",
     iconColor: "text-violet-600",
-    estimatedCost: "$2,000 - $6,000",
+    estimatedCost: "$3,500",
     timeRequired: "1-2 horas",
     keywords: ["cesión", "derechos", "transferir", "ceder", "patrimoniales"],
     requirements: [
@@ -289,7 +290,7 @@ const tramites = [
     description: "Derecho de uso sobre propiedad ajena",
     color: "bg-lime-50 border-lime-200 text-lime-700",
     iconColor: "text-lime-600",
-    estimatedCost: "$3,000 - $8,000",
+    estimatedCost: "$4,500",
     timeRequired: "1-2 horas",
     keywords: ["servidumbre", "derecho", "uso", "paso", "servicio"],
     requirements: [
@@ -306,7 +307,7 @@ const tramites = [
     description: "Modificación de contratos existentes",
     color: "bg-rose-50 border-rose-200 text-rose-700",
     iconColor: "text-rose-600",
-    estimatedCost: "$2,000 - $5,000",
+    estimatedCost: "$3,000",
     timeRequired: "1-2 horas",
     keywords: ["convenio", "modificación", "contrato", "cambiar", "alterar"],
     requirements: [
@@ -323,7 +324,7 @@ const tramites = [
     description: "Elevación de sentencia a escritura",
     color: "bg-emerald-50 border-emerald-200 text-emerald-700",
     iconColor: "text-emerald-600",
-    estimatedCost: "$5,000 - $15,000",
+    estimatedCost: "$8,500",
     timeRequired: "2-3 horas",
     keywords: ["elevación", "judicial", "sentencia", "escritura", "juez"],
     requirements: [
@@ -340,7 +341,7 @@ const tramites = [
     description: "Pago de deuda con bienes",
     color: "bg-teal-50 border-teal-200 text-teal-700",
     iconColor: "text-teal-600",
-    estimatedCost: "$3,000 - $8,000",
+    estimatedCost: "$4,500",
     timeRequired: "1-2 horas",
     keywords: ["dación", "pago", "deuda", "bienes", "satisfacer"],
     requirements: [
@@ -357,7 +358,7 @@ const tramites = [
     description: "Elevación de contrato privado a escritura",
     color: "bg-indigo-50 border-indigo-200 text-indigo-700",
     iconColor: "text-indigo-600",
-    estimatedCost: "$3,000 - $10,000",
+    estimatedCost: "$5,500",
     timeRequired: "1-2 horas",
     keywords: ["formalización", "contrato", "privado", "escritura", "elevar"],
     requirements: [
@@ -374,7 +375,7 @@ const tramites = [
     description: "Constitución y transmisión de fideicomisos",
     color: "bg-teal-50 border-teal-200 text-teal-700",
     iconColor: "text-teal-600",
-    estimatedCost: "$10,000 - $30,000",
+    estimatedCost: "$18,000",
     timeRequired: "3-4 horas",
     keywords: ["fideicomiso", "fiduciario", "fideicomitente", "fideicomisario"],
     requirements: [
@@ -391,7 +392,7 @@ const tramites = [
     description: "Inicio de proceso sucesorio",
     color: "bg-amber-50 border-amber-200 text-amber-700",
     iconColor: "text-amber-600",
-    estimatedCost: "$5,000 - $15,000",
+    estimatedCost: "$8,500",
     timeRequired: "2-4 horas",
     keywords: [
       "sucesión",
@@ -414,7 +415,7 @@ const tramites = [
     description: "Liberación de gravamen hipotecario",
     color: "bg-emerald-50 border-emerald-200 text-emerald-700",
     iconColor: "text-emerald-600",
-    estimatedCost: "$3,000 - $8,000",
+    estimatedCost: "$4,500",
     timeRequired: "1-2 horas",
     keywords: ["cancelación", "hipoteca", "liberar", "pagar", "crédito"],
     requirements: [
@@ -431,7 +432,7 @@ const tramites = [
     description: "Protocolización de actas de asamblea",
     color: "bg-blue-50 border-blue-200 text-blue-700",
     iconColor: "text-blue-600",
-    estimatedCost: "$2,000 - $5,000",
+    estimatedCost: "$3,000",
     timeRequired: "1-2 horas",
     keywords: ["protocolización", "acta", "asamblea", "sociedad", "reunión"],
     requirements: [
@@ -448,7 +449,7 @@ const tramites = [
     description: "Modificación del régimen matrimonial",
     color: "bg-pink-50 border-pink-200 text-pink-700",
     iconColor: "text-pink-600",
-    estimatedCost: "$3,000 - $8,000",
+    estimatedCost: "$4,500",
     timeRequired: "1-2 horas",
     keywords: ["régimen", "matrimonial", "cambio", "bienes", "mancomunado"],
     requirements: [
@@ -465,7 +466,7 @@ const tramites = [
     description: "Comparación de documentos",
     color: "bg-gray-50 border-gray-200 text-gray-700",
     iconColor: "text-gray-600",
-    estimatedCost: "$500 - $1,500",
+    estimatedCost: "$800",
     timeRequired: "15-30 minutos",
     keywords: ["cotejo", "comparar", "documento", "verificar", "igual"],
     requirements: [
@@ -481,7 +482,7 @@ const tramites = [
     description: "Constancia notarial de hechos",
     color: "bg-slate-50 border-slate-200 text-slate-700",
     iconColor: "text-slate-600",
-    estimatedCost: "$1,000 - $3,000",
+    estimatedCost: "$1,800",
     timeRequired: "30-60 minutos",
     keywords: ["fe", "hechos", "constancia", "notarial", "testimonio"],
     requirements: [
@@ -497,7 +498,7 @@ const tramites = [
     description: "Representación legal confiable",
     color: "bg-green-50 border-green-200 text-green-700",
     iconColor: "text-green-600",
-    estimatedCost: "$1,500 - $3,000",
+    estimatedCost: "$2,200",
     timeRequired: "30-60 minutos",
     keywords: ["poder", "representar", "apoderado", "facultades", "delegar"],
     requirements: [
@@ -514,7 +515,7 @@ const tramites = [
     description: "Corrección de errores en escrituras",
     color: "bg-orange-50 border-orange-200 text-orange-700",
     iconColor: "text-orange-600",
-    estimatedCost: "$2,000 - $5,000",
+    estimatedCost: "$3,000",
     timeRequired: "1-2 horas",
     keywords: [
       "rectificación",
@@ -549,6 +550,8 @@ export function TramiteModal({
   const [step, setStep] = useState(1); // 1: selección, 2: asesoría (eliminamos el paso de datos personales)
   const [searchQuery, setSearchQuery] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [valorInmueble, setValorInmueble] = useState("");
+  const [zonaInmueble, setZonaInmueble] = useState("");
 
   // Actualizar cuando cambie el trámite preseleccionado
   useEffect(() => {
@@ -662,12 +665,146 @@ export function TramiteModal({
     window.open(expedienteUrl, "_blank");
   };
 
+  const calcularCostoVariable = (
+    tramiteId: string,
+    valor: string,
+    zona: string
+  ) => {
+    const valorNum = parseFloat(valor.replace(/[,$]/g, ""));
+    if (!valorNum || valorNum <= 0) return null;
+
+    let porcentaje = 0;
+    let costoMinimo = 0;
+    let costoMaximo = 0;
+
+    switch (tramiteId) {
+      case "compraventa":
+        porcentaje =
+          zona === "centro" ? 0.025 : zona === "zona-rio" ? 0.03 : 0.035;
+        costoMinimo = 15000;
+        costoMaximo = 50000;
+        break;
+      case "donacion":
+        porcentaje =
+          zona === "centro" ? 0.02 : zona === "zona-rio" ? 0.025 : 0.03;
+        costoMinimo = 3000;
+        costoMaximo = 8000;
+        break;
+      case "permuta":
+        porcentaje =
+          zona === "centro" ? 0.02 : zona === "zona-rio" ? 0.025 : 0.03;
+        costoMinimo = 8000;
+        costoMaximo = 25000;
+        break;
+      case "credito-hipotecario":
+        porcentaje =
+          zona === "centro" ? 0.015 : zona === "zona-rio" ? 0.02 : 0.025;
+        costoMinimo = 8000;
+        costoMaximo = 20000;
+        break;
+      default:
+        return null;
+    }
+
+    const costoCalculado = valorNum * porcentaje;
+    const costoFinal = Math.max(
+      costoMinimo,
+      Math.min(costoMaximo, costoCalculado)
+    );
+
+    return {
+      costo: costoFinal,
+      porcentaje: porcentaje * 100,
+      zona: zona,
+    };
+  };
+
+  const obtenerDesgloseCosto = (tramiteId: string) => {
+    const desgloses = {
+      testamento: {
+        honorariosNotario: 1500,
+        impuestos: 1200,
+        gastosRegistro: 500,
+        total: 3200,
+      },
+      compraventa: {
+        honorariosNotario: 8000,
+        impuestos: 12000,
+        gastosRegistro: 3000,
+        avaluo: 2000,
+        total: 25000,
+      },
+      donacion: {
+        honorariosNotario: 2000,
+        impuestos: 1500,
+        gastosRegistro: 1000,
+        total: 4500,
+      },
+      permuta: {
+        honorariosNotario: 4000,
+        impuestos: 5000,
+        gastosRegistro: 2000,
+        avaluo: 1000,
+        total: 12000,
+      },
+      "credito-hipotecario": {
+        honorariosNotario: 4000,
+        impuestos: 5000,
+        gastosRegistro: 2000,
+        avaluo: 1000,
+        total: 12000,
+      },
+      sociedad: {
+        honorariosNotario: 8000,
+        impuestos: 4000,
+        gastosRegistro: 2000,
+        gastosPublicacion: 1000,
+        total: 15000,
+      },
+      fideicomiso: {
+        honorariosNotario: 10000,
+        impuestos: 5000,
+        gastosRegistro: 2000,
+        gastosPublicacion: 1000,
+        total: 18000,
+      },
+      "adjudicacion-hereditaria": {
+        honorariosNotario: 4000,
+        impuestos: 3000,
+        gastosRegistro: 1500,
+        total: 8500,
+      },
+      "liquidacion-copropiedad": {
+        honorariosNotario: 4000,
+        impuestos: 3000,
+        gastosRegistro: 1500,
+        total: 8500,
+      },
+      "elevacion-judicial": {
+        honorariosNotario: 4000,
+        impuestos: 3000,
+        gastosRegistro: 1500,
+        total: 8500,
+      },
+      "inicio-sucesion": {
+        honorariosNotario: 4000,
+        impuestos: 3000,
+        gastosRegistro: 1500,
+        total: 8500,
+      },
+    };
+
+    return desgloses[tramiteId as keyof typeof desgloses] || null;
+  };
+
   const resetModal = () => {
     setSelectedTramite(preselectedTramite || null);
     setUserInfo({ nombre: "", telefono: "", email: "", tramiteEspecifico: "" });
     setStep(preselectedTramite ? 2 : 1);
     setSearchQuery("");
     setIsRecording(false);
+    setValorInmueble("");
+    setZonaInmueble("");
   };
 
   const handleClose = () => {
@@ -679,281 +816,460 @@ export function TramiteModal({
     ? tramites.find((t) => t.id === selectedTramite)
     : null;
 
+  const costoCalculado =
+    tramite &&
+    ["compraventa", "donacion", "permuta", "credito-hipotecario"].includes(
+      tramite.id
+    )
+      ? calcularCostoVariable(tramite.id, valorInmueble, zonaInmueble)
+      : null;
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">
-            {step === 1 && "¿Qué trámite necesitas realizar?"}
-            {step === 2 && `Asesoría para ${tramite?.name}`}
-          </DialogTitle>
-          <DialogDescription className="text-center">
-            {step === 1 &&
-              "Selecciona el tipo de trámite que necesitas y te ayudaremos con toda la información"}
-            {step === 2 &&
-              "Aquí tienes toda la información que necesitas para tu trámite"}
-          </DialogDescription>
-        </DialogHeader>
-
-        {step === 1 && (
-          <div className="space-y-6 mt-6">
-            {/* Buscador */}
-            <div className="space-y-4">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  ¿Qué deseas hacer?
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Escribe o dicta lo que necesitas y te ayudamos a encontrar el
-                  trámite correcto
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Ej: testamento, compraventa, poder, sociedad..."
-                    className="pl-10 pr-4"
-                  />
-                </div>
-                <Button
-                  onClick={handleVoiceSearch}
-                  variant="outline"
-                  className={`px-4 ${
-                    isRecording ? "bg-red-50 border-red-200 text-red-600" : ""
-                  }`}
-                >
-                  {isRecording ? (
-                    <MicOff className="h-4 w-4" />
-                  ) : (
-                    <Mic className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-
-              {isRecording && (
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2 text-sm text-red-600">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    Escuchando... Di lo que necesitas
-                  </div>
-                </div>
-              )}
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+        {/* Header fijo */}
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <DialogTitle className="text-2xl font-bold text-center">
+                {step === 1 && "¿Qué trámite necesitas realizar?"}
+                {step === 2 && `Asesoría para ${tramite?.name}`}
+              </DialogTitle>
+              <DialogDescription className="text-center mt-2">
+                {step === 1 &&
+                  "Selecciona el tipo de trámite que necesitas y te ayudaremos con toda la información"}
+                {step === 2 &&
+                  "Aquí tienes toda la información que necesitas para tu trámite"}
+              </DialogDescription>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClose}
+              className="h-8 w-8 p-0 hover:bg-gray-100 ml-4"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
-            {/* Resultados */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTramites.length > 0 ? (
-                filteredTramites.map((tramite) => {
-                  const IconComponent = tramite.icon;
-                  return (
-                    <Card
-                      key={tramite.id}
-                      className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${tramite.color} border-2`}
-                      onClick={() => handleTramiteSelect(tramite.id)}
-                    >
-                      <CardHeader className="text-center">
-                        <div className="mx-auto mb-4">
-                          <IconComponent
-                            className={`h-12 w-12 ${tramite.iconColor}`}
-                          />
-                        </div>
-                        <CardTitle className="text-lg">
-                          {tramite.name}
-                        </CardTitle>
-                        <CardDescription>{tramite.description}</CardDescription>
-                      </CardHeader>
-                    </Card>
-                  );
-                })
-              ) : (
-                <div className="col-span-2 text-center py-8">
-                  <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No encontramos trámites
+        {/* Contenido scrolleable */}
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6 pb-8">
+          {step === 1 && (
+            <div className="space-y-6 mt-6">
+              {/* Buscador */}
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    ¿Qué deseas hacer?
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    Intenta con otras palabras o usa la búsqueda por voz
+                  <p className="text-sm text-gray-600">
+                    Escribe o dicta lo que necesitas y te ayudamos a encontrar
+                    el trámite correcto
                   </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Ej: testamento, compraventa, poder, sociedad..."
+                      className="pl-10 pr-4"
+                    />
+                  </div>
                   <Button
-                    onClick={() => setSearchQuery("")}
+                    onClick={handleVoiceSearch}
                     variant="outline"
-                    size="sm"
+                    className={`px-4 ${
+                      isRecording ? "bg-red-50 border-red-200 text-red-600" : ""
+                    }`}
                   >
-                    Ver todos los trámites
+                    {isRecording ? (
+                      <MicOff className="h-4 w-4" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
 
-        {step === 2 && tramite && (
-          <div className="space-y-6 mt-6">
-            {/* Información del trámite */}
-            <Card className="border-2 border-emerald-200 bg-emerald-50">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <tramite.icon className={`h-8 w-8 ${tramite.iconColor}`} />
-                  <div>
-                    <CardTitle className="text-xl">{tramite.name}</CardTitle>
-                    <CardDescription className="text-base">
-                      {tramite.description}
-                    </CardDescription>
+                {isRecording && (
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 text-sm text-red-600">
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                      Escuchando... Di lo que necesitas
+                    </div>
                   </div>
+                )}
+              </div>
+
+              {/* Resultados */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {filteredTramites.length > 0 ? (
+                  filteredTramites.map((tramite) => {
+                    const IconComponent = tramite.icon;
+                    return (
+                      <Card
+                        key={tramite.id}
+                        className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${tramite.color} border-2`}
+                        onClick={() => handleTramiteSelect(tramite.id)}
+                      >
+                        <CardHeader className="text-center">
+                          <div className="mx-auto mb-4">
+                            <IconComponent
+                              className={`h-12 w-12 ${tramite.iconColor}`}
+                            />
+                          </div>
+                          <CardTitle className="text-lg">
+                            {tramite.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {tramite.description}
+                          </CardDescription>
+                        </CardHeader>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <div className="col-span-2 text-center py-8">
+                    <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No encontramos trámites
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Intenta con otras palabras o usa la búsqueda por voz
+                    </p>
+                    <Button
+                      onClick={() => setSearchQuery("")}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Ver todos los trámites
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 2 && tramite && (
+            <div className="space-y-6 mt-6 mb-8">
+              {/* Información del trámite */}
+              <Card className="border-2 border-emerald-200 bg-emerald-50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <tramite.icon className={`h-8 w-8 ${tramite.iconColor}`} />
+                    <div>
+                      <CardTitle className="text-xl">{tramite.name}</CardTitle>
+                      <CardDescription className="text-base">
+                        {tramite.description}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Costos y tiempo */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      Costo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {costoCalculado ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Calculator className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm font-medium text-blue-600">
+                            Calculadora de Costos
+                          </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Valor del inmueble
+                            </label>
+                            <Input
+                              value={valorInmueble}
+                              onChange={(e) => setValorInmueble(e.target.value)}
+                              placeholder="Ej: $500,000"
+                              className="mt-1"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Zona del inmueble
+                            </label>
+                            <select
+                              value={zonaInmueble}
+                              onChange={(e) => setZonaInmueble(e.target.value)}
+                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                              <option value="">Selecciona una zona</option>
+                              <option value="centro">Centro (2.5%)</option>
+                              <option value="zona-rio">Zona Río (3%)</option>
+                              <option value="otras">Otras zonas (3.5%)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {costoCalculado && (
+                          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                            <p className="text-lg font-bold text-green-600">
+                              ${costoCalculado.costo.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-green-600">
+                              Basado en {costoCalculado.porcentaje}% del valor
+                              del inmueble
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-2xl font-bold text-green-600">
+                            {tramite.estimatedCost}
+                          </p>
+                        </div>
+
+                        {obtenerDesgloseCosto(tramite.id) && (
+                          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Calculator className="h-4 w-4 text-gray-500" />
+                              <span className="text-sm font-medium text-gray-600">
+                                Desglose de Costos
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-sm">
+                              {obtenerDesgloseCosto(tramite.id)
+                                ?.honorariosNotario && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">
+                                    Honorarios Notario:
+                                  </span>
+                                  <span className="font-medium">
+                                    $
+                                    {obtenerDesgloseCosto(
+                                      tramite.id
+                                    )?.honorariosNotario.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {obtenerDesgloseCosto(tramite.id)?.impuestos && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">
+                                    Impuestos:
+                                  </span>
+                                  <span className="font-medium">
+                                    $
+                                    {obtenerDesgloseCosto(
+                                      tramite.id
+                                    )?.impuestos.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {obtenerDesgloseCosto(tramite.id)
+                                ?.gastosRegistro && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">
+                                    Gastos de Registro:
+                                  </span>
+                                  <span className="font-medium">
+                                    $
+                                    {obtenerDesgloseCosto(
+                                      tramite.id
+                                    )?.gastosRegistro.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {(obtenerDesgloseCosto(tramite.id) as any)
+                                ?.avaluo && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Avalúo:</span>
+                                  <span className="font-medium">
+                                    $
+                                    {(
+                                      obtenerDesgloseCosto(tramite.id) as any
+                                    )?.avaluo.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              {(obtenerDesgloseCosto(tramite.id) as any)
+                                ?.gastosPublicacion && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">
+                                    Gastos de Publicación:
+                                  </span>
+                                  <span className="font-medium">
+                                    $
+                                    {(
+                                      obtenerDesgloseCosto(tramite.id) as any
+                                    )?.gastosPublicacion.toLocaleString()}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="border-t border-gray-300 pt-1 mt-2">
+                                <div className="flex justify-between font-bold">
+                                  <span>Total:</span>
+                                  <span className="text-green-600">
+                                    $
+                                    {obtenerDesgloseCosto(
+                                      tramite.id
+                                    )?.total.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      Tiempo Requerido
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {tramite.timeRequired}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      * Tiempo aproximado en notaría
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Requisitos */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-purple-600" />
+                    Documentos Requeridos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {tramite.requirements.map((req, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <span className="text-sm">{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+
+              {/* Acciones */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">
+                  ¿Cómo quieres continuar?
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    onClick={handleIniciarTramite}
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white"
+                    size="lg"
+                  >
+                    <FileText className="h-6 w-6 flex-shrink-0" />
+                    <div className="text-center space-y-1">
+                      <div className="font-bold text-base leading-tight">
+                        Iniciar Expediente Digital
+                      </div>
+                      <div className="text-xs opacity-90 leading-tight px-2">
+                        Completa tu trámite
+                        <br />
+                        paso a paso
+                      </div>
+                    </div>
+                  </Button>
+
+                  <Button
+                    onClick={() => window.open("/citas", "_blank")}
+                    variant="outline"
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 border-2 border-slate-300 hover:border-emerald-500 hover:bg-emerald-50"
+                    size="lg"
+                  >
+                    <Calendar className="h-6 w-6 text-slate-600 flex-shrink-0" />
+                    <div className="text-center space-y-1">
+                      <div className="font-bold text-base leading-tight text-slate-700">
+                        Agendar Cita
+                      </div>
+                      <div className="text-xs text-slate-600 leading-tight px-2">
+                        Ven a la notaría para
+                        <br />
+                        asesoría personal
+                      </div>
+                    </div>
+                  </Button>
                 </div>
-              </CardHeader>
-            </Card>
 
-            {/* Costos y tiempo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    Costo Estimado
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-green-600">
-                    {tramite.estimatedCost}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    * El costo final puede variar según la complejidad
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                    Tiempo Requerido
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {tramite.timeRequired}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    * Tiempo aproximado en notaría
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Requisitos */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-purple-600" />
-                  Documentos Requeridos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {tramite.requirements.map((req, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      <span className="text-sm">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Acciones */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                ¿Cómo quieres continuar?
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button
-                  onClick={handleIniciarTramite}
-                  className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white"
-                  size="lg"
-                >
-                  <FileText className="h-6 w-6 flex-shrink-0" />
-                  <div className="text-center space-y-1">
-                    <div className="font-bold text-base leading-tight">
-                      Iniciar Expediente Digital
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    onClick={handleWhatsApp}
+                    variant="outline"
+                    className="h-20 p-3 flex items-center gap-3 border-2 border-green-200 hover:border-green-500 hover:bg-green-50"
+                  >
+                    <MessageCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="font-semibold text-green-700 text-sm leading-tight">
+                        Enviar por WhatsApp
+                      </div>
+                      <div className="text-xs text-green-600 leading-tight">
+                        Recibe información
+                        <br />
+                        instantánea
+                      </div>
                     </div>
-                    <div className="text-xs opacity-90 leading-tight px-2">
-                      Completa tu trámite
-                      <br />
-                      paso a paso
-                    </div>
-                  </div>
-                </Button>
+                  </Button>
 
-                <Button
-                  onClick={() => window.open("/citas", "_blank")}
-                  variant="outline"
-                  className="h-32 p-4 flex flex-col items-center justify-center gap-2 border-2 border-slate-300 hover:border-emerald-500 hover:bg-emerald-50"
-                  size="lg"
-                >
-                  <Calendar className="h-6 w-6 text-slate-600 flex-shrink-0" />
-                  <div className="text-center space-y-1">
-                    <div className="font-bold text-base leading-tight text-slate-700">
-                      Agendar Cita
+                  <Button
+                    onClick={handleEmail}
+                    variant="outline"
+                    className="h-20 p-3 flex items-center gap-3 border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                  >
+                    <Mail className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="font-semibold text-blue-700 text-sm leading-tight">
+                        Enviar por Email
+                      </div>
+                      <div className="text-xs text-blue-600 leading-tight">
+                        Recibe información
+                        <br />
+                        detallada
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-600 leading-tight px-2">
-                      Ven a la notaría para
-                      <br />
-                      asesoría personal
-                    </div>
-                  </div>
-                </Button>
+                  </Button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-between items-center pt-6 mt-6 border-t border-gray-200">
+                <div className="text-sm text-gray-500">
+                  ¿Necesitas más información? Contáctanos
+                </div>
                 <Button
-                  onClick={handleWhatsApp}
-                  variant="outline"
-                  className="h-20 p-3 flex items-center gap-3 border-2 border-green-200 hover:border-green-500 hover:bg-green-50"
+                  onClick={handleClose}
+                  className="bg-emerald-600 hover:bg-emerald-700"
                 >
-                  <MessageCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <div className="text-left min-w-0 flex-1">
-                    <div className="font-semibold text-green-700 text-sm leading-tight">
-                      Enviar por WhatsApp
-                    </div>
-                    <div className="text-xs text-green-600 leading-tight">
-                      Recibe información
-                      <br />
-                      instantánea
-                    </div>
-                  </div>
-                </Button>
-
-                <Button
-                  onClick={handleEmail}
-                  variant="outline"
-                  className="h-20 p-3 flex items-center gap-3 border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
-                >
-                  <Mail className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                  <div className="text-left min-w-0 flex-1">
-                    <div className="font-semibold text-blue-700 text-sm leading-tight">
-                      Enviar por Email
-                    </div>
-                    <div className="text-xs text-blue-600 leading-tight">
-                      Recibe información
-                      <br />
-                      detallada
-                    </div>
-                  </div>
+                  Cerrar
                 </Button>
               </div>
             </div>
-
-            <div className="flex justify-end pt-4 border-t">
-              <Button onClick={handleClose}>Cerrar</Button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

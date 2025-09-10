@@ -14,7 +14,7 @@ export function Footer() {
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -25,60 +25,13 @@ export function Footer() {
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Servicios notariales profesionales en Tijuana con más de 20 años
-              de experiencia. Atención personalizada y asesoría sin costo.
+              de experiencia. Selecciona tu trámite y te guiamos paso a paso.
             </p>
             <div className="flex space-x-4">
               <Facebook className="h-8 w-8 text-primary hover:text-primary-foreground cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-primary p-2 rounded-lg border border-primary/20" />
               <Instagram className="h-8 w-8 text-primary hover:text-primary-foreground cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-primary p-2 rounded-lg border border-primary/20" />
               <Linkedin className="h-8 w-8 text-primary hover:text-primary-foreground cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-primary p-2 rounded-lg border border-primary/20" />
             </div>
-          </div>
-
-          {/* Services */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Servicios</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/servicios"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
-                >
-                  Compraventa
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/servicios"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
-                >
-                  Testamentos
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/servicios"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
-                >
-                  Poderes
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/servicios"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
-                >
-                  Sociedades
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/servicios"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
-                >
-                  Actos Familiares
-                </Link>
-              </li>
-            </ul>
           </div>
 
           {/* Quick Links */}
@@ -89,14 +42,6 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/simulador"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
-                >
-                  Simulador de Aranceles
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/citas"
                   className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
                 >
@@ -105,18 +50,18 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/portal-cliente"
+                  href="/continuar-tramite"
                   className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
                 >
-                  Portal del Cliente
+                  Continuar Trámite
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/blog"
+                  href="/contacto"
                   className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
                 >
-                  Blog Educativo
+                  Contacto
                 </Link>
               </li>
               <li>
