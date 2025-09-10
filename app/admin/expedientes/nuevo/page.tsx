@@ -625,17 +625,130 @@ export default function NuevoExpedientePage() {
 
   const clasificarDocumento = (fileName: string): string => {
     const name = fileName.toLowerCase();
-    if (name.includes("ine") || name.includes("identificacion"))
-      return "Identificación oficial";
-    if (name.includes("domicilio") || name.includes("comprobante"))
-      return "Comprobante de domicilio";
-    if (name.includes("escritura") || name.includes("titulo"))
-      return "Escritura de propiedad";
-    if (name.includes("avaluo")) return "Avalúo comercial";
-    if (name.includes("predial")) return "Constancia de no adeudo de predial";
-    if (name.includes("agua")) return "Constancia de no adeudo de agua";
-    if (name.includes("gravamen")) return "Certificado de libertad de gravamen";
-    if (name.includes("contrato")) return "Contrato de compraventa privado";
+
+    // Función auxiliar para buscar patrones similares
+    const hasSimilarPattern = (text: string, patterns: string[]) => {
+      return patterns.some((pattern) => {
+        const words = pattern.split(" ");
+        return words.every((word) => text.includes(word));
+      });
+    };
+
+    // Mapeo más específico para coincidir exactamente con los documentos requeridos
+    if (
+      name.includes("ine") ||
+      name.includes("identificacion") ||
+      name.includes("credencial") ||
+      name.includes("identificacion oficial") ||
+      hasSimilarPattern(name, ["identificacion", "oficial"]) ||
+      hasSimilarPattern(name, ["oficial", "identificacion"])
+    )
+      return "Identificación oficial vigente (INE/Pasaporte)";
+    if (
+      name.includes("domicilio") ||
+      name.includes("comprobante") ||
+      name.includes("servicio")
+    )
+      return "Comprobante de domicilio (no mayor a 3 meses)";
+    if (
+      name.includes("escritura") ||
+      name.includes("titulo") ||
+      name.includes("propiedad")
+    )
+      return "Escritura de propiedad o título de propiedad";
+    if (name.includes("avaluo") || name.includes("avalúo"))
+      return "Avalúo comercial del inmueble";
+    if (name.includes("predial") || name.includes("predio"))
+      return "Constancia de no adeudo de predial";
+    if (name.includes("agua") || name.includes("hidraulico"))
+      return "Constancia de no adeudo de agua";
+    if (name.includes("gravamen") || name.includes("libertad"))
+      return "Certificado de libertad de gravamen";
+    if (name.includes("contrato") || name.includes("compraventa"))
+      return "Contrato de compraventa privado (si aplica)";
+    if (name.includes("testamento") || name.includes("anterior"))
+      return "Testamento anterior (si existe)";
+    if (
+      name.includes("medico") ||
+      name.includes("médico") ||
+      name.includes("salud")
+    )
+      return "Certificado médico";
+    if (name.includes("testigo") || name.includes("witness"))
+      return "Testigos (2 personas)";
+    if (name.includes("nacimiento") || name.includes("birth"))
+      return "Acta de nacimiento";
+    if (name.includes("matrimonio") || name.includes("marriage"))
+      return "Acta de matrimonio (si aplica)";
+    if (name.includes("defuncion") || name.includes("death"))
+      return "Acta de defunción";
+    if (name.includes("inventario") || name.includes("inventory"))
+      return "Inventario de bienes";
+    if (name.includes("poder") || name.includes("power"))
+      return "Poder notarial de representantes";
+    if (name.includes("reserva") || name.includes("reserve"))
+      return "Constancia de reserva de nombre";
+    if (name.includes("capital") || name.includes("social"))
+      return "Capital social";
+    if (name.includes("poliza") || name.includes("seguro"))
+      return "Póliza de seguro";
+    if (name.includes("referencia") || name.includes("reference"))
+      return "Referencias comerciales";
+    if (name.includes("garantia") || name.includes("garantía"))
+      return "Garantías (si aplica)";
+    if (name.includes("adeudo") || name.includes("deuda"))
+      return "Reconocimiento de Adeudo";
+    if (name.includes("sentencia") || name.includes("judicial"))
+      return "Sentencia judicial (si aplica)";
+    if (name.includes("asamblea") || name.includes("assembly"))
+      return "Acta de asamblea";
+    if (name.includes("convenio") || name.includes("modificatorio"))
+      return "Convenio modificatorio";
+    if (name.includes("plano") || name.includes("plan"))
+      return "Plano de servidumbre";
+    if (name.includes("copia") || name.includes("cotejo"))
+      return "Copia a cotejar";
+    if (name.includes("original")) return "Documento original";
+    if (name.includes("apoderado") || name.includes("representante"))
+      return "Identificación del apoderado";
+    if (name.includes("albacea") || name.includes("executor"))
+      return "Identificación de albacea (si aplica)";
+    if (name.includes("hijo") || name.includes("children"))
+      return "Acta de nacimiento de hijos (si aplica)";
+    if (name.includes("bienes") || name.includes("assets"))
+      return "Lista de bienes y deudas";
+    if (name.includes("donacion") || name.includes("donación"))
+      return "Carta de aceptación de donación";
+    if (name.includes("credito") || name.includes("crédito"))
+      return "Contrato de crédito";
+    if (name.includes("hipoteca") || name.includes("mortgage"))
+      return "Escritura de hipoteca";
+    if (name.includes("pago") || name.includes("payment"))
+      return "Constancia de pago total";
+    if (name.includes("liquidacion") || name.includes("liquidación"))
+      return "Acuerdo de liquidación";
+    if (name.includes("cesion") || name.includes("cesión"))
+      return "Contrato de cesión";
+    if (name.includes("servidumbre")) return "Constitución de Servidumbre";
+    if (name.includes("dacion") || name.includes("dación"))
+      return "Dación en Pago";
+    if (name.includes("formalizacion") || name.includes("formalización"))
+      return "Formalización de contrato privado de compraventa y titulación en propiedad";
+    if (name.includes("fideicomiso") || name.includes("trust"))
+      return "Fideicomisos (constitución / transmisión de propiedad / extinción)";
+    if (name.includes("sucesion") || name.includes("sucesión"))
+      return "Inicio de Sucesión (Testamentaria / Intestamentaria)";
+    if (name.includes("cancelacion") || name.includes("cancelación"))
+      return "Cancelación de Hipoteca";
+    if (name.includes("protocolizacion") || name.includes("protocolización"))
+      return "Protocolización de Acta de Asamblea";
+    if (name.includes("regimen") || name.includes("régimen"))
+      return "Cambio de Régimen Matrimonial";
+    if (name.includes("cotejo")) return "Cotejos";
+    if (name.includes("hechos") || name.includes("fe")) return "Fe de Hechos";
+    if (name.includes("rectificacion") || name.includes("rectificación"))
+      return "Rectificación de Escrituras";
+
     return "Documento general";
   };
 
@@ -933,6 +1046,77 @@ NOTARIO PÚBLICO: ________________`;
     router.push("/admin/expedientes");
   };
 
+  // Función para contar documentos válidos (que coincidan con los requeridos)
+  const contarDocumentosValidos = () => {
+    if (!tramiteInfo) return 0;
+
+    const documentosValidos = tramiteInfo.documentosRequeridos.filter(
+      (documentoRequerido) => {
+        return Object.values(documentosClasificados).some(
+          (docClasificado) => docClasificado.tipo === documentoRequerido
+        );
+      }
+    );
+
+    return documentosValidos.length;
+  };
+
+  // Función para calcular progreso de datos del cliente
+  const calcularProgresoDatos = () => {
+    const camposRequeridos = [
+      "nombre",
+      "apellidoPaterno",
+      "apellidoMaterno",
+      "email",
+      "telefono",
+      "curp",
+      "rfc",
+      "fechaNacimiento",
+      "estadoCivil",
+      "nacionalidad",
+      "ocupacion",
+    ];
+
+    const camposCompletados = camposRequeridos.filter(
+      (campo) =>
+        datosCliente[campo as keyof typeof datosCliente] &&
+        datosCliente[campo as keyof typeof datosCliente] !== ""
+    );
+
+    const camposDomicilio = [
+      "calle",
+      "numero",
+      "colonia",
+      "codigoPostal",
+      "ciudad",
+      "estado",
+    ];
+    const domicilioCompletado = camposDomicilio.filter(
+      (campo) =>
+        datosCliente.domicilio[campo as keyof typeof datosCliente.domicilio] &&
+        datosCliente.domicilio[campo as keyof typeof datosCliente.domicilio] !==
+          ""
+    );
+
+    const totalCampos = camposRequeridos.length + camposDomicilio.length;
+    const camposCompletadosTotal =
+      camposCompletados.length + domicilioCompletado.length;
+
+    return Math.round((camposCompletadosTotal / totalCampos) * 100);
+  };
+
+  // Función para calcular progreso general del trámite
+  const calcularProgresoGeneral = () => {
+    if (!tramiteInfo) return 0;
+
+    const progresoDocumentos =
+      (contarDocumentosValidos() / tramiteInfo.documentosRequeridos.length) *
+      50; // 50% del progreso
+    const progresoDatos = (calcularProgresoDatos() / 100) * 50; // 50% del progreso
+
+    return Math.round(progresoDocumentos + progresoDatos);
+  };
+
   const handleImprimirRequisitos = () => {
     if (!tramiteInfo) return;
 
@@ -1077,6 +1261,135 @@ Notaría Tijuana`;
       })
       .catch(() => {
         prompt("Link generado (copia este texto):", link);
+      });
+  };
+
+  const handleCompartirPorEmail = () => {
+    if (!generatedDocument || !tramiteInfo) return;
+
+    const nombreCompleto =
+      `${datosCliente.nombre} ${datosCliente.apellidoPaterno} ${datosCliente.apellidoMaterno}`.trim();
+    const fecha = new Date().toLocaleDateString("es-MX");
+
+    const subject = `Documento Legal Generado - ${tramiteInfo.nombre} - ${nombreCompleto}`;
+    const body = `Estimado/a ${nombreCompleto},
+
+Adjunto encontrará el documento legal generado para el trámite de ${tramiteInfo.nombre}.
+
+INFORMACIÓN DEL DOCUMENTO:
+- Trámite: ${tramiteInfo.nombre}
+- Cliente: ${nombreCompleto}
+- Fecha de generación: ${fecha}
+- Notaría: Notaría Tijuana
+
+DOCUMENTO GENERADO:
+${generatedDocument}
+
+IMPORTANTE:
+Este documento ha sido generado automáticamente y debe ser revisado y firmado ante notario público para tener validez legal.
+
+Para cualquier consulta o para agendar su cita, no dude en contactarnos.
+
+Saludos cordiales,
+Notaría Tijuana
+Sistema de Gestión de Expedientes`;
+
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink);
+  };
+
+  const handleCompartirPorWhatsApp = () => {
+    if (!generatedDocument || !tramiteInfo) return;
+
+    const nombreCompleto =
+      `${datosCliente.nombre} ${datosCliente.apellidoPaterno} ${datosCliente.apellidoMaterno}`.trim();
+    const fecha = new Date().toLocaleDateString("es-MX");
+
+    const message = `📄 *Documento Legal Generado*
+
+Hola! Te envío el documento legal generado para el trámite de *${tramiteInfo.nombre}*:
+
+👤 *Cliente:* ${nombreCompleto}
+📅 *Fecha:* ${fecha}
+🏢 *Notaría:* Notaría Tijuana
+
+📋 *DOCUMENTO GENERADO:*
+${generatedDocument}
+
+⚠️ *IMPORTANTE:*
+Este documento ha sido generado automáticamente y debe ser revisado y firmado ante notario público para tener validez legal.
+
+📞 Para agendar tu cita o resolver dudas, contáctanos.
+
+¡Gracias por confiar en Notaría Tijuana!`;
+
+    const whatsappLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, "_blank");
+  };
+
+  const handleGenerarLinkCompartir = () => {
+    if (!generatedDocument || !tramiteInfo) return;
+
+    const nombreCompleto =
+      `${datosCliente.nombre} ${datosCliente.apellidoPaterno} ${datosCliente.apellidoMaterno}`.trim();
+    const fecha = new Date().toLocaleDateString("es-MX");
+    const linkId = `doc-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    // Simular almacenamiento del documento (en un sistema real se guardaría en base de datos)
+    const documentoParaAlmacenar = {
+      id: linkId,
+      tramite: tramiteInfo.nombre,
+      cliente: nombreCompleto,
+      fecha: fecha,
+      contenido: generatedDocument,
+      notaria: "Notaría Tijuana",
+      estado: "Generado",
+      expiracion: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString("es-MX"), // 30 días
+    };
+
+    // Almacenar en localStorage para simular persistencia
+    const documentosExistentes = JSON.parse(
+      localStorage.getItem("documentosCompartidos") || "{}"
+    );
+    documentosExistentes[linkId] = documentoParaAlmacenar;
+    localStorage.setItem(
+      "documentosCompartidos",
+      JSON.stringify(documentosExistentes)
+    );
+
+    const link = `${window.location.origin}/documento/${linkId}`;
+
+    // Copiar solo el link al portapapeles
+    navigator.clipboard
+      .writeText(link)
+      .then(() => {
+        alert(
+          `✅ Link generado y copiado al portapapeles!\n\n🔗 ${link}\n\nEste link permite acceder al documento desde cualquier dispositivo. El documento estará disponible por 30 días.`
+        );
+      })
+      .catch(() => {
+        // Fallback si no se puede copiar automáticamente
+        const linkInfo = `🔗 Link de Documento Generado
+
+Trámite: ${tramiteInfo.nombre}
+Cliente: ${nombreCompleto}
+Fecha: ${fecha}
+Link: ${link}
+
+Este link permite acceder al documento legal generado desde cualquier dispositivo.
+
+⚠️ IMPORTANTE:
+- El documento debe ser revisado y firmado ante notario público
+- Este link es temporal y tiene fecha de expiración (30 días)
+- Para mayor seguridad, no compartas este link públicamente`;
+
+        prompt("Link de documento generado (copia este texto):", linkInfo);
       });
   };
 
@@ -1272,7 +1585,7 @@ Notaría Tijuana`;
 
                   <TabsContent value="documentos" className="mt-6">
                     <div className="space-y-6">
-                      {/* Botones de carga */}
+                      {/* Botón de carga masiva */}
                       <div className="flex flex-wrap gap-3">
                         <Button
                           onClick={() => setIsBulkUploadModalOpen(true)}
@@ -1281,19 +1594,6 @@ Notaría Tijuana`;
                           <Upload className="h-4 w-4 mr-2" />
                           Carga Masiva
                         </Button>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            multiple
-                            onChange={handleFileSelect}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                          />
-                          <Button variant="outline">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Cargar Individual
-                          </Button>
-                        </div>
                       </div>
 
                       {/* Lista de Documentos Requeridos */}
@@ -1326,80 +1626,154 @@ Notaría Tijuana`;
                                           {documento}
                                         </h4>
                                         {documentoCargado && (
-                                          <p className="text-sm text-green-600">
-                                            {documentoCargado.file.name} (
-                                            {Math.round(
-                                              documentoCargado.confianza * 100
-                                            )}
-                                            % confianza)
-                                          </p>
+                                          <div className="flex items-center space-x-2">
+                                            <p className="text-sm text-green-600">
+                                              {documentoCargado.file.name}
+                                            </p>
+                                            <div className="flex items-center space-x-1">
+                                              <div
+                                                className={`w-2 h-2 rounded-full ${
+                                                  documentoCargado.confianza >=
+                                                  0.9
+                                                    ? "bg-green-500"
+                                                    : documentoCargado.confianza >=
+                                                      0.7
+                                                    ? "bg-yellow-500"
+                                                    : "bg-red-500"
+                                                }`}
+                                              ></div>
+                                              <span
+                                                className={`text-xs ${
+                                                  documentoCargado.confianza >=
+                                                  0.9
+                                                    ? "text-green-600"
+                                                    : documentoCargado.confianza >=
+                                                      0.7
+                                                    ? "text-yellow-600"
+                                                    : "text-red-600"
+                                                }`}
+                                              >
+                                                {Math.round(
+                                                  documentoCargado.confianza *
+                                                    100
+                                                )}
+                                                % confianza
+                                              </span>
+                                            </div>
+                                          </div>
                                         )}
                                       </div>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                       {documentoCargado ? (
                                         <div className="flex items-center space-x-2">
-                                          <div className="text-right">
-                                            <p className="text-xs text-green-600 font-medium">
-                                              ✓ Cargado
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                              {Math.round(
-                                                documentoCargado.confianza * 100
-                                              )}
-                                              % confianza
-                                            </p>
-                                          </div>
-                                          <div className="flex space-x-1">
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => {
-                                                const fileId = Object.keys(
-                                                  documentosClasificados
-                                                ).find(
-                                                  (key) =>
-                                                    documentosClasificados[
-                                                      key
-                                                    ] === documentoCargado
-                                                );
-                                                if (fileId)
-                                                  handleVerDocumento(fileId);
-                                              }}
-                                              className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
-                                              title="Ver documento"
-                                            >
-                                              <Eye className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => {
-                                                const fileId = Object.keys(
-                                                  documentosClasificados
-                                                ).find(
-                                                  (key) =>
-                                                    documentosClasificados[
-                                                      key
-                                                    ] === documentoCargado
-                                                );
-                                                if (fileId)
-                                                  handleEliminarDocumento(
-                                                    fileId
+                                          <Button
+                                            size="sm"
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                          >
+                                            Completado
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                              const fileId = Object.keys(
+                                                documentosClasificados
+                                              ).find(
+                                                (key) =>
+                                                  documentosClasificados[
+                                                    key
+                                                  ] === documentoCargado
+                                              );
+                                              if (fileId)
+                                                handleVerDocumento(fileId);
+                                            }}
+                                            className="flex items-center space-x-1"
+                                          >
+                                            <Eye className="h-3 w-3" />
+                                            <span>Ver</span>
+                                          </Button>
+                                          <div className="relative">
+                                            <input
+                                              type="file"
+                                              onChange={(e) => {
+                                                if (e.target.files?.[0]) {
+                                                  const file =
+                                                    e.target.files[0];
+                                                  const fileId = Object.keys(
+                                                    documentosClasificados
+                                                  ).find(
+                                                    (key) =>
+                                                      documentosClasificados[
+                                                        key
+                                                      ] === documentoCargado
                                                   );
+
+                                                  if (fileId) {
+                                                    // Reemplazar el documento existente
+                                                    setDocumentosSubidos(
+                                                      (prev) => ({
+                                                        ...prev,
+                                                        [fileId]: file,
+                                                      })
+                                                    );
+
+                                                    // Clasificar el nuevo documento
+                                                    const tipo =
+                                                      clasificarDocumento(
+                                                        file.name
+                                                      );
+                                                    const confianza =
+                                                      Math.random() * 0.3 + 0.7;
+                                                    const datosExtraidos =
+                                                      simularOCR(file.name);
+
+                                                    setDocumentosClasificados(
+                                                      (prev) => ({
+                                                        ...prev,
+                                                        [fileId]: {
+                                                          file,
+                                                          tipo,
+                                                          confianza,
+                                                          datosExtraidos,
+                                                        },
+                                                      })
+                                                    );
+
+                                                    // Prellenar datos con el nuevo documento
+                                                    const documentoParaPrellenar =
+                                                      {
+                                                        [fileId]: {
+                                                          file,
+                                                          tipo,
+                                                          confianza,
+                                                          datosExtraidos,
+                                                        },
+                                                      };
+                                                    prellenarDatos(
+                                                      documentoParaPrellenar
+                                                    );
+                                                  }
+                                                }
                                               }}
-                                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                              title="Eliminar documento"
+                                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                            />
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="flex items-center space-x-1 text-orange-600 border-orange-300 hover:bg-orange-50"
                                             >
-                                              <X className="h-3 w-3" />
+                                              <Upload className="h-3 w-3" />
+                                              <span>Reemplazar</span>
                                             </Button>
                                           </div>
                                         </div>
                                       ) : (
                                         <div className="flex space-x-1">
-                                          <Badge variant="outline">
+                                          <span className="text-sm text-gray-500">
                                             Pendiente
-                                          </Badge>
+                                          </span>
                                           <div className="relative">
                                             <input
                                               type="file"
@@ -1463,9 +1837,12 @@ Notaría Tijuana`;
                                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                             />
-                                            <Button size="sm" variant="outline">
-                                              <Upload className="h-3 w-3 mr-1" />
-                                              Subir
+                                            <Button
+                                              size="sm"
+                                              className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1"
+                                            >
+                                              <Upload className="h-3 w-3" />
+                                              <span>Subir</span>
                                             </Button>
                                           </div>
                                         </div>
@@ -1477,71 +1854,42 @@ Notaría Tijuana`;
                             )}
                           </div>
 
-                          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-600">
-                              <strong>Progreso:</strong>{" "}
-                              {Object.keys(documentosClasificados).length} de{" "}
-                              {tramiteInfo.documentosRequeridos.length}{" "}
-                              documentos cargados
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Lista de Documentos Cargados */}
-                      {Object.keys(documentosClasificados).length > 0 && (
-                        <div className="mt-6">
-                          <h4 className="text-lg font-semibold mb-3 text-green-700">
-                            Documentos Cargados (
-                            {Object.keys(documentosClasificados).length})
-                          </h4>
-                          <div className="space-y-2">
-                            {Object.entries(documentosClasificados).map(
-                              ([fileId, doc]) => (
-                                <div
-                                  key={fileId}
-                                  className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                    <div>
-                                      <p className="font-medium text-green-800">
-                                        {doc.file.name}
-                                      </p>
-                                      <p className="text-sm text-green-600">
-                                        Clasificado como: {doc.tipo}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        Confianza:{" "}
-                                        {Math.round(doc.confianza * 100)}%
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="flex space-x-1">
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => handleVerDocumento(fileId)}
-                                      className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800"
-                                      title="Ver documento"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() =>
-                                        handleEliminarDocumento(fileId)
-                                      }
-                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                      title="Eliminar documento"
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              )
-                            )}
+                          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm font-medium text-gray-700">
+                                Progreso General del Trámite
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {calcularProgresoGeneral()}% completado
+                              </p>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${calcularProgresoGeneral()}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <div className="mt-2 grid grid-cols-2 gap-4 text-xs">
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-600">
+                                  Documentos:
+                                </span>
+                                <span className="font-medium">
+                                  {contarDocumentosValidos()} de{" "}
+                                  {tramiteInfo.documentosRequeridos.length}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-600">
+                                  Datos cliente:
+                                </span>
+                                <span className="font-medium">
+                                  {calcularProgresoDatos()}%
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -1857,31 +2205,66 @@ Notaría Tijuana`;
                                 </p>
                               </div>
 
-                              <div className="flex flex-wrap gap-3">
-                                <Button
-                                  onClick={handleImprimirDocumento}
-                                  variant="outline"
-                                  className="flex items-center space-x-2"
-                                >
-                                  <Printer className="h-4 w-4" />
-                                  <span>Imprimir</span>
-                                </Button>
-                                <Button
-                                  onClick={handleDescargarDocumento}
-                                  variant="outline"
-                                  className="flex items-center space-x-2"
-                                >
-                                  <Download className="h-4 w-4" />
-                                  <span>Descargar</span>
-                                </Button>
-                                <Button
-                                  onClick={() => setGeneratedDocument(null)}
-                                  variant="ghost"
-                                  className="text-gray-500 hover:text-gray-700"
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Regenerar
-                                </Button>
+                              <div className="space-y-4">
+                                <div className="flex flex-wrap gap-3">
+                                  <Button
+                                    onClick={handleImprimirDocumento}
+                                    variant="outline"
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <Printer className="h-4 w-4" />
+                                    <span>Imprimir</span>
+                                  </Button>
+                                  <Button
+                                    onClick={handleDescargarDocumento}
+                                    variant="outline"
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                    <span>Descargar</span>
+                                  </Button>
+                                  <Button
+                                    onClick={() => setGeneratedDocument(null)}
+                                    variant="ghost"
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Regenerar
+                                  </Button>
+                                </div>
+
+                                {/* Opciones de Compartir */}
+                                <div className="pt-4 border-t border-gray-200">
+                                  <h5 className="font-medium text-gray-900 mb-3">
+                                    Compartir Documento
+                                  </h5>
+                                  <div className="flex flex-wrap gap-3">
+                                    <Button
+                                      onClick={handleCompartirPorEmail}
+                                      variant="outline"
+                                      className="flex items-center space-x-2 text-blue-600 border-blue-300 hover:bg-blue-50"
+                                    >
+                                      <Send className="h-4 w-4" />
+                                      <span>Enviar por Email</span>
+                                    </Button>
+                                    <Button
+                                      onClick={handleCompartirPorWhatsApp}
+                                      variant="outline"
+                                      className="flex items-center space-x-2 text-green-600 border-green-300 hover:bg-green-50"
+                                    >
+                                      <Send className="h-4 w-4" />
+                                      <span>Enviar por WhatsApp</span>
+                                    </Button>
+                                    <Button
+                                      onClick={handleGenerarLinkCompartir}
+                                      variant="outline"
+                                      className="flex items-center space-x-2 text-purple-600 border-purple-300 hover:bg-purple-50"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                      <span>Generar Link</span>
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
 
                               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">

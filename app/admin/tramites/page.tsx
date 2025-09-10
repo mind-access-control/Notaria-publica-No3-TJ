@@ -63,6 +63,12 @@ interface DocumentoRequerido {
   camposExtraidos: string[];
 }
 
+interface ConceptoPersonalizado {
+  id: string;
+  nombre: string;
+  cantidad: number;
+}
+
 interface CostosTramite {
   costoBase: number;
   aranceles: number;
@@ -70,6 +76,7 @@ interface CostosTramite {
   gastos: number;
   total: number;
   descuentos: Descuento[];
+  conceptosPersonalizados?: ConceptoPersonalizado[];
 }
 
 interface Descuento {
@@ -240,6 +247,24 @@ export default function ConfiguracionTramites() {
     useState<TramiteConfig | null>(null);
   const [mostrarDialog, setMostrarDialog] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState("");
+  const [unidadTiempo, setUnidadTiempo] = useState<"horas" | "dias">("horas");
+
+  const calcularTotalCostos = (costos: CostosTramite) => {
+    const conceptosPersonalizadosTotal = (
+      costos.conceptosPersonalizados || []
+    ).reduce((sum, concepto) => sum + concepto.cantidad, 0);
+
+    return (
+      costos.costoBase +
+      costos.aranceles +
+      costos.notariales +
+      costos.gastos +
+      conceptosPersonalizadosTotal
+    );
+  };
 
   const handleCrearTramite = () => {
     const nuevoTramite: TramiteConfig = {
@@ -264,29 +289,113 @@ export default function ConfiguracionTramites() {
     };
     setTramiteSeleccionado(nuevoTramite);
     setModoEdicion(true);
+    setUnidadTiempo("horas");
     setMostrarDialog(true);
   };
 
   const handleEditarTramite = (tramite: TramiteConfig) => {
     setTramiteSeleccionado(tramite);
     setModoEdicion(true);
+    setUnidadTiempo(tramite.tiempoEstimado > 24 ? "dias" : "horas");
     setMostrarDialog(true);
   };
 
-  const handleGuardarTramite = () => {
-    if (tramiteSeleccionado) {
-      if (modoEdicion) {
+  const handleGuardarTramite = async () => {
+    if (!tramiteSeleccionado) return;
+
+    // Validaciones básicas
+    if (!tramiteSeleccionado.nombre.trim()) {
+      alert("El nombre del trámite es obligatorio");
+      return;
+    }
+
+    if (!tramiteSeleccionado.categoria.trim()) {
+      alert("La categoría del trámite es obligatoria");
+      return;
+    }
+
+    if (tramiteSeleccionado.tiempoEstimado <= 0) {
+      alert("El tiempo estimado debe ser mayor a 0");
+      return;
+    }
+
+    setGuardando(true);
+
+    // Simular guardado con loading
+    const tramiteConFechas = {
+      ...tramiteSeleccionado,
+      fechaActualizacion: new Date().toISOString().split("T")[0],
+      fechaCreacion: modoEdicion
+        ? tramiteSeleccionado.fechaCreacion
+        : new Date().toISOString().split("T")[0],
+    };
+
+    try {
+      // Simular delay de guardado
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Verificar si es edición o creación basándose en si el trámite ya existe
+      const esEdicion = tramites.some((t) => t.id === tramiteSeleccionado.id);
+
+      if (esEdicion) {
         setTramites((prev) =>
           prev.map((t) =>
-            t.id === tramiteSeleccionado.id ? tramiteSeleccionado : t
+            t.id === tramiteSeleccionado.id ? tramiteConFechas : t
           )
         );
+        setMensajeConfirmacion(
+          `✅ Trámite "${tramiteConFechas.nombre}" actualizado exitosamente`
+        );
+        setMostrarConfirmacion(true);
+        setTimeout(() => setMostrarConfirmacion(false), 3000);
       } else {
-        setTramites((prev) => [...prev, tramiteSeleccionado]);
+        setTramites((prev) => [...prev, tramiteConFechas]);
+
+        // Mostrar el nuevo trámite en la lista con animación
+        setTimeout(() => {
+          const nuevoTramiteElement = document.querySelector(
+            `[data-tramite-id="${tramiteConFechas.id}"]`
+          );
+          if (nuevoTramiteElement) {
+            // Scroll suave hacia el nuevo trámite
+            nuevoTramiteElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+
+            // Animación de entrada
+            nuevoTramiteElement.classList.add(
+              "animate-pulse",
+              "ring-2",
+              "ring-blue-500"
+            );
+            setTimeout(() => {
+              nuevoTramiteElement.classList.remove(
+                "animate-pulse",
+                "ring-2",
+                "ring-blue-500"
+              );
+            }, 3000);
+          } else {
+            // Si no encuentra el elemento, hacer scroll hacia arriba para mostrar la lista
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }, 200);
+
+        setMensajeConfirmacion(
+          `✅ Trámite "${tramiteConFechas.nombre}" creado exitosamente`
+        );
+        setMostrarConfirmacion(true);
+        setTimeout(() => setMostrarConfirmacion(false), 3000);
       }
+
       setMostrarDialog(false);
       setTramiteSeleccionado(null);
       setModoEdicion(false);
+    } catch (error) {
+      alert("❌ Error al guardar el trámite. Inténtalo de nuevo.");
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -328,7 +437,8 @@ export default function ConfiguracionTramites() {
           {tramites.map((tramite) => (
             <Card
               key={tramite.id}
-              className="hover:shadow-lg transition-shadow"
+              data-tramite-id={tramite.id}
+              className="hover:shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-4"
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -435,7 +545,7 @@ export default function ConfiguracionTramites() {
                       <Label htmlFor="nombre">Nombre del Trámite</Label>
                       <Input
                         id="nombre"
-                        value={tramiteSeleccionado.nombre}
+                        value={tramiteSeleccionado.nombre || ""}
                         onChange={(e) =>
                           setTramiteSeleccionado((prev) =>
                             prev ? { ...prev, nombre: e.target.value } : null
@@ -448,7 +558,7 @@ export default function ConfiguracionTramites() {
                       <Label htmlFor="categoria">Categoría</Label>
                       <Input
                         id="categoria"
-                        value={tramiteSeleccionado.categoria}
+                        value={tramiteSeleccionado.categoria || ""}
                         onChange={(e) =>
                           setTramiteSeleccionado((prev) =>
                             prev ? { ...prev, categoria: e.target.value } : null
@@ -462,7 +572,7 @@ export default function ConfiguracionTramites() {
                     <Label htmlFor="descripcion">Descripción</Label>
                     <Textarea
                       id="descripcion"
-                      value={tramiteSeleccionado.descripcion}
+                      value={tramiteSeleccionado.descripcion || ""}
                       onChange={(e) =>
                         setTramiteSeleccionado((prev) =>
                           prev ? { ...prev, descripcion: e.target.value } : null
@@ -474,22 +584,40 @@ export default function ConfiguracionTramites() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="tiempo">Tiempo Estimado (días)</Label>
-                      <Input
-                        id="tiempo"
-                        type="number"
-                        value={tramiteSeleccionado.tiempoEstimado}
-                        onChange={(e) =>
-                          setTramiteSeleccionado((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  tiempoEstimado: Number(e.target.value),
-                                }
-                              : null
-                          )
-                        }
-                      />
+                      <Label htmlFor="tiempo">Tiempo Estimado</Label>
+                      <div className="flex space-x-2">
+                        <Input
+                          id="tiempo"
+                          type="number"
+                          min="0"
+                          value={tramiteSeleccionado.tiempoEstimado || ""}
+                          onChange={(e) =>
+                            setTramiteSeleccionado((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    tiempoEstimado: Number(e.target.value) || 0,
+                                  }
+                                : null
+                            )
+                          }
+                          placeholder="0"
+                        />
+                        <select
+                          value={unidadTiempo}
+                          onChange={(e) => {
+                            const nuevaUnidad = e.target.value as
+                              | "horas"
+                              | "dias";
+                            setUnidadTiempo(nuevaUnidad);
+                            // No convertir el valor, solo cambiar la unidad
+                          }}
+                          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="horas">Horas</option>
+                          <option value="dias">Días</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <input
@@ -513,222 +641,531 @@ export default function ConfiguracionTramites() {
                     <h3 className="text-lg font-semibold">
                       Documentos Requeridos
                     </h3>
-                    <Button size="sm">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const nuevoDoc: DocumentoRequerido = {
+                          id: `doc_${Date.now()}`,
+                          nombre: "",
+                          descripcion: "",
+                          obligatorio: true,
+                          formato: ["PDF", "JPG", "PNG"],
+                          validaciones: ["Vigencia", "Legibilidad"],
+                          ocrHabilitado: true,
+                          camposExtraidos: [],
+                        };
+                        setTramiteSeleccionado((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                documentosRequeridos: [
+                                  ...prev.documentosRequeridos,
+                                  nuevoDoc,
+                                ],
+                              }
+                            : null
+                        );
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
-                      Agregar Documento
+                      Agregar Documento Personalizado
                     </Button>
                   </div>
+
+                  {/* Documentos predefinidos */}
                   <div className="space-y-3">
-                    {tramiteSeleccionado.documentosRequeridos.map(
-                      (doc, index) => (
-                        <Card key={doc.id}>
-                          <CardContent className="p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label>Nombre del Documento</Label>
-                                <Input
-                                  value={doc.nombre}
-                                  onChange={(e) => {
-                                    const nuevosDocs = [
-                                      ...tramiteSeleccionado.documentosRequeridos,
-                                    ];
-                                    nuevosDocs[index].nombre = e.target.value;
+                    <h4 className="font-medium text-gray-700">
+                      Documentos Predefinidos
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        "Identificación oficial vigente (INE/Pasaporte)",
+                        "Comprobante de domicilio (no mayor a 3 meses)",
+                        "Escritura de propiedad o título de propiedad",
+                        "Avalúo comercial del inmueble",
+                        "Constancia de no adeudo de predial",
+                        "Constancia de no adeudo de agua",
+                        "Certificado de libertad de gravamen",
+                        "Contrato de compraventa privado (si aplica)",
+                        "Acta de nacimiento",
+                        "Acta de matrimonio (si aplica)",
+                        "Acta de defunción",
+                        "Testamento anterior (si existe)",
+                        "Certificado médico",
+                        "Testigos (2 personas)",
+                        "Poder notarial de representantes",
+                        "Constancia de reserva de nombre",
+                        "Capital social",
+                        "Póliza de seguro",
+                        "Referencias comerciales",
+                        "Garantías (si aplica)",
+                      ].map((docPredefinido) => {
+                        const yaIncluido =
+                          tramiteSeleccionado.documentosRequeridos.some(
+                            (doc) => doc.nombre === docPredefinido
+                          );
+
+                        return (
+                          <div
+                            key={docPredefinido}
+                            className={`flex items-center space-x-2 p-3 border rounded cursor-pointer transition-colors ${
+                              yaIncluido
+                                ? "bg-blue-50 border-blue-300 hover:bg-blue-100"
+                                : "hover:bg-gray-50"
+                            }`}
+                            onClick={() => {
+                              if (yaIncluido) {
+                                // Remover documento
+                                setTramiteSeleccionado((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        documentosRequeridos:
+                                          prev.documentosRequeridos.filter(
+                                            (doc) =>
+                                              doc.nombre !== docPredefinido
+                                          ),
+                                      }
+                                    : null
+                                );
+                              } else {
+                                // Agregar documento
+                                const nuevoDoc: DocumentoRequerido = {
+                                  id: `doc_${Date.now()}_${Math.random()
+                                    .toString(36)
+                                    .substr(2, 9)}`,
+                                  nombre: docPredefinido,
+                                  descripcion: `Documento requerido: ${docPredefinido}`,
+                                  obligatorio: true,
+                                  formato: ["PDF", "JPG", "PNG"],
+                                  validaciones: ["Vigencia", "Legibilidad"],
+                                  ocrHabilitado: true,
+                                  camposExtraidos: [],
+                                };
+                                setTramiteSeleccionado((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        documentosRequeridos: [
+                                          ...prev.documentosRequeridos,
+                                          nuevoDoc,
+                                        ],
+                                      }
+                                    : null
+                                );
+                              }
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={yaIncluido}
+                              onChange={() => {}} // El onChange se maneja en el onClick del div
+                              className="pointer-events-none" // Evita que el checkbox capture el click
+                            />
+                            <Label className="text-sm cursor-pointer">
+                              {docPredefinido}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Documentos personalizados */}
+                  {tramiteSeleccionado.documentosRequeridos.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-700">
+                        Documentos Configurados
+                      </h4>
+                      {tramiteSeleccionado.documentosRequeridos.map(
+                        (doc, index) => (
+                          <Card key={doc.id}>
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <h5 className="font-medium">
+                                  {doc.nombre ||
+                                    "Nuevo documento personalizado"}
+                                </h5>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
                                     setTramiteSeleccionado((prev) =>
                                       prev
                                         ? {
                                             ...prev,
-                                            documentosRequeridos: nuevosDocs,
+                                            documentosRequeridos:
+                                              prev.documentosRequeridos.filter(
+                                                (_, i) => i !== index
+                                              ),
                                           }
                                         : null
                                     );
                                   }}
-                                />
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
-                              <div>
-                                <Label>Descripción</Label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Nombre del Documento</Label>
+                                  <Input
+                                    value={doc.nombre || ""}
+                                    onChange={(e) => {
+                                      const nuevosDocs = [
+                                        ...tramiteSeleccionado.documentosRequeridos,
+                                      ];
+                                      nuevosDocs[index].nombre = e.target.value;
+                                      setTramiteSeleccionado((prev) =>
+                                        prev
+                                          ? {
+                                              ...prev,
+                                              documentosRequeridos: nuevosDocs,
+                                            }
+                                          : null
+                                      );
+                                    }}
+                                    placeholder="Nombre del documento"
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Descripción</Label>
+                                  <Input
+                                    value={doc.descripcion || ""}
+                                    onChange={(e) => {
+                                      const nuevosDocs = [
+                                        ...tramiteSeleccionado.documentosRequeridos,
+                                      ];
+                                      nuevosDocs[index].descripcion =
+                                        e.target.value;
+                                      setTramiteSeleccionado((prev) =>
+                                        prev
+                                          ? {
+                                              ...prev,
+                                              documentosRequeridos: nuevosDocs,
+                                            }
+                                          : null
+                                      );
+                                    }}
+                                    placeholder="Descripción del documento"
+                                  />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={doc.obligatorio}
+                                    onChange={(e) => {
+                                      const nuevosDocs = [
+                                        ...tramiteSeleccionado.documentosRequeridos,
+                                      ];
+                                      nuevosDocs[index].obligatorio =
+                                        e.target.checked;
+                                      setTramiteSeleccionado((prev) =>
+                                        prev
+                                          ? {
+                                              ...prev,
+                                              documentosRequeridos: nuevosDocs,
+                                            }
+                                          : null
+                                      );
+                                    }}
+                                  />
+                                  <Label>Documento obligatorio</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={doc.ocrHabilitado}
+                                    onChange={(e) => {
+                                      const nuevosDocs = [
+                                        ...tramiteSeleccionado.documentosRequeridos,
+                                      ];
+                                      nuevosDocs[index].ocrHabilitado =
+                                        e.target.checked;
+                                      setTramiteSeleccionado((prev) =>
+                                        prev
+                                          ? {
+                                              ...prev,
+                                              documentosRequeridos: nuevosDocs,
+                                            }
+                                          : null
+                                      );
+                                    }}
+                                  />
+                                  <Label>OCR habilitado</Label>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Tab Costos */}
+                <TabsContent value="costos" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium text-gray-700">
+                        Conceptos de Costo
+                      </h4>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const nuevoConcepto = {
+                            id: `concepto_${Date.now()}`,
+                            nombre: "",
+                            cantidad: 0,
+                          };
+                          setTramiteSeleccionado((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  costos: {
+                                    ...prev.costos,
+                                    conceptosPersonalizados: [
+                                      ...(prev.costos.conceptosPersonalizados ||
+                                        []),
+                                      nuevoConcepto,
+                                    ],
+                                  },
+                                }
+                              : null
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar Concepto
+                      </Button>
+                    </div>
+
+                    {/* Conceptos predefinidos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="costoBase">Costo Base</Label>
+                        <Input
+                          id="costoBase"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={tramiteSeleccionado.costos.costoBase || ""}
+                          onChange={(e) => {
+                            const nuevoCosto = Number(e.target.value) || 0;
+                            setTramiteSeleccionado((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    costos: {
+                                      ...prev.costos,
+                                      costoBase: nuevoCosto,
+                                      total: calcularTotalCostos({
+                                        ...prev.costos,
+                                        costoBase: nuevoCosto,
+                                      }),
+                                    },
+                                  }
+                                : null
+                            );
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="aranceles">Aranceles</Label>
+                        <Input
+                          id="aranceles"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={tramiteSeleccionado.costos.aranceles || ""}
+                          onChange={(e) => {
+                            const nuevoArancel = Number(e.target.value) || 0;
+                            setTramiteSeleccionado((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    costos: {
+                                      ...prev.costos,
+                                      aranceles: nuevoArancel,
+                                      total: calcularTotalCostos({
+                                        ...prev.costos,
+                                        aranceles: nuevoArancel,
+                                      }),
+                                    },
+                                  }
+                                : null
+                            );
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="notariales">Gastos Notariales</Label>
+                        <Input
+                          id="notariales"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={tramiteSeleccionado.costos.notariales || ""}
+                          onChange={(e) => {
+                            const nuevoNotarial = Number(e.target.value) || 0;
+                            setTramiteSeleccionado((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    costos: {
+                                      ...prev.costos,
+                                      notariales: nuevoNotarial,
+                                      total: calcularTotalCostos({
+                                        ...prev.costos,
+                                        notariales: nuevoNotarial,
+                                      }),
+                                    },
+                                  }
+                                : null
+                            );
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="gastos">Otros Gastos</Label>
+                        <Input
+                          id="gastos"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={tramiteSeleccionado.costos.gastos || ""}
+                          onChange={(e) => {
+                            const nuevoGasto = Number(e.target.value) || 0;
+                            setTramiteSeleccionado((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    costos: {
+                                      ...prev.costos,
+                                      gastos: nuevoGasto,
+                                      total: calcularTotalCostos({
+                                        ...prev.costos,
+                                        gastos: nuevoGasto,
+                                      }),
+                                    },
+                                  }
+                                : null
+                            );
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Conceptos personalizados */}
+                    {tramiteSeleccionado.costos.conceptosPersonalizados?.map(
+                      (concepto, index) => (
+                        <Card key={concepto.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="flex-1">
+                                <Label>Nombre del Concepto</Label>
                                 <Input
-                                  value={doc.descripcion}
+                                  value={concepto.nombre}
                                   onChange={(e) => {
-                                    const nuevosDocs = [
-                                      ...tramiteSeleccionado.documentosRequeridos,
+                                    const nuevosConceptos = [
+                                      ...(tramiteSeleccionado.costos
+                                        .conceptosPersonalizados || []),
                                     ];
-                                    nuevosDocs[index].descripcion =
+                                    nuevosConceptos[index].nombre =
                                       e.target.value;
                                     setTramiteSeleccionado((prev) =>
                                       prev
                                         ? {
                                             ...prev,
-                                            documentosRequeridos: nuevosDocs,
+                                            costos: {
+                                              ...prev.costos,
+                                              conceptosPersonalizados:
+                                                nuevosConceptos,
+                                              total: calcularTotalCostos({
+                                                ...prev.costos,
+                                                conceptosPersonalizados:
+                                                  nuevosConceptos,
+                                              }),
+                                            },
                                           }
                                         : null
                                     );
                                   }}
+                                  placeholder="Ej: Gastos de registro, Impuestos, etc."
                                 />
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  checked={doc.obligatorio}
+                              <div className="w-32">
+                                <Label>Cantidad</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  placeholder="0"
+                                  value={concepto.cantidad || ""}
                                   onChange={(e) => {
-                                    const nuevosDocs = [
-                                      ...tramiteSeleccionado.documentosRequeridos,
+                                    const nuevosConceptos = [
+                                      ...(tramiteSeleccionado.costos
+                                        .conceptosPersonalizados || []),
                                     ];
-                                    nuevosDocs[index].obligatorio =
-                                      e.target.checked;
+                                    nuevosConceptos[index].cantidad =
+                                      Number(e.target.value) || 0;
                                     setTramiteSeleccionado((prev) =>
                                       prev
                                         ? {
                                             ...prev,
-                                            documentosRequeridos: nuevosDocs,
+                                            costos: {
+                                              ...prev.costos,
+                                              conceptosPersonalizados:
+                                                nuevosConceptos,
+                                              total: calcularTotalCostos({
+                                                ...prev.costos,
+                                                conceptosPersonalizados:
+                                                  nuevosConceptos,
+                                              }),
+                                            },
                                           }
                                         : null
                                     );
                                   }}
                                 />
-                                <Label>Documento obligatorio</Label>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  checked={doc.ocrHabilitado}
-                                  onChange={(e) => {
-                                    const nuevosDocs = [
-                                      ...tramiteSeleccionado.documentosRequeridos,
-                                    ];
-                                    nuevosDocs[index].ocrHabilitado =
-                                      e.target.checked;
-                                    setTramiteSeleccionado((prev) =>
-                                      prev
-                                        ? {
-                                            ...prev,
-                                            documentosRequeridos: nuevosDocs,
-                                          }
-                                        : null
-                                    );
-                                  }}
-                                />
-                                <Label>OCR habilitado</Label>
-                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const nuevosConceptos = (
+                                    tramiteSeleccionado.costos
+                                      .conceptosPersonalizados || []
+                                  ).filter((_, i) => i !== index);
+                                  setTramiteSeleccionado((prev) =>
+                                    prev
+                                      ? {
+                                          ...prev,
+                                          costos: {
+                                            ...prev.costos,
+                                            conceptosPersonalizados:
+                                              nuevosConceptos,
+                                            total: calcularTotalCostos({
+                                              ...prev.costos,
+                                              conceptosPersonalizados:
+                                                nuevosConceptos,
+                                            }),
+                                          },
+                                        }
+                                      : null
+                                  );
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>
                       )
                     )}
                   </div>
-                </TabsContent>
 
-                {/* Tab Costos */}
-                <TabsContent value="costos" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="costoBase">Costo Base</Label>
-                      <Input
-                        id="costoBase"
-                        type="number"
-                        value={tramiteSeleccionado.costos.costoBase}
-                        onChange={(e) => {
-                          const nuevoCosto = Number(e.target.value);
-                          setTramiteSeleccionado((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  costos: {
-                                    ...prev.costos,
-                                    costoBase: nuevoCosto,
-                                    total:
-                                      nuevoCosto +
-                                      prev.costos.aranceles +
-                                      prev.costos.notariales +
-                                      prev.costos.gastos,
-                                  },
-                                }
-                              : null
-                          );
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="aranceles">Aranceles</Label>
-                      <Input
-                        id="aranceles"
-                        type="number"
-                        value={tramiteSeleccionado.costos.aranceles}
-                        onChange={(e) => {
-                          const nuevoArancel = Number(e.target.value);
-                          setTramiteSeleccionado((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  costos: {
-                                    ...prev.costos,
-                                    aranceles: nuevoArancel,
-                                    total:
-                                      prev.costos.costoBase +
-                                      nuevoArancel +
-                                      prev.costos.notariales +
-                                      prev.costos.gastos,
-                                  },
-                                }
-                              : null
-                          );
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="notariales">Gastos Notariales</Label>
-                      <Input
-                        id="notariales"
-                        type="number"
-                        value={tramiteSeleccionado.costos.notariales}
-                        onChange={(e) => {
-                          const nuevoNotarial = Number(e.target.value);
-                          setTramiteSeleccionado((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  costos: {
-                                    ...prev.costos,
-                                    notariales: nuevoNotarial,
-                                    total:
-                                      prev.costos.costoBase +
-                                      prev.costos.aranceles +
-                                      nuevoNotarial +
-                                      prev.costos.gastos,
-                                  },
-                                }
-                              : null
-                          );
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="gastos">Otros Gastos</Label>
-                      <Input
-                        id="gastos"
-                        type="number"
-                        value={tramiteSeleccionado.costos.gastos}
-                        onChange={(e) => {
-                          const nuevoGasto = Number(e.target.value);
-                          setTramiteSeleccionado((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  costos: {
-                                    ...prev.costos,
-                                    gastos: nuevoGasto,
-                                    total:
-                                      prev.costos.costoBase +
-                                      prev.costos.aranceles +
-                                      prev.costos.notariales +
-                                      nuevoGasto,
-                                  },
-                                }
-                              : null
-                          );
-                        }}
-                      />
-                    </div>
-                  </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold">Total:</span>
@@ -753,32 +1190,117 @@ export default function ConfiguracionTramites() {
                           prev
                             ? {
                                 ...prev,
-                                requisitosEspeciales: e.target.value
-                                  .split("\n")
-                                  .filter((r) => r.trim()),
+                                requisitosEspeciales:
+                                  e.target.value.split("\n"),
                               }
                             : null
                         )
                       }
-                      placeholder="Un requisito por línea"
-                      rows={6}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const textarea = e.target as HTMLTextAreaElement;
+                          const start = textarea.selectionStart;
+                          const end = textarea.selectionEnd;
+                          const value = textarea.value;
+                          const newValue =
+                            value.substring(0, start) +
+                            "\n" +
+                            value.substring(end);
+
+                          setTramiteSeleccionado((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  requisitosEspeciales: newValue.split("\n"),
+                                }
+                              : null
+                          );
+
+                          // Restaurar el cursor después del salto de línea
+                          setTimeout(() => {
+                            textarea.selectionStart = textarea.selectionEnd =
+                              start + 1;
+                          }, 0);
+                        }
+                      }}
+                      placeholder="Escribe cada requisito en una línea separada. Presiona Enter para crear una nueva línea."
+                      rows={8}
+                      className="resize-none"
                     />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Presiona Enter para crear una nueva línea. Cada línea será
+                      un requisito separado.
+                    </p>
                   </div>
+
+                  {/* Vista previa de requisitos */}
+                  {tramiteSeleccionado.requisitosEspeciales.filter(
+                    (r) => r.trim().length > 0
+                  ).length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Vista Previa de Requisitos:</Label>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <ul className="space-y-1">
+                          {tramiteSeleccionado.requisitosEspeciales
+                            .filter((r) => r.trim().length > 0)
+                            .map((requisito, index) => (
+                              <li
+                                key={index}
+                                className="flex items-start space-x-2"
+                              >
+                                <span className="text-blue-600 font-medium">
+                                  {index + 1}.
+                                </span>
+                                <span className="text-sm">{requisito}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             )}
 
             <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="outline" onClick={() => setMostrarDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setMostrarDialog(false)}
+                disabled={guardando}
+              >
                 Cancelar
               </Button>
-              <Button onClick={handleGuardarTramite}>
-                <Save className="h-4 w-4 mr-2" />
-                Guardar Trámite
+              <Button
+                onClick={handleGuardarTramite}
+                disabled={guardando}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {guardando ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Guardar Trámite
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Notificación de confirmación */}
+        {mostrarConfirmacion && (
+          <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4">
+            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">{mensajeConfirmacion}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
