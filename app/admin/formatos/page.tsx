@@ -23,6 +23,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -49,7 +60,27 @@ import {
   Calendar,
   MapPin,
   DollarSign,
+  Heart,
+  Archive,
+  Power,
+  PowerOff,
 } from "lucide-react";
+import { 
+  CATEGORIAS_FORMATOS, 
+  TIPOS_FORMATOS,
+  getCategoriaById, 
+  getCategoriaByNombre,
+  getTipoByNombre,
+  getCategoriasCompatiblesConTipoNombre,
+  getTiposCompatiblesConCategoriaNombre
+} from "@/lib/categorias";
+import { 
+  VARIABLES_PREDEFINIDAS,
+  getVariablesPorTipoPlantilla,
+  getCategoriasVariables,
+  getVariableById
+} from "@/lib/variables-predefinidas";
+import SimpleVariableEditor from "@/components/simple-variable-editor";
 
 // Tipos de datos
 interface PlantillaEscritura {
@@ -59,7 +90,7 @@ interface PlantillaEscritura {
   descripcion: string;
   contenido: string;
   variables: VariablePlantilla[];
-  activa: boolean;
+  estado: "activo" | "inactivo" | "archivado";
   fechaCreacion: string;
   fechaActualizacion: string;
   version: string;
@@ -172,7 +203,7 @@ Notario Público No. {{notario.numero}}
         posicion: { inicio: 120, fin: 140 },
       },
     ],
-    activa: true,
+    estado: "activo",
     fechaCreacion: "2024-01-01",
     fechaActualizacion: "2024-01-15",
     version: "1.2",
@@ -248,7 +279,7 @@ Notario Público No. {{notario.numero}}
         posicion: { inicio: 300, fin: 320 },
       },
     ],
-    activa: true,
+    estado: "activo",
     fechaCreacion: "2024-01-01",
     fechaActualizacion: "2024-01-10",
     version: "1.1",
@@ -289,6 +320,17 @@ export default function GestionFormatos() {
   const [modoEdicion, setModoEdicion] = useState(false);
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todos");
   const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState<typeof CATEGORIAS_FORMATOS>(CATEGORIAS_FORMATOS);
+  const [tiposDisponibles, setTiposDisponibles] = useState<typeof TIPOS_FORMATOS>(TIPOS_FORMATOS);
+  const [plantillaParaBorrar, setPlantillaParaBorrar] = useState<string | null>(null);
+  const [plantillaParaArchivar, setPlantillaParaArchivar] = useState<string | null>(null);
+  const [categoriasDisponiblesFormulario, setCategoriasDisponiblesFormulario] = useState<typeof CATEGORIAS_FORMATOS>(CATEGORIAS_FORMATOS);
+  const [tiposDisponiblesFormulario, setTiposDisponiblesFormulario] = useState<typeof TIPOS_FORMATOS>(TIPOS_FORMATOS);
+  const [variablesDisponibles, setVariablesDisponibles] = useState<typeof VARIABLES_PREDEFINIDAS>(VARIABLES_PREDEFINIDAS);
+  const [categoriaVariableSeleccionada, setCategoriaVariableSeleccionada] = useState<string>("todas");
+  
+  // Constante para el valor de limpiar selección
+  const CLEAR_SELECTION_VALUE = "__clear__";
 
   const handleCrearPlantilla = () => {
     const nuevaPlantilla: PlantillaEscritura = {
@@ -298,7 +340,7 @@ export default function GestionFormatos() {
       descripcion: "",
       contenido: "",
       variables: [],
-      activa: true,
+      estado: "activo",
       fechaCreacion: new Date().toISOString().split("T")[0],
       fechaActualizacion: new Date().toISOString().split("T")[0],
       version: "1.0",
@@ -308,12 +350,31 @@ export default function GestionFormatos() {
     setPlantillaSeleccionada(nuevaPlantilla);
     setModoEdicion(false);
     setMostrarDialog(true);
+    // Resetear filtros del formulario
+    setCategoriasDisponiblesFormulario(CATEGORIAS_FORMATOS);
+    setTiposDisponiblesFormulario(TIPOS_FORMATOS);
+    setVariablesDisponibles(VARIABLES_PREDEFINIDAS);
+    setCategoriaVariableSeleccionada("todas");
   };
 
   const handleEditarPlantilla = (plantilla: PlantillaEscritura) => {
     setPlantillaSeleccionada(plantilla);
     setModoEdicion(true);
     setMostrarDialog(true);
+    // Configurar filtros basados en la plantilla existente
+    if (plantilla.categoria) {
+      const tiposCompatibles = getTiposCompatiblesConCategoriaNombre(plantilla.categoria);
+      setTiposDisponiblesFormulario(tiposCompatibles);
+    } else {
+      setTiposDisponiblesFormulario(TIPOS_FORMATOS);
+    }
+    
+    if (plantilla.tipo) {
+      const categoriasCompatibles = getCategoriasCompatiblesConTipoNombre(plantilla.tipo);
+      setCategoriasDisponiblesFormulario(categoriasCompatibles);
+    } else {
+      setCategoriasDisponiblesFormulario(CATEGORIAS_FORMATOS);
+    }
   };
 
   const handleGuardarPlantilla = () => {
@@ -335,12 +396,126 @@ export default function GestionFormatos() {
 
   const handleEliminarPlantilla = (id: string) => {
     setPlantillas((prev) => prev.filter((p) => p.id !== id));
+    setPlantillaParaBorrar(null);
+  };
+
+  const handleArchivarPlantilla = (id: string) => {
+    setPlantillas((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, estado: "archivado" } : p))
+    );
+    setPlantillaParaArchivar(null);
   };
 
   const handleToggleActiva = (id: string) => {
     setPlantillas((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, activa: !p.activa } : p))
+      prev.map((p) => 
+        p.id === id 
+          ? { ...p, estado: p.estado === "activo" ? "inactivo" : "activo" } 
+          : p
+      )
     );
+  };
+
+  // Función para manejar cambio de categoría
+  const handleCategoriaChange = (categoria: string) => {
+    setFiltroCategoria(categoria);
+    
+    if (categoria === "todos") {
+      // Si se selecciona "todos", mostrar todos los tipos
+      setTiposDisponibles(TIPOS_FORMATOS);
+      setFiltroTipo("todos");
+    } else {
+      // Filtrar tipos compatibles con la categoría seleccionada
+      const tiposCompatibles = getTiposCompatiblesConCategoriaNombre(categoria);
+      setTiposDisponibles(tiposCompatibles);
+      
+      // Si el tipo actual no es compatible, resetearlo
+      if (filtroTipo !== "todos") {
+        const tipoActual = getTipoByNombre(filtroTipo);
+        if (tipoActual && !tiposCompatibles.some(t => t.id === tipoActual.id)) {
+          setFiltroTipo("todos");
+        }
+      }
+    }
+  };
+
+  // Función para manejar cambio de tipo
+  const handleTipoChange = (tipo: string) => {
+    setFiltroTipo(tipo);
+    
+    if (tipo === "todos") {
+      // Si se selecciona "todos", mostrar todas las categorías
+      setCategoriasDisponibles(CATEGORIAS_FORMATOS);
+      setFiltroCategoria("todos");
+    } else {
+      // Filtrar categorías compatibles con el tipo seleccionado
+      const categoriasCompatibles = getCategoriasCompatiblesConTipoNombre(tipo);
+      setCategoriasDisponibles(categoriasCompatibles);
+      
+      // Si la categoría actual no es compatible, resetearla
+      if (filtroCategoria !== "todos") {
+        const categoriaActual = getCategoriaByNombre(filtroCategoria);
+        if (categoriaActual && !categoriasCompatibles.some(c => c.id === categoriaActual.id)) {
+          setFiltroCategoria("todos");
+        }
+      }
+    }
+  };
+
+  // Función para manejar cambio de categoría en el formulario
+  const handleCategoriaChangeFormulario = (categoria: string) => {
+    if (plantillaSeleccionada) {
+      const newCategoria = categoria === CLEAR_SELECTION_VALUE ? "" : categoria;
+      setPlantillaSeleccionada(prev => prev ? { ...prev, categoria: newCategoria } : null);
+      
+      if (newCategoria === "") {
+        // Si se deselecciona categoría, mostrar todos los tipos y resetear tipo
+        setTiposDisponiblesFormulario(TIPOS_FORMATOS);
+        setPlantillaSeleccionada(prev => prev ? { ...prev, tipo: "" } : null);
+      } else {
+        // Filtrar tipos compatibles con la categoría seleccionada
+        const tiposCompatibles = getTiposCompatiblesConCategoriaNombre(newCategoria);
+        setTiposDisponiblesFormulario(tiposCompatibles);
+        
+        // Si el tipo actual no es compatible, resetearlo
+        if (plantillaSeleccionada.tipo !== "") {
+          const tipoActual = getTipoByNombre(plantillaSeleccionada.tipo);
+          if (tipoActual && !tiposCompatibles.some(t => t.id === tipoActual.id)) {
+            setPlantillaSeleccionada(prev => prev ? { ...prev, tipo: "" } : null);
+          }
+        }
+      }
+    }
+  };
+
+  // Función para manejar cambio de tipo en el formulario
+  const handleTipoChangeFormulario = (tipo: string) => {
+    if (plantillaSeleccionada) {
+      const newTipo = tipo === CLEAR_SELECTION_VALUE ? "" : tipo;
+      setPlantillaSeleccionada(prev => prev ? { ...prev, tipo: newTipo } : null);
+      
+      if (newTipo === "") {
+        // Si se deselecciona tipo, mostrar todas las categorías y resetear categoría
+        setCategoriasDisponiblesFormulario(CATEGORIAS_FORMATOS);
+        setPlantillaSeleccionada(prev => prev ? { ...prev, categoria: "" } : null);
+        setVariablesDisponibles(VARIABLES_PREDEFINIDAS);
+      } else {
+        // Filtrar categorías compatibles con el tipo seleccionado
+        const categoriasCompatibles = getCategoriasCompatiblesConTipoNombre(newTipo);
+        setCategoriasDisponiblesFormulario(categoriasCompatibles);
+        
+        // Actualizar variables disponibles según el tipo
+        actualizarVariablesSegunTipo(newTipo);
+        
+        // Si la categoría actual no es compatible, resetearla
+        if (plantillaSeleccionada.categoria !== "") {
+          const categoriaActual = getCategoriaByNombre(plantillaSeleccionada.categoria);
+          if (categoriaActual && !categoriasCompatibles.some(c => c.id === categoriaActual.id)) {
+            setPlantillaSeleccionada(prev => prev ? { ...prev, categoria: "" } : null);
+          }
+        }
+      }
+    }
   };
 
   const handleGenerarEscritura = (plantillaId: string) => {
@@ -363,6 +538,75 @@ export default function GestionFormatos() {
     }
   };
 
+  // Función para agregar variable a la plantilla
+  const handleAgregarVariable = (variableId: string) => {
+    if (plantillaSeleccionada) {
+      const variablePredefinida = getVariableById(variableId);
+      if (variablePredefinida) {
+        const nuevaVariable: VariablePlantilla = {
+          id: `var_${Date.now()}`,
+          nombre: variablePredefinida.nombre,
+          tipo: variablePredefinida.tipo,
+          descripcion: variablePredefinida.descripcion,
+          obligatoria: variablePredefinida.obligatoria,
+          valorPorDefecto: variablePredefinida.valorPorDefecto,
+          validaciones: variablePredefinida.validaciones,
+          posicion: { inicio: 0, fin: 0 } // Se calculará cuando se inserte en el contenido
+        };
+
+        setPlantillaSeleccionada(prev => 
+          prev ? { 
+            ...prev, 
+            variables: [...prev.variables, nuevaVariable] 
+          } : null
+        );
+
+        // Insertar la variable en el contenido
+        const variableText = `{{${variablePredefinida.nombre}}}`;
+        setPlantillaSeleccionada(prev => 
+          prev ? { 
+            ...prev, 
+            contenido: prev.contenido + (prev.contenido ? '\n' : '') + variableText 
+          } : null
+        );
+      }
+    }
+  };
+
+  // Función para eliminar variable de la plantilla
+  const handleEliminarVariable = (variableId: string) => {
+    if (plantillaSeleccionada) {
+      setPlantillaSeleccionada(prev => 
+        prev ? { 
+          ...prev, 
+          variables: prev.variables.filter(v => v.id !== variableId) 
+        } : null
+      );
+    }
+  };
+
+  // Función para filtrar variables por categoría
+  const handleCategoriaVariableChange = (categoria: string) => {
+    setCategoriaVariableSeleccionada(categoria);
+    
+    if (categoria === "todas") {
+      setVariablesDisponibles(VARIABLES_PREDEFINIDAS);
+    } else {
+      const variablesFiltradas = VARIABLES_PREDEFINIDAS.filter(v => v.categoria === categoria);
+      setVariablesDisponibles(variablesFiltradas);
+    }
+  };
+
+  // Función para actualizar variables disponibles según el tipo de plantilla
+  const actualizarVariablesSegunTipo = (tipo: string) => {
+    if (tipo) {
+      const variablesFiltradas = getVariablesPorTipoPlantilla(tipo);
+      setVariablesDisponibles(variablesFiltradas);
+    } else {
+      setVariablesDisponibles(VARIABLES_PREDEFINIDAS);
+    }
+  };
+
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
       case "testamento":
@@ -378,6 +622,12 @@ export default function GestionFormatos() {
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
+      case "activo":
+        return "bg-green-100 text-green-800";
+      case "inactivo":
+        return "bg-yellow-100 text-yellow-800";
+      case "archivado":
+        return "bg-gray-100 text-gray-800";
       case "aprobado":
         return "bg-green-100 text-green-800";
       case "revisado":
@@ -439,7 +689,7 @@ export default function GestionFormatos() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Select
                     value={filtroCategoria}
-                    onValueChange={setFiltroCategoria}
+                    onValueChange={handleCategoriaChange}
                   >
                     <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Categoría" />
@@ -448,22 +698,31 @@ export default function GestionFormatos() {
                       <SelectItem value="todos">
                         Todas las categorías
                       </SelectItem>
-                      <SelectItem value="Sucesiones">Sucesiones</SelectItem>
-                      <SelectItem value="Inmobiliaria">Inmobiliaria</SelectItem>
-                      <SelectItem value="Mercantil">Mercantil</SelectItem>
-                      <SelectItem value="Civil">Civil</SelectItem>
+                      {categoriasDisponibles.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.nombre}>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 rounded text-xs ${categoria.color}`}>
+                              {categoria.nombre}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                  <Select value={filtroTipo} onValueChange={handleTipoChange}>
                     <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="todos">Todos los tipos</SelectItem>
-                      <SelectItem value="testamento">Testamento</SelectItem>
-                      <SelectItem value="compraventa">Compraventa</SelectItem>
-                      <SelectItem value="poder">Poder</SelectItem>
-                      <SelectItem value="fideicomiso">Fideicomiso</SelectItem>
+                      {tiposDisponibles.map((tipo) => (
+                        <SelectItem key={tipo.id} value={tipo.nombre}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{tipo.nombre}</span>
+                            <span className="text-xs text-gray-500">{tipo.descripcion}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -490,14 +749,9 @@ export default function GestionFormatos() {
                           </CardDescription>
                         </div>
                       </div>
-                      <Badge
-                        className={
-                          plantilla.activa
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }
-                      >
-                        {plantilla.activa ? "Activa" : "Inactiva"}
+                      <Badge className={getEstadoColor(plantilla.estado)}>
+                        {plantilla.estado === "activo" ? "Activo" : 
+                         plantilla.estado === "inactivo" ? "Inactivo" : "Archivado"}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -505,7 +759,20 @@ export default function GestionFormatos() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-500">Categoría:</span>
+                        <div className="mt-1">
+                          {(() => {
+                            const categoria = getCategoriaById(
+                              CATEGORIAS_FORMATOS.find(c => c.nombre === plantilla.categoria)?.id || ''
+                            );
+                            return categoria ? (
+                              <span className={`px-2 py-1 rounded text-xs ${categoria.color}`}>
+                                {plantilla.categoria}
+                              </span>
+                            ) : (
                         <p className="font-medium">{plantilla.categoria}</p>
+                            );
+                          })()}
+                        </div>
                       </div>
                       <div>
                         <span className="text-gray-500">Versión:</span>
@@ -553,26 +820,54 @@ export default function GestionFormatos() {
                         <Edit className="h-4 w-4 mr-2" />
                         Editar
                       </Button>
+                      
+                      {/* Botón de Activar/Desactivar */}
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleToggleActiva(plantilla.id)}
                         className={
-                          plantilla.activa ? "text-red-600" : "text-green-600"
+                          plantilla.estado === "activo" ? "text-yellow-600" : "text-green-600"
                         }
+                        title={plantilla.estado === "activo" ? "Desactivar" : "Activar"}
                       >
-                        {plantilla.activa ? (
-                          <Trash2 className="h-4 w-4" />
+                        {plantilla.estado === "activo" ? (
+                          <PowerOff className="h-4 w-4" />
                         ) : (
-                          <FileText className="h-4 w-4" />
+                          <Power className="h-4 w-4" />
                         )}
                       </Button>
+
+                      {/* Botón de Archivar */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPlantillaParaArchivar(plantilla.id)}
+                        className="text-blue-600"
+                        title="Archivar"
+                      >
+                        <Archive className="h-4 w-4" />
+                      </Button>
+
+                      {/* Botón de Generar Escritura */}
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleGenerarEscritura(plantilla.id)}
+                        title="Generar Escritura"
                       >
                         <Wand2 className="h-4 w-4" />
+                      </Button>
+
+                      {/* Botón de Borrar */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPlantillaParaBorrar(plantilla.id)}
+                        className="text-red-600"
+                        title="Borrar permanentemente"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
@@ -819,7 +1114,7 @@ export default function GestionFormatos() {
 
                 {/* Tab Básico */}
                 <TabsContent value="basico" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Nombre de la plantilla - fila completa */}
                     <div>
                       <Label htmlFor="nombre">Nombre de la Plantilla</Label>
                       <Input
@@ -830,45 +1125,68 @@ export default function GestionFormatos() {
                             prev ? { ...prev, nombre: e.target.value } : null
                           )
                         }
-                      />
+                      placeholder="Ingresa el nombre de la plantilla"
+                    />
+                  </div>
+
+                  {/* Categoría y Tipo - misma fila */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="categoria">Categoría</Label>
+                      <Select
+                        value={plantillaSeleccionada.categoria}
+                        onValueChange={handleCategoriaChangeFormulario}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={CLEAR_SELECTION_VALUE}>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-gray-500 italic">Limpiar selección</span>
+                            </div>
+                          </SelectItem>
+                          {categoriasDisponiblesFormulario.map((categoria) => (
+                            <SelectItem key={categoria.id} value={categoria.nombre}>
+                              <div className="flex items-center space-x-2">
+                                <span className={`px-2 py-1 rounded text-xs ${categoria.color}`}>
+                                  {categoria.nombre}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="tipo">Tipo</Label>
                       <Select
                         value={plantillaSeleccionada.tipo}
-                        onValueChange={(value) =>
-                          setPlantillaSeleccionada((prev) =>
-                            prev ? { ...prev, tipo: value } : null
-                          )
-                        }
+                        onValueChange={handleTipoChangeFormulario}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="testamento">Testamento</SelectItem>
-                          <SelectItem value="compraventa">
-                            Compraventa
+                          <SelectItem value={CLEAR_SELECTION_VALUE}>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-gray-500 italic">Limpiar selección</span>
+                            </div>
                           </SelectItem>
-                          <SelectItem value="poder">Poder</SelectItem>
-                          <SelectItem value="fideicomiso">
-                            Fideicomiso
+                          {tiposDisponiblesFormulario.map((tipo) => (
+                            <SelectItem key={tipo.id} value={tipo.nombre}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{tipo.nombre}</span>
+                                <span className="text-xs text-gray-500">{tipo.descripcion}</span>
+                              </div>
                           </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label htmlFor="categoria">Categoría</Label>
-                      <Input
-                        id="categoria"
-                        value={plantillaSeleccionada.categoria}
-                        onChange={(e) =>
-                          setPlantillaSeleccionada((prev) =>
-                            prev ? { ...prev, categoria: e.target.value } : null
-                          )
-                        }
-                      />
                     </div>
+
+                  {/* Versión - fila separada */}
                     <div>
                       <Label htmlFor="version">Versión</Label>
                       <Input
@@ -879,8 +1197,8 @@ export default function GestionFormatos() {
                             prev ? { ...prev, version: e.target.value } : null
                           )
                         }
+                      placeholder="Ej: 1.0"
                       />
-                    </div>
                   </div>
                   <div>
                     <Label htmlFor="descripcion">Descripción</Label>
@@ -922,109 +1240,49 @@ export default function GestionFormatos() {
                     <h3 className="text-lg font-semibold">
                       Variables de la Plantilla
                     </h3>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar Variable
-                    </Button>
+                    <div className="text-sm text-gray-500">
+                      {plantillaSeleccionada.variables.length} variable(s) agregada(s)
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {plantillaSeleccionada.variables.map((variable, index) => (
-                      <Card key={variable.id}>
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <Label>Nombre de la Variable</Label>
-                              <Input
-                                value={variable.nombre}
-                                onChange={(e) => {
-                                  const nuevasVariables = [
-                                    ...plantillaSeleccionada.variables,
-                                  ];
-                                  nuevasVariables[index].nombre =
-                                    e.target.value;
-                                  setPlantillaSeleccionada((prev) =>
-                                    prev
-                                      ? { ...prev, variables: nuevasVariables }
-                                      : null
-                                  );
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <Label>Tipo</Label>
-                              <Select
-                                value={variable.tipo}
-                                onValueChange={(value) => {
-                                  const nuevasVariables = [
-                                    ...plantillaSeleccionada.variables,
-                                  ];
-                                  nuevasVariables[index].tipo = value as any;
-                                  setPlantillaSeleccionada((prev) =>
-                                    prev
-                                      ? { ...prev, variables: nuevasVariables }
-                                      : null
-                                  );
-                                }}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="texto">Texto</SelectItem>
-                                  <SelectItem value="fecha">Fecha</SelectItem>
-                                  <SelectItem value="numero">Número</SelectItem>
-                                  <SelectItem value="moneda">Moneda</SelectItem>
-                                  <SelectItem value="direccion">
-                                    Dirección
-                                  </SelectItem>
-                                  <SelectItem value="persona">
-                                    Persona
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="flex items-end">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const nuevasVariables =
-                                    plantillaSeleccionada.variables.filter(
-                                      (_, i) => i !== index
-                                    );
-                                  setPlantillaSeleccionada((prev) =>
-                                    prev
-                                      ? { ...prev, variables: nuevasVariables }
-                                      : null
-                                  );
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="mt-2">
-                            <Label>Descripción</Label>
-                            <Input
-                              value={variable.descripcion}
-                              onChange={(e) => {
-                                const nuevasVariables = [
-                                  ...plantillaSeleccionada.variables,
-                                ];
-                                nuevasVariables[index].descripcion =
-                                  e.target.value;
-                                setPlantillaSeleccionada((prev) =>
-                                  prev
-                                    ? { ...prev, variables: nuevasVariables }
-                                    : null
-                                );
-                              }}
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+
+                  {/* Filtro de categorías de variables */}
+                  <div>
+                    <Label htmlFor="categoria-variable">Filtrar por categoría</Label>
+                    <Select
+                      value={categoriaVariableSeleccionada}
+                      onValueChange={handleCategoriaVariableChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todas">Todas las categorías</SelectItem>
+                        {getCategoriasVariables().map((categoria) => (
+                          <SelectItem key={categoria} value={categoria}>
+                            {categoria.charAt(0).toUpperCase() + categoria.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  {/* Editor simple con botón de agregar variables */}
+                  <SimpleVariableEditor
+                    variables={plantillaSeleccionada.variables}
+                    onVariablesChange={(nuevasVariables) => 
+                      setPlantillaSeleccionada(prev => 
+                        prev ? { ...prev, variables: nuevasVariables } : null
+                      )
+                    }
+                    contenido={plantillaSeleccionada.contenido}
+                    onContenidoChange={(nuevoContenido) => 
+                      setPlantillaSeleccionada(prev => 
+                        prev ? { ...prev, contenido: nuevoContenido } : null
+                      )
+                    }
+                    variablesDisponibles={variablesDisponibles}
+                    onAgregarVariable={handleAgregarVariable}
+                  />
                 </TabsContent>
               </Tabs>
             )}
@@ -1040,6 +1298,50 @@ export default function GestionFormatos() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Diálogo de confirmación para borrar */}
+        <AlertDialog open={plantillaParaBorrar !== null} onOpenChange={() => setPlantillaParaBorrar(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Se eliminará permanentemente la plantilla "{plantillas.find(p => p.id === plantillaParaBorrar)?.nombre}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => plantillaParaBorrar && handleEliminarPlantilla(plantillaParaBorrar)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Borrar permanentemente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Diálogo de confirmación para archivar */}
+        <AlertDialog open={plantillaParaArchivar !== null} onOpenChange={() => setPlantillaParaArchivar(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Archivar plantilla?</AlertDialogTitle>
+              <AlertDialogDescription>
+                La plantilla "{plantillas.find(p => p.id === plantillaParaArchivar)?.nombre}" será archivada. Podrás restaurarla más tarde si es necesario.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => plantillaParaArchivar && handleArchivarPlantilla(plantillaParaArchivar)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                Archivar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
