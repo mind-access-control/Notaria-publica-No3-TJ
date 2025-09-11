@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getSolicitudByNumber, Solicitud } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/auth-context";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { StatusTracker } from "@/components/status-tracker";
@@ -11,19 +12,39 @@ import { SolicitudHistory } from "@/components/solicitud-history";
 import { SolicitudHeader } from "@/components/solicitud-header";
 import { SolicitudInfo } from "@/components/solicitud-info";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Clock, FileText } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, FileText, Shield, LogIn } from "lucide-react";
 
 export default function SolicitudStatusPage() {
   const params = useParams();
+  const router = useRouter();
   const numeroSolicitud = params.numeroSolicitud as string;
+  const { user, isAuthenticated, isLoading: authLoading, canAccessSolicitud } = useAuth();
   
   const [solicitud, setSolicitud] = useState<Solicitud | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const fetchSolicitud = async () => {
+      // Esperar a que termine la autenticación
+      if (authLoading) return;
+      
+      // Si no está autenticado, redirigir al login
+      if (!isAuthenticated) {
+        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+      
+      // Verificar si el usuario puede acceder a esta solicitud
+      if (!canAccessSolicitud(numeroSolicitud)) {
+        setAccessDenied(true);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
         const data = await getSolicitudByNumber(numeroSolicitud);
@@ -44,7 +65,7 @@ export default function SolicitudStatusPage() {
     if (numeroSolicitud) {
       fetchSolicitud();
     }
-  }, [numeroSolicitud]);
+  }, [numeroSolicitud, isAuthenticated, authLoading, canAccessSolicitud, router]);
 
   const handleStatusUpdate = (nuevoEstatus: string) => {
     if (solicitud) {
@@ -76,7 +97,7 @@ export default function SolicitudStatusPage() {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -84,7 +105,66 @@ export default function SolicitudStatusPage() {
           <div className="max-w-6xl mx-auto px-4 py-12">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando información de la solicitud...</p>
+              <p className="text-gray-600">
+                {authLoading ? "Verificando credenciales..." : "Cargando información de la solicitud..."}
+              </p>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-20">
+          <div className="max-w-2xl mx-auto px-4 py-12">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Shield className="h-10 w-10 text-red-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Acceso Denegado
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                No tienes permisos para acceder a esta solicitud
+              </p>
+              
+              <Card className="max-w-md mx-auto">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Solicitud: <strong>{numeroSolicitud}</strong>
+                      </p>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Usuario actual: <strong>{user?.nombre}</strong> ({user?.role})
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Button 
+                        onClick={() => router.push('/login')}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Cambiar de Usuario
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => router.push('/')}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Ir al Inicio
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

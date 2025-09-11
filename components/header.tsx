@@ -1,18 +1,35 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Shield } from "lucide-react";
+import { Shield, User, LogOut, LogIn } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MobileNav } from "@/components/mobile-nav";
+import { useAuth } from "@/contexts/auth-context";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true;
     if (path !== "/" && pathname.startsWith(path)) return true;
     return false;
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    logout();
+    setIsLoggingOut(false);
   };
 
   return (
@@ -85,6 +102,51 @@ export function Header() {
                 Agendar Cita
               </Button>
             </Link>
+            
+            {/* Botones de autenticación */}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {user?.nombre.split(' ')[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user?.nombre}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/mi-cuenta" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Mi Cuenta
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-2 text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/login">
+                  <Button variant="outline" size="sm">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+              </div>
+            )}
+            
             <Link
               href="/admin/login"
               className="text-xs text-gray-500 hover:text-gray-700 transition-colors"

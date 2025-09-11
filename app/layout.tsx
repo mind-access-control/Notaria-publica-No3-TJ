@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Suspense } from "react";
 import { AIChatbot } from "@/components/ai-chatbot";
+import { AuthProvider } from "@/contexts/auth-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,9 +34,11 @@ export default function RootLayout({
       <body
         className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <Suspense fallback={null}>{children}</Suspense>
-        <AIChatbot />
-        <Analytics />
+        <AuthProvider>
+          <Suspense fallback={null}>{children}</Suspense>
+          <AIChatbot />
+          <Analytics />
+        </AuthProvider>
       </body>
     </html>
   );
