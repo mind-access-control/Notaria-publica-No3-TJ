@@ -30,11 +30,13 @@ export interface Solicitud {
   fechaCreacion: string;
   fechaUltimaActualizacion: string;
   cliente: {
+    id: string;
     nombre: string;
     email: string;
     telefono: string;
   };
   notario: {
+    id: string;
     nombre: string;
     email: string;
     telefono: string;
@@ -97,11 +99,13 @@ export const mockSolicitud: Solicitud = {
   fechaCreacion: '2025-01-10',
   fechaUltimaActualizacion: '2025-01-15',
   cliente: {
+    id: 'user-1',
     nombre: 'Juan Carlos Pérez García',
     email: 'juan.perez@email.com',
     telefono: '+52 664 123 4567'
   },
   notario: {
+    id: 'notario-1',
     nombre: 'Dra. María Elena Rodríguez',
     email: 'maria.rodriguez@notaria3tijuana.com',
     telefono: '+52 664 987 6543'
@@ -158,4 +162,100 @@ export const uploadDocumento = async (numeroSolicitud: string, documentoId: numb
   }
   
   return false;
+};
+
+// Función para crear una nueva solicitud
+export const createSolicitud = async (userId: string, tipoTramite: string): Promise<Solicitud | null> => {
+  // Simular delay de API
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Generar número de solicitud único
+  const numeroSolicitud = `NT3-2025-${String(Date.now()).slice(-5)}`;
+  
+  // Obtener información del usuario (en un sistema real esto vendría de la base de datos)
+  const user = mockUsers.find(u => u.id === userId);
+  if (!user) return null;
+  
+  // Obtener información del notario asignado
+  const notario = mockUsers.find(u => u.role === 'notario');
+  if (!notario) return null;
+  
+  // Configuración de documentos según el tipo de trámite
+  const getDocumentosRequeridos = (tipo: string): DocumentoSolicitud[] => {
+    const documentosBase = [
+      { id: 1, nombre: 'Identificación Oficial Vigente', descripcion: 'INE, Pasaporte o Cédula Profesional', subido: false },
+      { id: 2, nombre: 'Comprobante de Domicilio', descripcion: 'Recibo de luz, agua o teléfono no mayor a 3 meses', subido: false }
+    ];
+    
+    switch (tipo) {
+      case 'testamento':
+        return [
+          ...documentosBase,
+          { id: 3, nombre: 'Acta de Nacimiento', descripcion: 'Copia certificada del acta de nacimiento', subido: false },
+          { id: 4, nombre: 'Comprobante de Estado Civil', descripcion: 'Acta de matrimonio, divorcio o soltería según corresponda', subido: false },
+          { id: 5, nombre: 'Lista de Bienes y Propiedades', descripcion: 'Relación de los bienes a incluir en el testamento', subido: false }
+        ];
+      case 'compraventa':
+        return [
+          ...documentosBase,
+          { id: 3, nombre: 'Escritura de Propiedad', descripcion: 'Documento que acredite la propiedad del inmueble', subido: false },
+          { id: 4, nombre: 'Avalúo del Inmueble', descripcion: 'Avalúo vigente del inmueble a vender', subido: false },
+          { id: 5, nombre: 'Comprobante de Ingresos', descripcion: 'Comprobantes de ingresos de los últimos 3 meses', subido: false }
+        ];
+      case 'poder':
+        return [
+          ...documentosBase,
+          { id: 3, nombre: 'Identificación del Apoderado', descripcion: 'INE del apoderado', subido: false },
+          { id: 4, nombre: 'Acta de Nacimiento', descripcion: 'Copia certificada del acta de nacimiento', subido: false }
+        ];
+      default:
+        return documentosBase;
+    }
+  };
+  
+  // Obtener costo según el tipo de trámite
+  const getCosto = (tipo: string): number => {
+    switch (tipo) {
+      case 'testamento': return 15000;
+      case 'compraventa': return 25000;
+      case 'poder': return 8000;
+      default: return 10000;
+    }
+  };
+  
+  const nuevaSolicitud: Solicitud = {
+    numeroSolicitud,
+    tipoTramite,
+    estatusActual: 'ARMANDO_EXPEDIENTE',
+    documentosRequeridos: getDocumentosRequeridos(tipoTramite),
+    historial: [
+      {
+        estatus: 'Solicitud Creada',
+        fecha: new Date().toISOString().split('T')[0],
+        descripcion: `Se ha creado la solicitud ${numeroSolicitud} para ${tipoTramite}`
+      }
+    ],
+    fechaCreacion: new Date().toISOString().split('T')[0],
+    fechaUltimaActualizacion: new Date().toISOString().split('T')[0],
+    cliente: {
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      telefono: user.telefono
+    },
+    notario: {
+      id: notario.id,
+      nombre: notario.nombre,
+      email: notario.email,
+      telefono: notario.telefono
+    },
+    costoTotal: getCosto(tipoTramite),
+    pagosRealizados: 0,
+    saldoPendiente: getCosto(tipoTramite)
+  };
+  
+  // En un sistema real, aquí se guardaría en la base de datos
+  // Por ahora, solo retornamos la solicitud creada
+  
+  return nuevaSolicitud;
 };

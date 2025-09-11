@@ -386,14 +386,8 @@ export function PortalPrivado({
   };
 
   const iniciarTramite = (tramiteId: string) => {
-    const tramiteInfo = TRAMITES_DISPONIBLES.find((t) => t.id === tramiteId);
-    if (!tramiteInfo) return;
-
-    // Generar número de solicitud único
-    const numeroSolicitud = `NT3-2025-${String(Date.now()).slice(-5)}`;
-    
-    // Redirigir a la nueva página de estatus de solicitud
-    window.location.href = `/solicitud/${numeroSolicitud}`;
+    // Redirigir a la página de selección de trámite autenticada
+    window.location.href = `/iniciar-tramite?tramite=${tramiteId}`;
   };
 
   // Función para simular extracción de datos por OCR

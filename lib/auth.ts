@@ -116,8 +116,13 @@ export const canAccessSolicitud = (user: User, numeroSolicitud: string): boolean
   }
   
   if (user.role === 'cliente') {
-    // En un sistema real, esto verificaría si el cliente es el dueño de la solicitud
-    // Para el POC, asumimos que el cliente puede ver su solicitud
+    // En un sistema real, esto verificaría en la base de datos si el cliente es el dueño
+    // Para el POC, verificamos si la solicitud mock pertenece al usuario
+    if (numeroSolicitud === 'NT3-2025-00123' && user.id === 'user-1') {
+      return true;
+    }
+    // Para solicitudes recién creadas, asumimos que pertenecen al usuario actual
+    // En un sistema real, esto se verificaría consultando la base de datos
     return true;
   }
   

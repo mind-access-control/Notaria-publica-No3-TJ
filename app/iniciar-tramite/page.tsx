@@ -1,0 +1,343 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { createSolicitud } from "@/lib/mock-data";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  FileText, 
+  Clock, 
+  DollarSign, 
+  CheckCircle2, 
+  ArrowRight,
+  Shield,
+  User,
+  AlertCircle
+} from "lucide-react";
+
+// Configuración de trámites disponibles
+const TRAMITES_DISPONIBLES = [
+  {
+    id: "testamento",
+    nombre: "Testamento Público Abierto",
+    descripcion: "Documento notarial que permite disponer de bienes y derechos para después de la muerte",
+    costo: 15000,
+    tiempo: "5-7 días hábiles",
+    documentos: [
+      "Identificación oficial vigente",
+      "Comprobante de domicilio",
+      "Acta de nacimiento",
+      "Lista de bienes y propiedades",
+      "Comprobante de estado civil"
+    ],
+    requisitos: [
+      "Ser mayor de edad",
+      "Tener capacidad legal",
+      "Presentar identificación oficial",
+      "Comprobante de domicilio no mayor a 3 meses"
+    ]
+  },
+  {
+    id: "compraventa",
+    nombre: "Compraventa de Inmueble",
+    descripcion: "Contrato notarial para la transferencia de propiedad de bienes inmuebles",
+    costo: 25000,
+    tiempo: "7-10 días hábiles",
+    documentos: [
+      "Identificación oficial vigente",
+      "Comprobante de domicilio",
+      "Escritura de propiedad",
+      "Avalúo del inmueble",
+      "Comprobante de ingresos"
+    ],
+    requisitos: [
+      "Ser mayor de edad",
+      "Tener capacidad legal",
+      "Documentos de propiedad",
+      "Avalúo vigente del inmueble"
+    ]
+  },
+  {
+    id: "poder",
+    nombre: "Poder Notarial",
+    descripcion: "Documento que autoriza a otra persona para actuar en representación",
+    costo: 8000,
+    tiempo: "3-5 días hábiles",
+    documentos: [
+      "Identificación oficial vigente",
+      "Comprobante de domicilio",
+      "Identificación del apoderado",
+      "Acta de nacimiento"
+    ],
+    requisitos: [
+      "Ser mayor de edad",
+      "Tener capacidad legal",
+      "Identificación del apoderado",
+      "Especificar facultades del poder"
+    ]
+  }
+];
+
+export default function IniciarTramitePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  const [tramiteSeleccionado, setTramiteSeleccionado] = useState<string | null>(null);
+  const [isCreandoSolicitud, setIsCreandoSolicitud] = useState(false);
+
+  const tramitePreseleccionado = searchParams.get('tramite');
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    if (tramitePreseleccionado) {
+      setTramiteSeleccionado(tramitePreseleccionado);
+    }
+  }, [tramitePreseleccionado]);
+
+  const handleSeleccionarTramite = (tramiteId: string) => {
+    setTramiteSeleccionado(tramiteId);
+  };
+
+  const handleCrearSolicitud = async () => {
+    if (!tramiteSeleccionado || !user) return;
+
+    setIsCreandoSolicitud(true);
+    
+    try {
+      // Crear la solicitud asociada al usuario
+      const solicitud = await createSolicitud(user.id, tramiteSeleccionado);
+      
+      if (solicitud) {
+        // Redirigir a la página de estatus de la solicitud
+        router.push(`/solicitud/${solicitud.numeroSolicitud}`);
+      } else {
+        console.error('Error: No se pudo crear la solicitud');
+      }
+    } catch (error) {
+      console.error('Error creando solicitud:', error);
+    } finally {
+      setIsCreandoSolicitud(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando credenciales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  const tramiteInfo = tramiteSeleccionado 
+    ? TRAMITES_DISPONIBLES.find(t => t.id === tramiteSeleccionado)
+    : null;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="pt-20">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <FileText className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Iniciar Nuevo Trámite
+                </h1>
+                <p className="text-gray-600">
+                  Bienvenido, {user.nombre}. Selecciona el trámite que deseas realizar.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="h-4 w-4" />
+              <span>Cuenta: {user.email}</span>
+              <Badge variant="outline" className="ml-2">
+                {user.role === 'cliente' ? 'Cliente' : 
+                 user.role === 'notario' ? 'Notario' : 'Administrador'}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Lista de trámites */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-emerald-600" />
+                    Trámites Disponibles
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {TRAMITES_DISPONIBLES.map((tramite) => (
+                    <div
+                      key={tramite.id}
+                      onClick={() => handleSeleccionarTramite(tramite.id)}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                        tramiteSeleccionado === tramite.id
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-900">{tramite.nombre}</h3>
+                        {tramiteSeleccionado === tramite.id && (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{tramite.descripcion}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-4 w-4" />
+                          ${tramite.costo.toLocaleString('es-MX')}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {tramite.tiempo}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Detalles del trámite seleccionado */}
+            <div className="lg:col-span-2">
+              {tramiteInfo ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-emerald-600" />
+                      {tramiteInfo.nombre}
+                    </CardTitle>
+                    <p className="text-gray-600">{tramiteInfo.descripcion}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Información del trámite */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
+                        <DollarSign className="h-5 w-5 text-emerald-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Costo Total</p>
+                          <p className="text-lg font-semibold text-emerald-900">
+                            ${tramiteInfo.costo.toLocaleString('es-MX')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Tiempo Estimado</p>
+                          <p className="text-lg font-semibold text-blue-900">
+                            {tramiteInfo.tiempo}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Documentos requeridos */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        Documentos Requeridos
+                      </h3>
+                      <ul className="space-y-2">
+                        {tramiteInfo.documentos.map((doc, index) => (
+                          <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            {doc}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Requisitos */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        Requisitos
+                      </h3>
+                      <ul className="space-y-2">
+                        {tramiteInfo.requisitos.map((req, index) => (
+                          <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Botón de crear solicitud */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <Alert className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Al crear la solicitud, se generará un número único y un enlace personalizado 
+                          que solo tú podrás acceder con tus credenciales.
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <Button
+                        onClick={handleCrearSolicitud}
+                        disabled={isCreandoSolicitud}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-lg"
+                      >
+                        {isCreandoSolicitud ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Creando Solicitud...
+                          </>
+                        ) : (
+                          <>
+                            Crear Solicitud
+                            <ArrowRight className="h-5 w-5 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Selecciona un Trámite
+                    </h3>
+                    <p className="text-gray-600">
+                      Elige un trámite de la lista para ver los detalles y crear tu solicitud.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}

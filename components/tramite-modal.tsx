@@ -661,10 +661,9 @@ export function TramiteModal({
   };
 
   const handleIniciarTramite = () => {
-    // Generar número de solicitud único
-    const numeroSolicitud = `NT3-2025-${String(Date.now()).slice(-5)}`;
-    const solicitudUrl = `/solicitud/${numeroSolicitud}`;
-    window.open(solicitudUrl, "_blank");
+    // Redirigir a login con el trámite preseleccionado
+    const loginUrl = `/login?tramite=${selectedTramite}&redirect=${encodeURIComponent('/iniciar-tramite')}`;
+    window.open(loginUrl, "_blank");
   };
 
   const calcularCostoVariable = (
