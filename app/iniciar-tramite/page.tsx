@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TramiteModal } from "@/components/tramite-modal";
 import { 
   FileText, 
   Clock, 
@@ -18,7 +19,8 @@ import {
   ArrowRight,
   Shield,
   User,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
 
 // Configuración de trámites disponibles
@@ -91,6 +93,7 @@ export default function IniciarTramitePage() {
   
   const [tramiteSeleccionado, setTramiteSeleccionado] = useState<string | null>(null);
   const [isCreandoSolicitud, setIsCreandoSolicitud] = useState(false);
+  const [showTramiteModal, setShowTramiteModal] = useState(false);
 
   const tramitePreseleccionado = searchParams.get('tramite');
 
@@ -108,6 +111,19 @@ export default function IniciarTramitePage() {
 
   const handleSeleccionarTramite = (tramiteId: string) => {
     setTramiteSeleccionado(tramiteId);
+  };
+
+  const handleAgregarTramite = () => {
+    setShowTramiteModal(true);
+  };
+
+  const handleTramiteModalClose = () => {
+    setShowTramiteModal(false);
+  };
+
+  const handleTramiteSelect = (tramiteId: string) => {
+    setTramiteSeleccionado(tramiteId);
+    setShowTramiteModal(false);
   };
 
   const handleCrearSolicitud = async () => {
@@ -187,41 +203,60 @@ export default function IniciarTramitePage() {
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-emerald-600" />
-                    Trámites Disponibles
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-emerald-600" />
+                      Trámite Seleccionado
+                    </CardTitle>
+                    <Button
+                      onClick={handleAgregarTramite}
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Agregar Trámite
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {TRAMITES_DISPONIBLES.map((tramite) => (
-                    <div
-                      key={tramite.id}
-                      onClick={() => handleSeleccionarTramite(tramite.id)}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                        tramiteSeleccionado === tramite.id
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900">{tramite.nombre}</h3>
-                        {tramiteSeleccionado === tramite.id && (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{tramite.descripcion}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          ${tramite.costo.toLocaleString('es-MX')}
+                  {tramiteSeleccionado ? (
+                    (() => {
+                      const tramite = TRAMITES_DISPONIBLES.find(t => t.id === tramiteSeleccionado);
+                      return tramite ? (
+                        <div className="p-4 border border-emerald-500 bg-emerald-50 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-medium text-gray-900">{tramite.nombre}</h3>
+                            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{tramite.descripcion}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-4 w-4" />
+                              ${tramite.costo.toLocaleString('es-MX')}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {tramite.tiempo}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {tramite.tiempo}
-                        </div>
-                      </div>
+                      ) : null;
+                    })()
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 mb-4">No hay trámite seleccionado</p>
+                      <Button
+                        onClick={handleAgregarTramite}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Seleccionar Trámite
+                      </Button>
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -338,6 +373,14 @@ export default function IniciarTramitePage() {
         </div>
       </div>
       <Footer />
+
+      {/* Modal de selección de trámites */}
+      <TramiteModal
+        isOpen={showTramiteModal}
+        onClose={handleTramiteModalClose}
+        preselectedTramite={tramiteSeleccionado || undefined}
+        onTramiteSelect={handleTramiteSelect}
+      />
     </div>
   );
 }

@@ -56,6 +56,7 @@ interface TramiteModalProps {
   isOpen: boolean;
   onClose: () => void;
   preselectedTramite?: string;
+  onTramiteSelect?: (tramiteId: string) => void;
 }
 
 const tramites = [
@@ -537,6 +538,7 @@ export function TramiteModal({
   isOpen,
   onClose,
   preselectedTramite,
+  onTramiteSelect,
 }: TramiteModalProps) {
   const [selectedTramite, setSelectedTramite] = useState<string | null>(
     preselectedTramite || null
@@ -661,9 +663,15 @@ export function TramiteModal({
   };
 
   const handleIniciarTramite = () => {
-    // Redirigir a login con el trámite preseleccionado
-    const loginUrl = `/login?tramite=${selectedTramite}&redirect=${encodeURIComponent('/iniciar-tramite')}`;
-    window.open(loginUrl, "_blank");
+    if (onTramiteSelect) {
+      // Si hay callback, usarlo para notificar la selección
+      onTramiteSelect(selectedTramite!);
+      onClose();
+    } else {
+      // Comportamiento original: redirigir a login
+      const loginUrl = `/login?tramite=${selectedTramite}&redirect=${encodeURIComponent('/iniciar-tramite')}`;
+      window.open(loginUrl, "_blank");
+    }
   };
 
   const calcularCostoVariable = (
