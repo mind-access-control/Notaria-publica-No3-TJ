@@ -389,48 +389,11 @@ export function PortalPrivado({
     const tramiteInfo = TRAMITES_DISPONIBLES.find((t) => t.id === tramiteId);
     if (!tramiteInfo) return;
 
-    const nuevoTramite: Tramite = {
-      id: Date.now().toString(),
-      nombre: tramiteInfo.nombre,
-      estado: "iniciado",
-      fechaInicio: new Date().toISOString(),
-      fechaEstimada: new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000
-      ).toISOString(), // 30 días
-      progreso: 10,
-      documentos: [],
-      costo: tramiteInfo.costo,
-      descripcion: tramiteInfo.descripcion,
-      datosRequeridos: [
-        "Nombre completo",
-        "Fecha de nacimiento",
-        "Lugar de nacimiento",
-        "Estado civil",
-        "Ocupación",
-        "Domicilio actual",
-        "Teléfono",
-        "Email",
-      ],
-      documentosRequeridos: [
-        "Identificación oficial vigente",
-        "Comprobante de domicilio",
-        "Acta de nacimiento",
-        "Comprobante de ingresos",
-      ],
-      etapaActual: "Inicio del trámite",
-      siguienteEtapa: "Completar datos personales",
-      pagado: false,
-    };
-
-    const updatedTramites = [...tramites, nuevoTramite];
-    setTramites(updatedTramites);
-    localStorage.setItem(
-      `tramites_${userData.id}`,
-      JSON.stringify(updatedTramites)
-    );
-    setSelectedTramite(nuevoTramite);
-    setShowNuevoTramite(false);
-    setSearchTerm("");
+    // Generar número de solicitud único
+    const numeroSolicitud = `NT3-2025-${String(Date.now()).slice(-5)}`;
+    
+    // Redirigir a la nueva página de estatus de solicitud
+    window.location.href = `/solicitud/${numeroSolicitud}`;
   };
 
   // Función para simular extracción de datos por OCR

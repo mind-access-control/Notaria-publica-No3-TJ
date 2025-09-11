@@ -1,0 +1,201 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { getSolicitudByNumber, Solicitud } from "@/lib/mock-data";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { StatusTracker } from "@/components/status-tracker";
+import { PendingActions } from "@/components/pending-actions";
+import { SolicitudHistory } from "@/components/solicitud-history";
+import { SolicitudHeader } from "@/components/solicitud-header";
+import { SolicitudInfo } from "@/components/solicitud-info";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle2, Clock, FileText } from "lucide-react";
+
+export default function SolicitudStatusPage() {
+  const params = useParams();
+  const numeroSolicitud = params.numeroSolicitud as string;
+  
+  const [solicitud, setSolicitud] = useState<Solicitud | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSolicitud = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getSolicitudByNumber(numeroSolicitud);
+        
+        if (data) {
+          setSolicitud(data);
+        } else {
+          setError("Solicitud no encontrada");
+        }
+      } catch (err) {
+        setError("Error al cargar la solicitud");
+        console.error("Error fetching solicitud:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (numeroSolicitud) {
+      fetchSolicitud();
+    }
+  }, [numeroSolicitud]);
+
+  const handleStatusUpdate = (nuevoEstatus: string) => {
+    if (solicitud) {
+      setSolicitud({
+        ...solicitud,
+        estatusActual: nuevoEstatus as any,
+        fechaUltimaActualizacion: new Date().toISOString().split('T')[0]
+      });
+    }
+  };
+
+  const handleDocumentUpload = (documentoId: number, archivo: File) => {
+    if (solicitud) {
+      const updatedDocumentos = solicitud.documentosRequeridos.map(doc => 
+        doc.id === documentoId 
+          ? { 
+              ...doc, 
+              subido: true, 
+              archivo: archivo.name,
+              fechaSubida: new Date().toISOString().split('T')[0]
+            }
+          : doc
+      );
+      
+      setSolicitud({
+        ...solicitud,
+        documentosRequeridos: updatedDocumentos
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-20">
+          <div className="max-w-6xl mx-auto px-4 py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando información de la solicitud...</p>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !solicitud) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-20">
+          <div className="max-w-6xl mx-auto px-4 py-12">
+            <Alert variant="destructive" className="max-w-md mx-auto">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {error || "No se pudo cargar la información de la solicitud"}
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="pt-20">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Header de la solicitud */}
+          <SolicitudHeader solicitud={solicitud} />
+          
+          {/* Información general de la solicitud */}
+          <div className="mt-8">
+            <SolicitudInfo solicitud={solicitud} />
+          </div>
+
+          {/* Tracker de estatus */}
+          <div className="mt-8">
+            <StatusTracker 
+              estatusActual={solicitud.estatusActual}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          </div>
+
+          {/* Acciones pendientes */}
+          <div className="mt-8">
+            <PendingActions 
+              solicitud={solicitud}
+              onDocumentUpload={handleDocumentUpload}
+            />
+          </div>
+
+          {/* Historial de la solicitud */}
+          <div className="mt-8">
+            <SolicitudHistory solicitud={solicitud} />
+          </div>
+
+          {/* Información adicional */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <FileText className="h-6 w-6 text-emerald-600" />
+                  <h3 className="text-lg font-semibold">Documentos</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Documentos subidos:</span>
+                    <span className="font-medium">
+                      {solicitud.documentosRequeridos.filter(doc => doc.subido).length} / {solicitud.documentosRequeridos.length}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${(solicitud.documentosRequeridos.filter(doc => doc.subido).length / solicitud.documentosRequeridos.length) * 100}%` 
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock className="h-6 w-6 text-blue-600" />
+                  <h3 className="text-lg font-semibold">Progreso</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Estatus actual:</span>
+                    <span className="font-medium capitalize">
+                      {solicitud.estatusActual.replace(/_/g, ' ').toLowerCase()}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Última actualización: {solicitud.fechaUltimaActualizacion}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}

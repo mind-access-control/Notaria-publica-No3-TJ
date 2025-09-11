@@ -661,8 +661,10 @@ export function TramiteModal({
   };
 
   const handleIniciarTramite = () => {
-    const expedienteUrl = `/expediente-digital?tramite=${selectedTramite}`;
-    window.open(expedienteUrl, "_blank");
+    // Generar número de solicitud único
+    const numeroSolicitud = `NT3-2025-${String(Date.now()).slice(-5)}`;
+    const solicitudUrl = `/solicitud/${numeroSolicitud}`;
+    window.open(solicitudUrl, "_blank");
   };
 
   const calcularCostoVariable = (
