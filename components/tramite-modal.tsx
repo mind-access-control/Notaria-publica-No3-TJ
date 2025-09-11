@@ -954,7 +954,7 @@ export function TramiteModal({
           )}
 
           {step === 2 && tramite && (
-            <div className="space-y-6 mt-6 mb-8">
+            <div className="space-y-6 mt-4 mb-8">
               {/* Información del trámite */}
               <Card className="border-2 border-emerald-200 bg-emerald-50">
                 <CardHeader>
@@ -970,170 +970,92 @@ export function TramiteModal({
                 </CardHeader>
               </Card>
 
-              {/* Costos y tiempo */}
+              {/* Párrafo de introducción */}
+              <div className="text-center px-4 py-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-100">
+                <p className="text-gray-700 text-base leading-relaxed">
+                  {tramite.id === "testamento" &&
+                    "Proteger el futuro de tu familia es uno de los actos más importantes que puedes realizar. Un testamento bien estructurado garantiza que tus seres queridos estén protegidos y tus bienes se distribuyan según tus deseos."}
+                  {tramite.id === "compraventa" &&
+                    "La compraventa de inmuebles es una de las transacciones más importantes en la vida. Nuestro servicio garantiza que tu inversión esté protegida con todos los documentos legales necesarios."}
+                  {tramite.id === "donacion" &&
+                    "Las donaciones son una forma noble de transferir bienes a tus seres queridos. Te ayudamos a realizar este proceso de manera legal y segura, protegiendo tanto al donante como al donatario."}
+                  {tramite.id === "permuta" &&
+                    "El intercambio de propiedades puede ser una excelente alternativa a la compraventa tradicional. Te asesoramos para que ambas partes obtengan el mejor beneficio de esta transacción."}
+                  {tramite.id === "credito-hipotecario" &&
+                    "Obtener un crédito hipotecario es el primer paso hacia la casa de tus sueños. Te acompañamos en todo el proceso para que tu financiamiento sea aprobado sin complicaciones."}
+                  {tramite.id === "contrato-mutuo" &&
+                    "Los contratos de mutuo son una forma segura de prestar o recibir dinero con garantías legales. Te ayudamos a estructurar el acuerdo más conveniente para todas las partes."}
+                  {tramite.id === "reconocimiento-adeudo" &&
+                    "Reconocer una deuda formalmente es el primer paso para resolver cualquier situación financiera. Te asesoramos para que este proceso sea transparente y legal."}
+                  {tramite.id === "adjudicacion-hereditaria" &&
+                    "Las adjudicaciones hereditarias permiten transferir legalmente los bienes de una herencia. Te guiamos a través de todo el proceso sucesorio para que recibas lo que te corresponde."}
+                  {tramite.id === "sociedad" &&
+                    "Constituir una sociedad es el primer paso para formalizar tu empresa. Te ayudamos a elegir el tipo de sociedad más conveniente y a cumplir con todos los requisitos legales."}
+                  {tramite.id === "liquidacion-copropiedad" &&
+                    "La liquidación de copropiedad permite dividir equitativamente una propiedad en común. Te asesoramos para que este proceso sea justo y legal para todos los copropietarios."}
+                  {tramite.id === "cesion-derechos" &&
+                    "La cesión de derechos patrimoniales es una herramienta legal muy útil. Te ayudamos a transferir tus derechos de manera segura y legal."}
+                  {tramite.id === "servidumbre" &&
+                    "Las servidumbres son derechos de uso sobre propiedades ajenas que pueden ser muy valiosos. Te asesoramos para constituir o modificar estos derechos de manera legal."}
+                  {tramite.id === "convenios-modificatorios" &&
+                    "Los convenios modificatorios permiten actualizar contratos existentes según las nuevas necesidades. Te ayudamos a modificar tus acuerdos de manera legal y efectiva."}
+                  {tramite.id === "elevacion-judicial" &&
+                    "La elevación judicial a escritura pública convierte una sentencia en un documento notarial. Te acompañamos en este proceso para que tu sentencia tenga plena validez legal."}
+                  {tramite.id === "dacion-pago" &&
+                    "La dación en pago es una alternativa legal para saldar deudas con bienes. Te asesoramos para que esta transacción sea beneficiosa para todas las partes involucradas."}
+                  {tramite.id === "formalizacion-contrato" &&
+                    "Elevar un contrato privado a escritura pública le da mayor validez legal. Te ayudamos a formalizar tus acuerdos para que tengan plena seguridad jurídica."}
+                  {tramite.id === "fideicomiso" &&
+                    "Los fideicomisos son una herramienta poderosa para la administración y transmisión de bienes. Te asesoramos para estructurar el fideicomiso más conveniente para tus necesidades."}
+                  {tramite.id === "inicio-sucesion" &&
+                    "Iniciar una sucesión es el primer paso para recibir una herencia. Te guiamos a través de todo el proceso para que obtengas lo que te corresponde de manera legal."}
+                  {tramite.id === "cancelacion-hipoteca" &&
+                    "Cancelar una hipoteca es el último paso para ser completamente dueño de tu propiedad. Te ayudamos a completar este proceso de manera eficiente."}
+                  {tramite.id === "protocolizacion-acta" &&
+                    "La protocolización de actas de asamblea da validez legal a las decisiones de tu empresa. Te asesoramos para que tus actas cumplan con todos los requisitos legales."}
+                  {tramite.id === "cambio-regimen-matrimonial" &&
+                    "Cambiar el régimen matrimonial puede ser necesario según las circunstancias de vida. Te asesoramos para que esta modificación sea beneficiosa para ambos cónyuges."}
+                  {tramite.id === "cotejos" &&
+                    "Los cotejos son una herramienta legal para verificar la autenticidad de documentos. Te ayudamos a comparar y validar tus documentos de manera oficial."}
+                  {tramite.id === "fe-hechos" &&
+                    "Las fe de hechos son constancias notariales que dan validez legal a eventos importantes. Te asesoramos para que tus hechos queden debidamente documentados."}
+                  {tramite.id === "poderes" &&
+                    "Los poderes son una herramienta legal muy útil para delegar facultades. Te ayudamos a redactar el poder más conveniente para tus necesidades específicas."}
+                  {tramite.id === "rectificacion-escrituras" &&
+                    "Rectificar escrituras es necesario cuando hay errores que deben corregirse. Te asesoramos para que tus documentos queden perfectos y sin errores."}
+                  {![
+                    "testamento",
+                    "compraventa",
+                    "donacion",
+                    "permuta",
+                    "credito-hipotecario",
+                    "contrato-mutuo",
+                    "reconocimiento-adeudo",
+                    "adjudicacion-hereditaria",
+                    "sociedad",
+                    "liquidacion-copropiedad",
+                    "cesion-derechos",
+                    "servidumbre",
+                    "convenios-modificatorios",
+                    "elevacion-judicial",
+                    "dacion-pago",
+                    "formalizacion-contrato",
+                    "fideicomiso",
+                    "inicio-sucesion",
+                    "cancelacion-hipoteca",
+                    "protocolizacion-acta",
+                    "cambio-regimen-matrimonial",
+                    "cotejos",
+                    "fe-hechos",
+                    "poderes",
+                    "rectificacion-escrituras",
+                  ].includes(tramite.id) &&
+                    "Este trámite es fundamental para proteger tus intereses legales. Te brindamos la asesoría especializada que necesitas para completarlo de manera exitosa y segura."}
+                </p>
+              </div>
+
+              {/* Información del servicio */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-green-600" />
-                      Costo
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {costoCalculado ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Calculator className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm font-medium text-blue-600">
-                            Calculadora de Costos
-                          </span>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">
-                              Valor del inmueble
-                            </label>
-                            <Input
-                              value={valorInmueble}
-                              onChange={(e) => setValorInmueble(e.target.value)}
-                              placeholder="Ej: $500,000"
-                              className="mt-1"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">
-                              Zona del inmueble
-                            </label>
-                            <select
-                              value={zonaInmueble}
-                              onChange={(e) => setZonaInmueble(e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            >
-                              <option value="">Selecciona una zona</option>
-                              <option value="centro">Centro (2.5%)</option>
-                              <option value="zona-rio">Zona Río (3%)</option>
-                              <option value="otras">Otras zonas (3.5%)</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        {costoCalculado && (
-                          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                            <p className="text-lg font-bold text-green-600">
-                              ${costoCalculado.costo.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-green-600">
-                              Basado en {costoCalculado.porcentaje}% del valor
-                              del inmueble
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-2xl font-bold text-green-600">
-                            {tramite.estimatedCost}
-                          </p>
-                        </div>
-
-                        {obtenerDesgloseCosto(tramite.id) && (
-                          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Calculator className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm font-medium text-gray-600">
-                                Desglose de Costos
-                              </span>
-                            </div>
-                            <div className="space-y-1 text-sm">
-                              {obtenerDesgloseCosto(tramite.id)
-                                ?.honorariosNotario && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">
-                                    Honorarios Notario:
-                                  </span>
-                                  <span className="font-medium">
-                                    $
-                                    {obtenerDesgloseCosto(
-                                      tramite.id
-                                    )?.honorariosNotario.toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              {obtenerDesgloseCosto(tramite.id)?.impuestos && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">
-                                    Impuestos:
-                                  </span>
-                                  <span className="font-medium">
-                                    $
-                                    {obtenerDesgloseCosto(
-                                      tramite.id
-                                    )?.impuestos.toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              {obtenerDesgloseCosto(tramite.id)
-                                ?.gastosRegistro && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">
-                                    Gastos de Registro:
-                                  </span>
-                                  <span className="font-medium">
-                                    $
-                                    {obtenerDesgloseCosto(
-                                      tramite.id
-                                    )?.gastosRegistro.toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              {(obtenerDesgloseCosto(tramite.id) as any)
-                                ?.avaluo && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">Avalúo:</span>
-                                  <span className="font-medium">
-                                    $
-                                    {(
-                                      obtenerDesgloseCosto(tramite.id) as any
-                                    )?.avaluo.toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              {(obtenerDesgloseCosto(tramite.id) as any)
-                                ?.gastosPublicacion && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">
-                                    Gastos de Publicación:
-                                  </span>
-                                  <span className="font-medium">
-                                    $
-                                    {(
-                                      obtenerDesgloseCosto(tramite.id) as any
-                                    )?.gastosPublicacion.toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="border-t border-gray-300 pt-1 mt-2">
-                                <div className="flex justify-between font-bold">
-                                  <span>Total:</span>
-                                  <span className="text-green-600">
-                                    $
-                                    {obtenerDesgloseCosto(
-                                      tramite.id
-                                    )?.total.toLocaleString()}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -1147,6 +1069,23 @@ export function TramiteModal({
                     </p>
                     <p className="text-sm text-gray-600">
                       * Tiempo aproximado en notaría
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-purple-600" />
+                      Documentos Necesarios
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {tramite.requirements.length} documentos
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      * Lista detallada abajo
                     </p>
                   </CardContent>
                 </Card>
@@ -1169,6 +1108,173 @@ export function TramiteModal({
                       </li>
                     ))}
                   </ul>
+                </CardContent>
+              </Card>
+
+              {/* Inversión Aproximada */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    Inversión Aproximada
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {costoCalculado ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Calculator className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium text-blue-600">
+                          Calculadora de Costos
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">
+                            Valor del inmueble
+                          </label>
+                          <Input
+                            value={valorInmueble}
+                            onChange={(e) => setValorInmueble(e.target.value)}
+                            placeholder="Ej: $500,000"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">
+                            Zona del inmueble
+                          </label>
+                          <select
+                            value={zonaInmueble}
+                            onChange={(e) => setZonaInmueble(e.target.value)}
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          >
+                            <option value="">Selecciona una zona</option>
+                            <option value="centro">Centro (2.5%)</option>
+                            <option value="zona-rio">Zona Río (3%)</option>
+                            <option value="otras">Otras zonas (3.5%)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {costoCalculado && (
+                        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                          <p className="text-lg font-bold text-green-600">
+                            ${costoCalculado.costo.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-green-600">
+                            Basado en {costoCalculado.porcentaje}% del valor del
+                            inmueble
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <p className="text-3xl font-bold text-green-600 mb-2">
+                          {tramite.estimatedCost}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          * Rango aproximado, puede variar según el caso
+                          específico
+                        </p>
+                      </div>
+
+                      {obtenerDesgloseCosto(tramite.id) && (
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Calculator className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-600">
+                              Desglose de Costos
+                            </span>
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            {obtenerDesgloseCosto(tramite.id)
+                              ?.honorariosNotario && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Honorarios Notario:
+                                </span>
+                                <span className="font-medium">
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.honorariosNotario.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            {obtenerDesgloseCosto(tramite.id)?.impuestos && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Impuestos:
+                                </span>
+                                <span className="font-medium">
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.impuestos.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            {obtenerDesgloseCosto(tramite.id)
+                              ?.gastosRegistro && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Gastos de Registro:
+                                </span>
+                                <span className="font-medium">
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.gastosRegistro.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            {(obtenerDesgloseCosto(tramite.id) as any)
+                              ?.avaluo && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Avalúo:</span>
+                                <span className="font-medium">
+                                  $
+                                  {(
+                                    obtenerDesgloseCosto(tramite.id) as any
+                                  )?.avaluo.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            {(obtenerDesgloseCosto(tramite.id) as any)
+                              ?.gastosPublicacion && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Gastos de Publicación:
+                                </span>
+                                <span className="font-medium">
+                                  $
+                                  {(
+                                    obtenerDesgloseCosto(tramite.id) as any
+                                  )?.gastosPublicacion.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            <div className="border-t border-gray-300 pt-1 mt-2">
+                              <div className="flex justify-between font-bold">
+                                <span>Total:</span>
+                                <span className="text-green-600">
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.total.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
