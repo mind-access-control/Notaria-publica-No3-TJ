@@ -1840,72 +1840,49 @@ export default function AbogadoPage() {
             }}
             showCloseButton={false}
           >
-            <DialogHeader className="p-1 pb-0 border-b">
-              <div className="flex items-center justify-between">
-                <div>
-                  <DialogTitle className="text-sm font-bold">
-                    {selectedMainDocument?.nombre}
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-gray-600">
-                    {selectedMainDocument?.descripcion}
-                  </DialogDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => {
-                      const url = `/documentos_legales/${encodeURIComponent(
-                        selectedMainDocument?.archivo || ""
-                      )}`;
-                      window.open(url, "_blank");
-                    }}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Nueva Pestaña
-                  </Button>
-                  <Button
-                    onClick={() => setShowDocumentModal(false)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Cerrar
-                  </Button>
-                </div>
-              </div>
-            </DialogHeader>
-
+            {/* ELIMINADO COMPLETAMENTE: DialogHeader - ya no existe */}
+            
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Barra de herramientas superior */}
-              <div className="bg-white border-b px-2 py-1 flex items-center justify-between">
+              {/* Barra de herramientas superior - ULTRA COMPACTA */}
+              <div className="bg-gray-100 border-b px-2 py-1 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium">Página 1 de 1</span>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
+                  <span className="text-xs font-medium">Página 1 de 1</span>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
                       -
                     </Button>
-                    <span className="text-sm w-12 text-center">100%</span>
-                    <Button variant="outline" size="sm">
+                    <span className="text-xs w-8 text-center">100%</span>
+                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
                       +
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => setShowReviewPoints(!showReviewPoints)}
+                    className="h-5 px-2 text-xs hover:bg-gray-200"
                   >
-                    <Eye className="h-4 w-4 mr-1" />
-                    {showReviewPoints ? "Ocultar Puntos" : "Mostrar Puntos"}
+                    <Eye className="h-3 w-3 mr-1" />
+                    {showReviewPoints ? "Ocultar" : "Mostrar"}
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <RotateCcw className="h-4 w-4 mr-1" />
+                  <Button variant="ghost" size="sm" className="h-5 px-2 text-xs hover:bg-gray-200">
+                    <RotateCcw className="h-3 w-3 mr-1" />
                     Rotar
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-1" />
+                  <Button variant="ghost" size="sm" className="h-5 px-2 text-xs hover:bg-gray-200">
+                    <Download className="h-3 w-3 mr-1" />
                     Descargar
+                  </Button>
+                  <Button
+                    onClick={() => setShowDocumentModal(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-xs hover:bg-gray-200"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Cerrar
                   </Button>
                 </div>
               </div>

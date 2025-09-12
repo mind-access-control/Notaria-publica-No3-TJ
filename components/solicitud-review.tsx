@@ -518,17 +518,18 @@ export function SolicitudReview({
             <div className="flex-1 p-0">
               {selectedDocument ? (
                 <div className="h-full flex flex-col">
-                  {/* Header con botones */}
-                  <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-gray-900">
+                  {/* Header con botones - ULTRA COMPACTO */}
+                  <div className="px-2 py-1 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-medium text-gray-900 truncate">
                         {selectedDocument.nombre}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <span className="text-xs text-gray-500">•</span>
+                      <p className="text-xs text-gray-600 truncate">
                         {selectedDocument.descripcion}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button
                         onClick={() => {
                           const url = `/documentos_legales/${encodeURIComponent(
@@ -538,8 +539,9 @@ export function SolicitudReview({
                         }}
                         variant="outline"
                         size="sm"
+                        className="h-6 px-2 text-xs"
                       >
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="h-3 w-3 mr-1" />
                         Nueva Pestaña
                       </Button>
                       <Button
@@ -554,8 +556,9 @@ export function SolicitudReview({
                         }}
                         variant="outline"
                         size="sm"
+                        className="h-6 px-2 text-xs"
                       >
-                        <Download className="h-4 w-4 mr-1" />
+                        <Download className="h-3 w-3 mr-1" />
                         Descargar
                       </Button>
                     </div>
@@ -710,17 +713,33 @@ export function SolicitudReview({
           }}
           showCloseButton={false}
         >
-          <DialogHeader className="p-1 pb-0 border-b">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-sm font-bold">
+          {/* ELIMINADO COMPLETAMENTE: DialogHeader - ya no existe */}
+          
+          <div className="flex-1 overflow-hidden">
+            {/* Barra de herramientas superior - ULTRA COMPACTA */}
+            <div className="bg-gray-100 border-b px-2 py-1 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-medium">
                   {selectedMainDocument?.nombre}
-                </DialogTitle>
-                <DialogDescription className="text-xs text-gray-600">
+                </span>
+                <span className="text-xs text-gray-500">
                   {selectedMainDocument?.descripcion}
-                </DialogDescription>
+                </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Button
+                  onClick={() => {
+                    // Simular edición de escritura
+                    console.log("Editando escritura:", selectedMainDocument?.nombre);
+                    // Aquí iría la lógica para abrir el editor
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-auto px-2 text-xs"
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Editar
+                </Button>
                 <Button
                   onClick={() => {
                     const url = `/documentos_legales/${encodeURIComponent(
@@ -728,94 +747,35 @@ export function SolicitudReview({
                     )}`;
                     window.open(url, "_blank");
                   }}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
+                  className="h-6 w-auto px-2 text-xs"
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-3 w-3 mr-1" />
                   Nueva Pestaña
                 </Button>
                 <Button
                   onClick={() => setShowDocumentModal(false)}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
+                  className="h-6 w-6 p-0"
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  Cerrar
+                  <X className="h-3 w-3" />
                 </Button>
               </div>
             </div>
-          </DialogHeader>
 
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full flex">
-              {/* Panel de herramientas lateral */}
-              <div className="w-16 bg-gray-50 border-r flex flex-col items-center py-4 space-y-4">
-                <Button variant="outline" size="sm" className="w-10 h-10 p-0">
-                  <FileText className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="w-10 h-10 p-0">
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="w-10 h-10 p-0">
-                  <Save className="h-4 w-4" />
-                </Button>
-                <Separator className="w-8" />
-                <Button variant="outline" size="sm" className="w-10 h-10 p-0">
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Área principal del documento */}
-              <div className="flex-1 flex flex-col">
-                {/* Barra de herramientas superior */}
-                <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium">Página 1 de 1</span>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        -
-                      </Button>
-                      <span className="text-sm w-12 text-center">100%</span>
-                      <Button variant="outline" size="sm">
-                        +
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <RotateCcw className="h-4 w-4 mr-1" />
-                      Rotar
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-1" />
-                      Vista
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Visor del documento */}
-                <div
-                  className="flex-1 relative bg-gray-100"
-                  style={{ width: "100%" }}
-                >
-                  <div className="h-full w-full overflow-hidden">
-                    <iframe
-                      src={`/documentos_legales/${encodeURIComponent(
-                        selectedMainDocument?.archivo || ""
-                      )}`}
-                      className="w-full h-full border-0"
-                      title={selectedMainDocument?.nombre}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        minWidth: "100%",
-                        maxWidth: "100%",
-                        display: "block",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* Contenido del documento */}
+            <div className="h-full overflow-auto bg-gray-100">
+              {selectedMainDocument && (
+                <iframe
+                  src={`/documentos_legales/${encodeURIComponent(
+                    selectedMainDocument.archivo
+                  )}`}
+                  className="w-full h-full border-0"
+                  title="Vista previa del documento"
+                />
+              )}
             </div>
           </div>
         </DialogContent>

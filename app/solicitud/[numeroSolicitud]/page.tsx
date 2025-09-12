@@ -304,7 +304,10 @@ export default function SolicitudStatusPage() {
 
           {/* Información general de la solicitud - INMEDIATAMENTE DESPUÉS DEL PROGRESO */}
           <div className="mt-8">
-            <SolicitudInfo solicitud={solicitud} />
+            <SolicitudInfo 
+              solicitud={solicitud} 
+              onSolicitudUpdate={handleSolicitudUpdate}
+            />
           </div>
 
           {/* Acciones pendientes */}

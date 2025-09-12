@@ -229,17 +229,31 @@ export function PendingActions({
       (doc) => doc.subido
     ).length;
 
-    const debeBloquear = solicitud.saldoPendiente > 0 && documentosSubidos >= 2;
+    // Si no hay saldo pendiente, no hay bloqueo
+    if (solicitud.saldoPendiente === 0) {
+      return false;
+    }
+
+    // Si hay saldo pendiente pero el usuario ya realizó al menos un pago, no bloquear
+    // Esto indica que ya configuró un método de pago
+    const yaConfiguroMetodoPago = solicitud.pagosRealizados > 0;
+
+    // Bloquear solo si:
+    // 1. Hay saldo pendiente Y
+    // 2. Se han subido al menos 2 documentos Y
+    // 3. NO se ha realizado ningún pago (no se ha configurado método de pago)
+    const debeBloquear = solicitud.saldoPendiente > 0 && 
+                        documentosSubidos >= 2 && 
+                        !yaConfiguroMetodoPago;
 
     console.log("🔍 Debug bloqueo:", {
       saldoPendiente: solicitud.saldoPendiente,
+      pagosRealizados: solicitud.pagosRealizados,
       documentosSubidos,
+      yaConfiguroMetodoPago,
       debeBloquear,
     });
 
-    // Mostrar bloqueo si:
-    // 1. Hay saldo pendiente Y
-    // 2. Se han subido al menos 2 documentos
     return debeBloquear;
   };
 
