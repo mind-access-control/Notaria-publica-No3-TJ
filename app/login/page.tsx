@@ -11,33 +11,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  User, 
-  Lock, 
-  Mail, 
-  Phone, 
-  Shield, 
+import {
+  User,
+  Lock,
+  Mail,
+  Phone,
+  Shield,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, register, isAuthenticated, isLoading } = useAuth();
-  
+
   const [activeTab, setActiveTab] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Estados para login
   const [loginData, setLoginData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
-  
+
   // Estados para registro
   const [registerData, setRegisterData] = useState({
     email: "",
@@ -45,16 +45,16 @@ export default function LoginPage() {
     nombre: "",
     password: "",
     confirmPassword: "",
-    role: "cliente" as "cliente" | "notario"
+    role: "cliente" as "cliente" | "notario",
   });
 
-  const redirectUrl = searchParams.get('redirect') || '/';
-  const tramitePreseleccionado = searchParams.get('tramite');
+  const redirectUrl = searchParams.get("redirect") || "/";
+  const tramitePreseleccionado = searchParams.get("tramite");
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       // Si hay un trámite preseleccionado, agregarlo a la URL de redirección
-      const finalRedirectUrl = tramitePreseleccionado 
+      const finalRedirectUrl = tramitePreseleccionado
         ? `${redirectUrl}?tramite=${tramitePreseleccionado}`
         : redirectUrl;
       router.push(finalRedirectUrl);
@@ -67,13 +67,13 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await login(loginData);
-      
-      if (response.success) {
-        router.push(redirectUrl);
-      } else {
+      // Usar la redirección automática del contexto de autenticación
+      const response = await login(loginData, redirectUrl);
+
+      if (!response.success) {
         setError(response.error || "Error al iniciar sesión");
       }
+      // No necesitamos hacer router.push aquí porque el contexto ya maneja la redirección
     } catch (err) {
       setError("Error interno del servidor");
     } finally {
@@ -106,9 +106,9 @@ export default function LoginPage() {
         nombre: registerData.nombre,
         password: registerData.password,
         role: registerData.role,
-        activo: true
+        activo: true,
       });
-      
+
       if (response.success) {
         router.push(redirectUrl);
       } else {
@@ -145,15 +145,15 @@ export default function LoginPage() {
               Acceso al Portal
             </h1>
             <p className="text-gray-600">
-              {tramitePreseleccionado 
+              {tramitePreseleccionado
                 ? "Inicia sesión o regístrate para continuar con tu trámite"
-                : "Inicia sesión o regístrate para acceder a tu solicitud"
-              }
+                : "Inicia sesión o regístrate para acceder a tu solicitud"}
             </p>
             {tramitePreseleccionado && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Trámite seleccionado:</strong> {tramitePreseleccionado.replace('-', ' ').toUpperCase()}
+                  <strong>Trámite seleccionado:</strong>{" "}
+                  {tramitePreseleccionado.replace("-", " ").toUpperCase()}
                 </p>
                 <p className="text-xs text-blue-600 mt-1">
                   Una vez que inicies sesión, podrás continuar con este trámite.
@@ -192,7 +192,12 @@ export default function LoginPage() {
                           type="text"
                           placeholder="tu@email.com o +52 664 123 4567"
                           value={loginData.email}
-                          onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                          onChange={(e) =>
+                            setLoginData({
+                              ...loginData,
+                              email: e.target.value,
+                            })
+                          }
                           className="pl-10"
                           required
                         />
@@ -208,7 +213,12 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder="Tu contraseña"
                           value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                          onChange={(e) =>
+                            setLoginData({
+                              ...loginData,
+                              password: e.target.value,
+                            })
+                          }
                           className="pl-10 pr-10"
                           required
                         />
@@ -228,8 +238,8 @@ export default function LoginPage() {
                       </div>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-emerald-600 hover:bg-emerald-700"
                       disabled={isSubmitting}
                     >
@@ -238,11 +248,22 @@ export default function LoginPage() {
                   </form>
 
                   <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600 mb-4">Credenciales de prueba:</p>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Credenciales de prueba:
+                    </p>
                     <div className="space-y-2 text-xs text-gray-500">
-                      <p><strong>Cliente:</strong> juan.perez@email.com / cliente123</p>
-                      <p><strong>Notario:</strong> maria.rodriguez@notaria3tijuana.com / notario123</p>
-                      <p><strong>Admin:</strong> admin@notaria3tijuana.com / admin123</p>
+                      <p>
+                        <strong>Cliente:</strong> juan.perez@email.com /
+                        cliente123
+                      </p>
+                      <p>
+                        <strong>Notario:</strong>{" "}
+                        maria.rodriguez@notaria3tijuana.com / notario123
+                      </p>
+                      <p>
+                        <strong>Admin:</strong> admin@notaria3tijuana.com /
+                        admin123
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
@@ -266,7 +287,12 @@ export default function LoginPage() {
                           type="text"
                           placeholder="Tu nombre completo"
                           value={registerData.nombre}
-                          onChange={(e) => setRegisterData({ ...registerData, nombre: e.target.value })}
+                          onChange={(e) =>
+                            setRegisterData({
+                              ...registerData,
+                              nombre: e.target.value,
+                            })
+                          }
                           className="pl-10"
                           required
                         />
@@ -282,7 +308,12 @@ export default function LoginPage() {
                           type="email"
                           placeholder="tu@email.com"
                           value={registerData.email}
-                          onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                          onChange={(e) =>
+                            setRegisterData({
+                              ...registerData,
+                              email: e.target.value,
+                            })
+                          }
                           className="pl-10"
                           required
                         />
@@ -298,7 +329,12 @@ export default function LoginPage() {
                           type="tel"
                           placeholder="+52 664 123 4567"
                           value={registerData.telefono}
-                          onChange={(e) => setRegisterData({ ...registerData, telefono: e.target.value })}
+                          onChange={(e) =>
+                            setRegisterData({
+                              ...registerData,
+                              telefono: e.target.value,
+                            })
+                          }
                           className="pl-10"
                           required
                         />
@@ -310,7 +346,12 @@ export default function LoginPage() {
                       <select
                         id="register-role"
                         value={registerData.role}
-                        onChange={(e) => setRegisterData({ ...registerData, role: e.target.value as "cliente" | "notario" })}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            role: e.target.value as "cliente" | "notario",
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         required
                       >
@@ -328,7 +369,12 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder="Mínimo 6 caracteres"
                           value={registerData.password}
-                          onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                          onChange={(e) =>
+                            setRegisterData({
+                              ...registerData,
+                              password: e.target.value,
+                            })
+                          }
                           className="pl-10 pr-10"
                           required
                         />
@@ -349,7 +395,9 @@ export default function LoginPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-confirm-password">Confirmar Contraseña</Label>
+                      <Label htmlFor="register-confirm-password">
+                        Confirmar Contraseña
+                      </Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -357,15 +405,20 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder="Repite tu contraseña"
                           value={registerData.confirmPassword}
-                          onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                          onChange={(e) =>
+                            setRegisterData({
+                              ...registerData,
+                              confirmPassword: e.target.value,
+                            })
+                          }
                           className="pl-10"
                           required
                         />
                       </div>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-emerald-600 hover:bg-emerald-700"
                       disabled={isSubmitting}
                     >

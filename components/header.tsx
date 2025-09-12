@@ -102,21 +102,27 @@ export function Header() {
                 Agendar Cita
               </Button>
             </Link>
-            
+
             {/* Botones de autenticación */}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
                     <User className="h-4 w-4" />
-                    {user?.nombre.split(' ')[0]}
+                    {user?.nombre.split(" ")[0]}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">{user?.nombre}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {user?.role}
+                    </p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -126,7 +132,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                     className="flex items-center gap-2 text-red-600"
@@ -146,9 +152,9 @@ export function Header() {
                 </Link>
               </div>
             )}
-            
+
             <Link
-              href="/admin/login"
+              href="/login"
               className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
               title="Acceso Administrativo"
             >

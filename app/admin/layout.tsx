@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import AdminSidebar from "@/components/admin-sidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
@@ -11,38 +12,27 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [adminSession, setAdminSession] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const pathname = usePathname();
 
   // Skip authentication check for login page
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === "/login";
 
   useEffect(() => {
     if (isLoginPage) {
-      setIsLoading(false);
       return;
     }
 
-    // Check for admin session only for non-login pages
-    const session = localStorage.getItem("adminSession");
-    if (session) {
-      try {
-        const parsedSession = JSON.parse(session);
-        setAdminSession(parsedSession);
-      } catch (error) {
-        localStorage.removeItem("adminSession");
-        window.location.href = "/admin/login";
-      }
-    } else {
-      window.location.href = "/admin/login";
+    // Check if user is authenticated and is admin
+    if (!isLoading && (!isAuthenticated || user?.role !== "admin")) {
+      router.push("/login");
     }
-    setIsLoading(false);
-  }, [isLoginPage]);
+  }, [isAuthenticated, isLoading, user, router, isLoginPage]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminSession");
-    window.location.href = "/admin/login";
+    logout();
+    router.push("/");
   };
 
   // For login page, just render children without layout
@@ -61,7 +51,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!adminSession) {
+  if (!isAuthenticated || user?.role !== "admin") {
     return null; // Will redirect to login
   }
 
@@ -78,7 +68,7 @@ export default function AdminLayout({
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <User className="h-4 w-4" />
-                <span>{adminSession.username}</span>
+                <span>{user?.nombre}</span>
               </div>
               <Button
                 variant="outline"

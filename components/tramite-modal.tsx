@@ -552,6 +552,14 @@ export function TramiteModal({
   const [step, setStep] = useState(1); // 1: selección, 2: asesoría (eliminamos el paso de datos personales)
   const [searchQuery, setSearchQuery] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+
+  // Resetear al paso 1 cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      setStep(1);
+      setSearchQuery("");
+    }
+  }, [isOpen]);
   const [valorInmueble, setValorInmueble] = useState("");
   const [zonaInmueble, setZonaInmueble] = useState("");
 
@@ -669,7 +677,9 @@ export function TramiteModal({
       onClose();
     } else {
       // Comportamiento original: redirigir a login
-      const loginUrl = `/login?tramite=${selectedTramite}&redirect=${encodeURIComponent('/iniciar-tramite')}`;
+      const loginUrl = `/login?tramite=${selectedTramite}&redirect=${encodeURIComponent(
+        "/iniciar-tramite"
+      )}`;
       window.open(loginUrl, "_blank");
     }
   };
@@ -968,7 +978,7 @@ export function TramiteModal({
               <Card className="border-2 border-emerald-200 bg-emerald-50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <tramite.icon className={`h-8 w-8 ${tramite.iconColor}`} />
+                    <tramite.icon className={`h-16 w-16 ${tramite.iconColor}`} />
                     <div>
                       <CardTitle className="text-xl">{tramite.name}</CardTitle>
                       <CardDescription className="text-base">

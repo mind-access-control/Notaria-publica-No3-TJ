@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getSolicitudByNumber, Solicitud } from "@/lib/mock-data";
+import { getSolicitudByNumber, Solicitud, solicitudes } from "@/lib/mock-data";
 import { useAuth } from "@/contexts/auth-context";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -11,44 +11,72 @@ import { PendingActions } from "@/components/pending-actions";
 import { SolicitudHistory } from "@/components/solicitud-history";
 import { SolicitudHeader } from "@/components/solicitud-header";
 import { SolicitudInfo } from "@/components/solicitud-info";
+import { SolicitudReview } from "@/components/solicitud-review";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Clock, FileText, Shield, LogIn } from "lucide-react";
+import { NotificationModal } from "@/components/notification-modal";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Shield,
+  LogIn,
+} from "lucide-react";
 
 export default function SolicitudStatusPage() {
   const params = useParams();
   const router = useRouter();
   const numeroSolicitud = params.numeroSolicitud as string;
-  const { user, isAuthenticated, isLoading: authLoading, canAccessSolicitud } = useAuth();
-  
+  const {
+    user,
+    isAuthenticated,
+    isLoading: authLoading,
+    canAccessSolicitud,
+  } = useAuth();
+
   const [solicitud, setSolicitud] = useState<Solicitud | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [notificationModal, setNotificationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "success" | "error" | "warning" | "info";
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     const fetchSolicitud = async () => {
       // Esperar a que termine la autenticación
       if (authLoading) return;
-      
+
       // Si no está autenticado, redirigir al login
       if (!isAuthenticated) {
-        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        router.push(
+          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+        );
         return;
       }
-      
+
       // Verificar si el usuario puede acceder a esta solicitud
       if (!canAccessSolicitud(numeroSolicitud)) {
         setAccessDenied(true);
         setIsLoading(false);
         return;
       }
-      
+
       try {
         setIsLoading(true);
         const data = await getSolicitudByNumber(numeroSolicitud);
-        
+
         if (data) {
           setSolicitud(data);
         } else {
@@ -65,36 +93,85 @@ export default function SolicitudStatusPage() {
     if (numeroSolicitud) {
       fetchSolicitud();
     }
-  }, [numeroSolicitud, isAuthenticated, authLoading, canAccessSolicitud, router]);
+  }, [
+    numeroSolicitud,
+    isAuthenticated,
+    authLoading,
+    canAccessSolicitud,
+    router,
+  ]);
 
   const handleStatusUpdate = (nuevoEstatus: string) => {
-    if (solicitud) {
-      setSolicitud({
+    if (!solicitud) return;
+
+    // Verificar si se puede avanzar de estatus
+    const documentosSubidos = solicitud.documentosRequeridos.filter(
+      (doc) => doc.subido
+    ).length;
+    const documentosRequeridos = solicitud.documentosRequeridos.length;
+    const todosDocumentosSubidos = documentosSubidos === documentosRequeridos;
+    const sinSaldoPendiente = solicitud.saldoPendiente === 0;
+
+    // Solo permitir cambio si todos los documentos están subidos y no hay saldo pendiente
+    if (!todosDocumentosSubidos || !sinSaldoPendiente) {
+      setNotificationModal({
+        isOpen: true,
+        title: "No se puede avanzar",
+        message:
+          "No se puede avanzar de estatus. Faltan documentos por subir o hay saldo pendiente.",
+        type: "warning",
+      });
+      return;
+    }
+
+    // Si va a "EN_REVISION_INTERNA", actualizar primero y luego redirigir
+    if (nuevoEstatus === "EN_REVISION_INTERNA") {
+      // Actualizar el estado local primero
+      const solicitudActualizada = {
         ...solicitud,
         estatusActual: nuevoEstatus as any,
-        fechaUltimaActualizacion: new Date().toISOString().split('T')[0]
+        fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+      };
+
+      setSolicitud(solicitudActualizada);
+
+      // Actualizar en el array de solicitudes del mock data
+      const solicitudIndex = solicitudes.findIndex(
+        (s) => s.numeroSolicitud === solicitud.numeroSolicitud
+      );
+      if (solicitudIndex !== -1) {
+        solicitudes[solicitudIndex] = solicitudActualizada;
+      }
+
+      setNotificationModal({
+        isOpen: true,
+        title: "¡Trámite Enviado a Revisión!",
+        message:
+          "Tu trámite ha sido enviado a revisión interna. Te notificaremos cuando haya avances. ¿Deseas regresar a tu cuenta para ver tus solicitudes o iniciar otro trámite?",
+        type: "success",
+        onConfirm: () => {
+          // Redirigir según el rol del usuario
+          if (user?.role === "admin") {
+            router.push("/admin");
+          } else if (user?.role === "abogado" || user?.role === "notario") {
+            router.push("/abogado");
+          } else {
+            router.push("/mi-cuenta");
+          }
+        },
       });
+      return;
     }
+
+    setSolicitud({
+      ...solicitud,
+      estatusActual: nuevoEstatus as any,
+      fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+    });
   };
 
-  const handleDocumentUpload = (documentoId: number, archivo: File) => {
-    if (solicitud) {
-      const updatedDocumentos = solicitud.documentosRequeridos.map(doc => 
-        doc.id === documentoId 
-          ? { 
-              ...doc, 
-              subido: true, 
-              archivo: archivo.name,
-              fechaSubida: new Date().toISOString().split('T')[0]
-            }
-          : doc
-      );
-      
-      setSolicitud({
-        ...solicitud,
-        documentosRequeridos: updatedDocumentos
-      });
-    }
+  const handleSolicitudUpdate = (solicitudActualizada: Solicitud) => {
+    setSolicitud(solicitudActualizada);
   };
 
   if (authLoading || isLoading) {
@@ -106,7 +183,9 @@ export default function SolicitudStatusPage() {
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">
-                {authLoading ? "Verificando credenciales..." : "Cargando información de la solicitud..."}
+                {authLoading
+                  ? "Verificando credenciales..."
+                  : "Cargando información de la solicitud..."}
               </p>
             </div>
           </div>
@@ -132,7 +211,7 @@ export default function SolicitudStatusPage() {
               <p className="text-xl text-gray-600 mb-8">
                 No tienes permisos para acceder a esta solicitud
               </p>
-              
+
               <Card className="max-w-md mx-auto">
                 <CardContent className="p-6">
                   <div className="space-y-4">
@@ -141,21 +220,22 @@ export default function SolicitudStatusPage() {
                         Solicitud: <strong>{numeroSolicitud}</strong>
                       </p>
                       <p className="text-sm text-gray-600 mb-6">
-                        Usuario actual: <strong>{user?.nombre}</strong> ({user?.role})
+                        Usuario actual: <strong>{user?.nombre}</strong> (
+                        {user?.role})
                       </p>
                     </div>
-                    
+
                     <div className="space-y-3">
-                      <Button 
-                        onClick={() => router.push('/login')}
+                      <Button
+                        onClick={() => router.push("/login")}
                         className="w-full bg-emerald-600 hover:bg-emerald-700"
                       >
                         <LogIn className="h-4 w-4 mr-2" />
                         Cambiar de Usuario
                       </Button>
-                      
-                      <Button 
-                        onClick={() => router.push('/')}
+
+                      <Button
+                        onClick={() => router.push("/")}
                         variant="outline"
                         className="w-full"
                       >
@@ -192,32 +272,46 @@ export default function SolicitudStatusPage() {
     );
   }
 
+  // Si es notario o abogado, mostrar vista de revisión
+  if (user?.role === "notario" || user?.role === "abogado") {
+    return (
+      <SolicitudReview
+        solicitud={solicitud}
+        onStatusUpdate={handleStatusUpdate}
+        onCorrection={(section, message) => {
+          console.log(`Corrección para ${section}:`, message);
+          // Aquí se implementaría la lógica para enviar correcciones
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header de la solicitud */}
-          <SolicitudHeader solicitud={solicitud} />
-          
-          {/* Información general de la solicitud */}
-          <div className="mt-8">
-            <SolicitudInfo solicitud={solicitud} />
-          </div>
+          <SolicitudHeader solicitud={solicitud} userRole={user?.role} />
 
           {/* Tracker de estatus */}
           <div className="mt-8">
-            <StatusTracker 
+            <StatusTracker
               estatusActual={solicitud.estatusActual}
               onStatusUpdate={handleStatusUpdate}
             />
           </div>
 
+          {/* Información general de la solicitud - INMEDIATAMENTE DESPUÉS DEL PROGRESO */}
+          <div className="mt-8">
+            <SolicitudInfo solicitud={solicitud} />
+          </div>
+
           {/* Acciones pendientes */}
           <div className="mt-8">
-            <PendingActions 
+            <PendingActions
               solicitud={solicitud}
-              onDocumentUpload={handleDocumentUpload}
+              onSolicitudUpdate={handleSolicitudUpdate}
             />
           </div>
 
@@ -238,14 +332,25 @@ export default function SolicitudStatusPage() {
                   <div className="flex justify-between text-sm">
                     <span>Documentos subidos:</span>
                     <span className="font-medium">
-                      {solicitud.documentosRequeridos.filter(doc => doc.subido).length} / {solicitud.documentosRequeridos.length}
+                      {
+                        solicitud.documentosRequeridos.filter(
+                          (doc) => doc.subido
+                        ).length
+                      }{" "}
+                      / {solicitud.documentosRequeridos.length}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
-                      style={{ 
-                        width: `${(solicitud.documentosRequeridos.filter(doc => doc.subido).length / solicitud.documentosRequeridos.length) * 100}%` 
+                      style={{
+                        width: `${
+                          (solicitud.documentosRequeridos.filter(
+                            (doc) => doc.subido
+                          ).length /
+                            solicitud.documentosRequeridos.length) *
+                          100
+                        }%`,
                       }}
                     ></div>
                   </div>
@@ -263,7 +368,7 @@ export default function SolicitudStatusPage() {
                   <div className="flex justify-between text-sm">
                     <span>Estatus actual:</span>
                     <span className="font-medium capitalize">
-                      {solicitud.estatusActual.replace(/_/g, ' ').toLowerCase()}
+                      {solicitud.estatusActual.replace(/_/g, " ").toLowerCase()}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600">
@@ -276,6 +381,21 @@ export default function SolicitudStatusPage() {
         </div>
       </div>
       <Footer />
+
+      {/* Modal de notificación */}
+      <NotificationModal
+        isOpen={notificationModal.isOpen}
+        onClose={() =>
+          setNotificationModal((prev) => ({ ...prev, isOpen: false }))
+        }
+        title={notificationModal.title}
+        message={notificationModal.message}
+        type={notificationModal.type}
+        onConfirm={notificationModal.onConfirm}
+        showCancel={!!notificationModal.onConfirm}
+        confirmText="Sí, continuar"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }

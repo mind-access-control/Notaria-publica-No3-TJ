@@ -11,16 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TramiteModal } from "@/components/tramite-modal";
-import { 
-  FileText, 
-  Clock, 
-  DollarSign, 
-  CheckCircle2, 
+import {
+  FileText,
+  Clock,
+  DollarSign,
+  CheckCircle,
   ArrowRight,
   Shield,
   User,
   AlertCircle,
-  Plus
+  Plus,
 } from "lucide-react";
 
 // Configuración de trámites disponibles
@@ -28,7 +28,8 @@ const TRAMITES_DISPONIBLES = [
   {
     id: "testamento",
     nombre: "Testamento Público Abierto",
-    descripcion: "Documento notarial que permite disponer de bienes y derechos para después de la muerte",
+    descripcion:
+      "Documento notarial que permite disponer de bienes y derechos para después de la muerte",
     costo: 15000,
     tiempo: "5-7 días hábiles",
     documentos: [
@@ -36,19 +37,20 @@ const TRAMITES_DISPONIBLES = [
       "Comprobante de domicilio",
       "Acta de nacimiento",
       "Lista de bienes y propiedades",
-      "Comprobante de estado civil"
+      "Comprobante de estado civil",
     ],
     requisitos: [
       "Ser mayor de edad",
       "Tener capacidad legal",
       "Presentar identificación oficial",
-      "Comprobante de domicilio no mayor a 3 meses"
-    ]
+      "Comprobante de domicilio no mayor a 3 meses",
+    ],
   },
   {
     id: "compraventa",
     nombre: "Compraventa de Inmueble",
-    descripcion: "Contrato notarial para la transferencia de propiedad de bienes inmuebles",
+    descripcion:
+      "Contrato notarial para la transferencia de propiedad de bienes inmuebles",
     costo: 25000,
     tiempo: "7-10 días hábiles",
     documentos: [
@@ -56,50 +58,56 @@ const TRAMITES_DISPONIBLES = [
       "Comprobante de domicilio",
       "Escritura de propiedad",
       "Avalúo del inmueble",
-      "Comprobante de ingresos"
+      "Comprobante de ingresos",
     ],
     requisitos: [
       "Ser mayor de edad",
       "Tener capacidad legal",
       "Documentos de propiedad",
-      "Avalúo vigente del inmueble"
-    ]
+      "Avalúo vigente del inmueble",
+    ],
   },
   {
     id: "poder",
     nombre: "Poder Notarial",
-    descripcion: "Documento que autoriza a otra persona para actuar en representación",
+    descripcion:
+      "Documento que autoriza a otra persona para actuar en representación",
     costo: 8000,
     tiempo: "3-5 días hábiles",
     documentos: [
       "Identificación oficial vigente",
       "Comprobante de domicilio",
       "Identificación del apoderado",
-      "Acta de nacimiento"
+      "Acta de nacimiento",
     ],
     requisitos: [
       "Ser mayor de edad",
       "Tener capacidad legal",
       "Identificación del apoderado",
-      "Especificar facultades del poder"
-    ]
-  }
+      "Especificar facultades del poder",
+    ],
+  },
 ];
 
 export default function IniciarTramitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading } = useAuth();
-  
-  const [tramiteSeleccionado, setTramiteSeleccionado] = useState<string | null>(null);
+
+  const [tramiteSeleccionado, setTramiteSeleccionado] = useState<string | null>(
+    null
+  );
   const [isCreandoSolicitud, setIsCreandoSolicitud] = useState(false);
   const [showTramiteModal, setShowTramiteModal] = useState(false);
 
-  const tramitePreseleccionado = searchParams.get('tramite');
+  const tramitePreseleccionado = searchParams.get("tramite");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+      router.push(
+        "/login?redirect=" +
+          encodeURIComponent(window.location.pathname + window.location.search)
+      );
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -114,11 +122,17 @@ export default function IniciarTramitePage() {
   };
 
   const handleAgregarTramite = () => {
+    // Limpiar la selección actual para que el modal se abra en modo selección
+    setTramiteSeleccionado(null);
     setShowTramiteModal(true);
   };
 
   const handleTramiteModalClose = () => {
     setShowTramiteModal(false);
+    // Restaurar el trámite preseleccionado si no se seleccionó uno nuevo
+    if (tramitePreseleccionado && !tramiteSeleccionado) {
+      setTramiteSeleccionado(tramitePreseleccionado);
+    }
   };
 
   const handleTramiteSelect = (tramiteId: string) => {
@@ -130,19 +144,19 @@ export default function IniciarTramitePage() {
     if (!tramiteSeleccionado || !user) return;
 
     setIsCreandoSolicitud(true);
-    
+
     try {
       // Crear la solicitud asociada al usuario
       const solicitud = await createSolicitud(user.id, tramiteSeleccionado);
-      
+
       if (solicitud) {
         // Redirigir a la página de estatus de la solicitud
         router.push(`/solicitud/${solicitud.numeroSolicitud}`);
       } else {
-        console.error('Error: No se pudo crear la solicitud');
+        console.error("Error: No se pudo crear la solicitud");
       }
     } catch (error) {
-      console.error('Error creando solicitud:', error);
+      console.error("Error creando solicitud:", error);
     } finally {
       setIsCreandoSolicitud(false);
     }
@@ -163,8 +177,8 @@ export default function IniciarTramitePage() {
     return null;
   }
 
-  const tramiteInfo = tramiteSeleccionado 
-    ? TRAMITES_DISPONIBLES.find(t => t.id === tramiteSeleccionado)
+  const tramiteInfo = tramiteSeleccionado
+    ? TRAMITES_DISPONIBLES.find((t) => t.id === tramiteSeleccionado)
     : null;
 
   return (
@@ -183,17 +197,21 @@ export default function IniciarTramitePage() {
                   Iniciar Nuevo Trámite
                 </h1>
                 <p className="text-gray-600">
-                  Bienvenido, {user.nombre}. Selecciona el trámite que deseas realizar.
+                  Bienvenido, {user.nombre}. Selecciona el trámite que deseas
+                  realizar.
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <User className="h-4 w-4" />
               <span>Cuenta: {user.email}</span>
               <Badge variant="outline" className="ml-2">
-                {user.role === 'cliente' ? 'Cliente' : 
-                 user.role === 'notario' ? 'Notario' : 'Administrador'}
+                {user.role === "cliente"
+                  ? "Cliente"
+                  : user.role === "notario"
+                  ? "Notario"
+                  : "Administrador"}
               </Badge>
             </div>
           </div>
@@ -222,18 +240,24 @@ export default function IniciarTramitePage() {
                 <CardContent className="space-y-3">
                   {tramiteSeleccionado ? (
                     (() => {
-                      const tramite = TRAMITES_DISPONIBLES.find(t => t.id === tramiteSeleccionado);
+                      const tramite = TRAMITES_DISPONIBLES.find(
+                        (t) => t.id === tramiteSeleccionado
+                      );
                       return tramite ? (
                         <div className="p-4 border border-emerald-500 bg-emerald-50 rounded-lg">
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium text-gray-900">{tramite.nombre}</h3>
-                            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                            <h3 className="font-medium text-gray-900">
+                              {tramite.nombre}
+                            </h3>
+                            <CheckCircle className="h-5 w-5 text-emerald-600" />
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{tramite.descripcion}</p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {tramite.descripcion}
+                          </p>
                           <div className="flex items-center gap-4 text-sm text-gray-500">
                             <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
-                              ${tramite.costo.toLocaleString('es-MX')}
+                              <DollarSign className="h-4 w-4" />$
+                              {tramite.costo.toLocaleString("es-MX")}
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
@@ -246,7 +270,9 @@ export default function IniciarTramitePage() {
                   ) : (
                     <div className="text-center py-8">
                       <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 mb-4">No hay trámite seleccionado</p>
+                      <p className="text-gray-500 mb-4">
+                        No hay trámite seleccionado
+                      </p>
                       <Button
                         onClick={handleAgregarTramite}
                         variant="outline"
@@ -273,25 +299,14 @@ export default function IniciarTramitePage() {
                     <p className="text-gray-600">{tramiteInfo.descripcion}</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Información del trámite */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
-                        <DollarSign className="h-5 w-5 text-emerald-600" />
-                        <div>
-                          <p className="text-sm text-gray-600">Costo Total</p>
-                          <p className="text-lg font-semibold text-emerald-900">
-                            ${tramiteInfo.costo.toLocaleString('es-MX')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm text-gray-600">Tiempo Estimado</p>
-                          <p className="text-lg font-semibold text-blue-900">
-                            {tramiteInfo.tiempo}
-                          </p>
-                        </div>
+                    {/* Tiempo estimado */}
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                      <Clock className="h-6 w-6 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Tiempo Estimado</p>
+                        <p className="text-lg font-semibold text-blue-900">
+                          {tramiteInfo.tiempo}
+                        </p>
                       </div>
                     </div>
 
@@ -302,8 +317,11 @@ export default function IniciarTramitePage() {
                       </h3>
                       <ul className="space-y-2">
                         {tramiteInfo.documentos.map((doc, index) => (
-                          <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <li
+                            key={index}
+                            className="flex items-center gap-2 text-sm text-gray-700"
+                          >
+                            <CheckCircle className="h-4 w-4 text-emerald-600" />
                             {doc}
                           </li>
                         ))}
@@ -317,12 +335,62 @@ export default function IniciarTramitePage() {
                       </h3>
                       <ul className="space-y-2">
                         {tramiteInfo.requisitos.map((req, index) => (
-                          <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <li
+                            key={index}
+                            className="flex items-center gap-2 text-sm text-gray-700"
+                          >
+                            <CheckCircle className="h-4 w-4 text-emerald-600" />
                             {req}
                           </li>
                         ))}
                       </ul>
+                    </div>
+
+                    {/* Costo desglosado */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        Inversión en tu Trámite
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Costo base del trámite:
+                          </span>
+                          <span className="font-medium">
+                            ${(tramiteInfo.costo * 0.6).toLocaleString("es-MX")}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Aranceles notariales:
+                          </span>
+                          <span className="font-medium">
+                            $
+                            {(tramiteInfo.costo * 0.25).toLocaleString("es-MX")}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Gastos de gestión:
+                          </span>
+                          <span className="font-medium">
+                            $
+                            {(tramiteInfo.costo * 0.15).toLocaleString("es-MX")}
+                          </span>
+                        </div>
+                        <div className="border-t border-gray-300 pt-2 mt-2">
+                          <div className="flex justify-between font-semibold text-lg">
+                            <span>Total:</span>
+                            <span className="text-emerald-600">
+                              ${tramiteInfo.costo.toLocaleString("es-MX")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        * Incluye asesoría personalizada, revisión de documentos
+                        y seguimiento completo
+                      </p>
                     </div>
 
                     {/* Botón de crear solicitud */}
@@ -330,11 +398,12 @@ export default function IniciarTramitePage() {
                       <Alert className="mb-4">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Al crear la solicitud, se generará un número único y un enlace personalizado 
-                          que solo tú podrás acceder con tus credenciales.
+                          Al crear la solicitud, se generará un número único y
+                          un enlace personalizado que solo tú podrás acceder con
+                          tus credenciales.
                         </AlertDescription>
                       </Alert>
-                      
+
                       <Button
                         onClick={handleCrearSolicitud}
                         disabled={isCreandoSolicitud}
@@ -363,7 +432,8 @@ export default function IniciarTramitePage() {
                       Selecciona un Trámite
                     </h3>
                     <p className="text-gray-600">
-                      Elige un trámite de la lista para ver los detalles y crear tu solicitud.
+                      Elige un trámite de la lista para ver los detalles y crear
+                      tu solicitud.
                     </p>
                   </CardContent>
                 </Card>
@@ -378,7 +448,7 @@ export default function IniciarTramitePage() {
       <TramiteModal
         isOpen={showTramiteModal}
         onClose={handleTramiteModalClose}
-        preselectedTramite={tramiteSeleccionado || undefined}
+        preselectedTramite={undefined}
         onTramiteSelect={handleTramiteSelect}
       />
     </div>

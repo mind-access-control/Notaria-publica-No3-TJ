@@ -1,174 +1,275 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Solicitud, EstatusSolicitud } from "@/lib/mock-data";
+import { useState } from "react";
+import {
+  Solicitud,
+  EstatusSolicitud,
+  updateSolicitudStatus,
+  uploadDocumento,
+} from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Upload, 
-  CheckCircle2, 
-  FileText, 
-  CreditCard, 
-  Eye, 
+import {
+  Upload,
+  CheckCircle2,
+  FileText,
+  CreditCard,
+  Eye,
   Download,
   AlertCircle,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Lock,
 } from "lucide-react";
+import DocumentUploadBulk from "./document-upload-bulk";
+import PaymentModal from "./payment-modal";
+import RealDocumentViewer from "./real-document-viewer";
 
 interface PendingActionsProps {
   solicitud: Solicitud;
-  onDocumentUpload: (documentoId: number, archivo: File) => void;
+  onSolicitudUpdate: (solicitud: Solicitud) => void;
 }
 
-export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsProps) {
-  const [uploadingDoc, setUploadingDoc] = useState<number | null>(null);
-  const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
+export function PendingActions({
+  solicitud,
+  onSolicitudUpdate,
+}: PendingActionsProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+  const [selectedDocument, setSelectedDocument] =
+    useState<DocumentoSolicitud | null>(null);
 
-  const handleFileUpload = async (documentoId: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleDocumentosSubidos = async (documentos: {
+    [key: number]: File;
+  }) => {
+    setIsProcessing(true);
 
-    setUploadingDoc(documentoId);
-    
-    // Simular upload
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    onDocumentUpload(documentoId, file);
-    setUploadingDoc(null);
+    try {
+      // Subir cada documento
+      for (const [documentoId, archivo] of Object.entries(documentos)) {
+        await uploadDocumento(
+          solicitud.numeroSolicitud,
+          parseInt(documentoId),
+          archivo
+        );
+      }
+
+      // Actualizar la solicitud
+      const solicitudActualizada = { ...solicitud };
+      solicitudActualizada.documentosRequeridos =
+        solicitudActualizada.documentosRequeridos.map((doc) => {
+          if (documentos[doc.id]) {
+            return {
+              ...doc,
+              subido: true,
+              archivo: documentos[doc.id], // Guardar el archivo real
+              fechaSubida: new Date().toISOString().split("T")[0],
+            };
+          }
+          return doc;
+        });
+
+      onSolicitudUpdate(solicitudActualizada);
+
+      // Verificar si se activó el bloqueo después de subir documentos
+      const documentosSubidosDespues =
+        solicitudActualizada.documentosRequeridos.filter(
+          (doc) => doc.subido
+        ).length;
+
+      if (
+        solicitudActualizada.saldoPendiente > 0 &&
+        documentosSubidosDespues >= 2
+      ) {
+        // Abrir modal de pago automáticamente
+        setTimeout(() => {
+          setShowPaymentModal(true);
+        }, 1000); // Pequeño delay para que se vea la actualización
+      }
+    } catch (error) {
+      console.error("Error subiendo documentos:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const triggerFileUpload = (documentoId: number) => {
-    fileInputRefs.current[documentoId]?.click();
+  const handleDocumentoReemplazado = async (
+    documentoId: number,
+    archivo: File
+  ) => {
+    setIsProcessing(true);
+
+    try {
+      await uploadDocumento(solicitud.numeroSolicitud, documentoId, archivo);
+
+      const solicitudActualizada = { ...solicitud };
+      solicitudActualizada.documentosRequeridos =
+        solicitudActualizada.documentosRequeridos.map((doc) => {
+          if (doc.id === documentoId) {
+            return {
+              ...doc,
+              archivo: archivo, // Guardar el archivo real
+              fechaSubida: new Date().toISOString().split("T")[0],
+            };
+          }
+          return doc;
+        });
+
+      onSolicitudUpdate(solicitudActualizada);
+    } catch (error) {
+      console.error("Error reemplazando documento:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const renderDocumentosSection = () => {
-    const documentosPendientes = solicitud.documentosRequeridos.filter(doc => !doc.subido);
-    const documentosCompletados = solicitud.documentosRequeridos.filter(doc => doc.subido);
+  const handleDocumentoEliminado = (documentoId: number) => {
+    const solicitudActualizada = { ...solicitud };
+    solicitudActualizada.documentosRequeridos =
+      solicitudActualizada.documentosRequeridos.map((doc) => {
+        if (doc.id === documentoId) {
+          return {
+            ...doc,
+            subido: false,
+            archivo: undefined,
+            fechaSubida: undefined,
+          };
+        }
+        return doc;
+      });
 
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Documentos Requeridos</h3>
-          <Badge variant="outline">
-            {documentosCompletados.length} / {solicitud.documentosRequeridos.length} completados
-          </Badge>
-        </div>
+    onSolicitudUpdate(solicitudActualizada);
+  };
 
-        {/* Documentos pendientes */}
-        {documentosPendientes.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Pendientes de subir:</h4>
-            {documentosPendientes.map((documento) => (
-              <div key={documento.id} className="flex items-center justify-between p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{documento.nombre}</p>
-                  <p className="text-sm text-gray-600">{documento.descripcion}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={(el) => fileInputRefs.current[documento.id] = el}
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={(e) => handleFileUpload(documento.id, e)}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => triggerFileUpload(documento.id)}
-                    disabled={uploadingDoc === documento.id}
-                    className="bg-yellow-600 hover:bg-yellow-700"
-                  >
-                    {uploadingDoc === documento.id ? (
-                      <>
-                        <Clock className="h-4 w-4 mr-2 animate-spin" />
-                        Subiendo...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Subir Archivo
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Documentos completados */}
-        {documentosCompletados.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Completados:</h4>
-            {documentosCompletados.map((documento) => (
-              <div key={documento.id} className="flex items-center justify-between p-4 border border-emerald-200 bg-emerald-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{documento.nombre}</p>
-                    <p className="text-sm text-gray-600">
-                      Subido: {documento.fechaSubida && new Date(documento.fechaSubida).toLocaleDateString('es-MX')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                    Completado
-                  </Badge>
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+  const handleVerDocumento = (documentoId: number) => {
+    const documento = solicitud.documentosRequeridos.find(
+      (doc) => doc.id === documentoId
     );
+    if (documento) {
+      setSelectedDocument(documento);
+      setShowDocumentViewer(true);
+    }
   };
 
-  const renderPaymentSection = () => {
-    const tieneSaldoPendiente = solicitud.saldoPendiente > 0;
-    
-    if (!tieneSaldoPendiente) {
-      return (
-        <div className="flex items-center gap-3 p-4 border border-emerald-200 bg-emerald-50 rounded-lg">
-          <CheckCircle className="h-5 w-5 text-emerald-600" />
-          <div>
-            <p className="font-medium text-emerald-900">Pago completado</p>
-            <p className="text-sm text-emerald-700">Todos los pagos han sido procesados</p>
-          </div>
-        </div>
-      );
+  const handleDocumentoIndividual = async (
+    documentoId: number,
+    archivo: File
+  ) => {
+    setIsProcessing(true);
+
+    try {
+      await uploadDocumento(solicitud.numeroSolicitud, documentoId, archivo);
+
+      const solicitudActualizada = { ...solicitud };
+      solicitudActualizada.documentosRequeridos =
+        solicitudActualizada.documentosRequeridos.map((doc) => {
+          if (doc.id === documentoId) {
+            return {
+              ...doc,
+              subido: true,
+              archivo: archivo, // Guardar el archivo real
+              fechaSubida: new Date().toISOString().split("T")[0],
+            };
+          }
+          return doc;
+        });
+
+      onSolicitudUpdate(solicitudActualizada);
+
+      // Verificar si se activó el bloqueo después de subir documento
+      const documentosSubidosDespues =
+        solicitudActualizada.documentosRequeridos.filter(
+          (doc) => doc.subido
+        ).length;
+
+      if (
+        solicitudActualizada.saldoPendiente > 0 &&
+        documentosSubidosDespues >= 2
+      ) {
+        // Abrir modal de pago automáticamente
+        setTimeout(() => {
+          setShowPaymentModal(true);
+        }, 1000); // Pequeño delay para que se vea la actualización
+      }
+    } catch (error) {
+      console.error("Error subiendo documento individual:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePagoRealizado = async (monto: number) => {
+    setIsProcessing(true);
+
+    try {
+      const solicitudActualizada = { ...solicitud };
+      solicitudActualizada.pagosRealizados += monto;
+      solicitudActualizada.saldoPendiente -= monto;
+
+      // NO cambiar de estatus automáticamente solo por pagar
+      // El cambio de estatus debe ser manual y solo cuando todos los documentos estén subidos
+
+      onSolicitudUpdate(solicitudActualizada);
+
+      // Cerrar el modal después del pago
+      setShowPaymentModal(false);
+    } catch (error) {
+      console.error("Error procesando pago:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Determinar si debe mostrar el bloqueo por pago
+  const debeMostrarBloqueoPago = () => {
+    const documentosSubidos = solicitud.documentosRequeridos.filter(
+      (doc) => doc.subido
+    ).length;
+
+    const debeBloquear = solicitud.saldoPendiente > 0 && documentosSubidos >= 2;
+
+    console.log("🔍 Debug bloqueo:", {
+      saldoPendiente: solicitud.saldoPendiente,
+      documentosSubidos,
+      debeBloquear,
+    });
+
+    // Mostrar bloqueo si:
+    // 1. Hay saldo pendiente Y
+    // 2. Se han subido al menos 2 documentos
+    return debeBloquear;
+  };
+
+  // Verificar si se pueden subir más documentos
+  const puedeSubirDocumentos = () => {
+    const documentosSubidos = solicitud.documentosRequeridos.filter(
+      (doc) => doc.subido
+    ).length;
+    const documentosRequeridos = solicitud.documentosRequeridos.length;
+
+    // Si hay bloqueo de pago, no permitir subir más documentos
+    if (debeMostrarBloqueoPago()) {
+      return false;
     }
 
+    // Si no hay bloqueo, permitir subir documentos
+    return true;
+  };
+
+  // Verificar si se puede avanzar de estatus
+  const puedeAvanzarEstatus = () => {
+    const documentosSubidos = solicitud.documentosRequeridos.filter(
+      (doc) => doc.subido
+    ).length;
+    const documentosRequeridos = solicitud.documentosRequeridos.length;
+
+    // Solo se puede avanzar si todos los documentos están subidos Y no hay saldo pendiente
     return (
-      <div className="space-y-4">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Para continuar con el trámite, es necesario completar el pago pendiente de ${solicitud.saldoPendiente.toLocaleString('es-MX')}.
-          </AlertDescription>
-        </Alert>
-        
-        <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-red-900">Pago pendiente</p>
-              <p className="text-sm text-red-700">
-                Saldo: ${solicitud.saldoPendiente.toLocaleString('es-MX')}
-              </p>
-            </div>
-            <Button className="bg-red-600 hover:bg-red-700">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Realizar Pago
-            </Button>
-          </div>
-        </div>
-      </div>
+      documentosSubidos === documentosRequeridos &&
+      solicitud.saldoPendiente === 0
     );
   };
 
@@ -178,10 +279,13 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
         <div className="p-4 border border-purple-200 bg-purple-50 rounded-lg">
           <div className="flex items-center gap-3 mb-3">
             <FileText className="h-5 w-5 text-purple-600" />
-            <h3 className="font-semibold text-purple-900">Borrador del Documento</h3>
+            <h3 className="font-semibold text-purple-900">
+              Borrador del Documento
+            </h3>
           </div>
           <p className="text-sm text-purple-700 mb-4">
-            El borrador de tu testamento está listo para revisión. Por favor, revisa cuidadosamente todos los detalles antes de aprobar.
+            El borrador de tu testamento está listo para revisión. Por favor,
+            revisa cuidadosamente todos los detalles antes de aprobar.
           </p>
           <div className="flex gap-3">
             <Button className="bg-purple-600 hover:bg-purple-700">
@@ -207,8 +311,8 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
             <h3 className="font-semibold text-orange-900">Listo para Firma</h3>
           </div>
           <p className="text-sm text-orange-700 mb-4">
-            Tu documento ha sido aprobado y está listo para ser firmado en la notaría. 
-            Contacta a tu notario para agendar la cita de firma.
+            Tu documento ha sido aprobado y está listo para ser firmado en la
+            notaría. Contacta a tu notario para agendar la cita de firma.
           </p>
           <div className="flex gap-3">
             <Button className="bg-orange-600 hover:bg-orange-700">
@@ -234,7 +338,8 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
             <h3 className="font-semibold text-green-900">Listo para Entrega</h3>
           </div>
           <p className="text-sm text-green-700 mb-4">
-            Tu testimonio notarial está listo. Puedes recogerlo en la notaría o solicitar envío a domicilio.
+            Tu testimonio notarial está listo. Puedes recogerlo en la notaría o
+            solicitar envío a domicilio.
           </p>
           <div className="flex gap-3">
             <Button className="bg-green-600 hover:bg-green-700">
@@ -257,10 +362,12 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
         <div className="p-4 border border-emerald-200 bg-emerald-50 rounded-lg">
           <div className="flex items-center gap-3 mb-3">
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            <h3 className="font-semibold text-emerald-900">Trámite Completado</h3>
+            <h3 className="font-semibold text-emerald-900">
+              Trámite Completado
+            </h3>
           </div>
           <p className="text-sm text-emerald-700 mb-4">
-            ¡Felicidades! Tu trámite notarial ha sido completado exitosamente. 
+            ¡Felicidades! Tu trámite notarial ha sido completado exitosamente.
             Puedes descargar tu testimonio desde aquí.
           </p>
           <div className="flex gap-3">
@@ -280,9 +387,39 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
 
   const getActionsForStatus = (estatus: EstatusSolicitud) => {
     switch (estatus) {
-      case 'ARMANDO_EXPEDIENTE':
-        return renderDocumentosSection();
-      case 'EN_REVISION_INTERNA':
+      case "ARMANDO_EXPEDIENTE":
+        return (
+          <div className="space-y-4">
+            {!puedeSubirDocumentos() && !showPaymentModal && (
+              <Alert className="border-red-200 bg-red-50">
+                <Lock className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  <strong>Subida de documentos bloqueada:</strong> Para
+                  continuar subiendo documentos, es necesario completar el pago
+                  pendiente.
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto text-red-800 underline"
+                    onClick={() => setShowPaymentModal(true)}
+                  >
+                    Realizar pago ahora
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <DocumentUploadBulk
+              documentosRequeridos={solicitud.documentosRequeridos}
+              onDocumentosSubidos={handleDocumentosSubidos}
+              onDocumentoReemplazado={handleDocumentoReemplazado}
+              onDocumentoEliminado={handleDocumentoEliminado}
+              onVerDocumento={handleVerDocumento}
+              onDocumentoIndividual={handleDocumentoIndividual}
+              bloqueado={!puedeSubirDocumentos()}
+            />
+          </div>
+        );
+      case "EN_REVISION_INTERNA":
         return (
           <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
             <div className="flex items-center gap-3">
@@ -290,19 +427,20 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
               <div>
                 <p className="font-medium text-blue-900">En revisión interna</p>
                 <p className="text-sm text-blue-700">
-                  Nuestro equipo está revisando tus documentos. Te notificaremos cuando esté listo.
+                  Nuestro equipo está revisando tus documentos. Te notificaremos
+                  cuando esté listo.
                 </p>
               </div>
             </div>
           </div>
         );
-      case 'BORRADOR_PARA_REVISION_CLIENTE':
+      case "BORRADOR_PARA_REVISION_CLIENTE":
         return renderBorradorSection();
-      case 'APROBADO_PARA_FIRMA':
+      case "APROBADO_PARA_FIRMA":
         return renderFirmaSection();
-      case 'LISTO_PARA_ENTREGA':
+      case "LISTO_PARA_ENTREGA":
         return renderEntregaSection();
-      case 'COMPLETADO':
+      case "COMPLETADO":
         return renderCompletadoSection();
       default:
         return null;
@@ -310,34 +448,65 @@ export function PendingActions({ solicitud, onDocumentUpload }: PendingActionsPr
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-          Acciones Pendientes
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Sección de pagos (siempre visible si hay saldo pendiente) */}
-        {solicitud.saldoPendiente > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-red-600" />
-              Estado de Pagos
-            </h3>
-            {renderPaymentSection()}
-          </div>
-        )}
+    <div className="space-y-6">
+      {/* Bloqueo por pago - Solo mostrar si el modal NO está abierto */}
+      {debeMostrarBloqueoPago() && !showPaymentModal && (
+        <Alert className="border-red-200 bg-red-50">
+          <Lock className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            <strong>Proceso Bloqueado:</strong> Para continuar con el trámite,
+            es necesario completar el pago pendiente de $
+            {solicitud.saldoPendiente.toLocaleString("es-MX")}.
+            <Button
+              variant="link"
+              className="p-0 h-auto text-red-800 underline ml-2"
+              onClick={() => setShowPaymentModal(true)}
+            >
+              Realizar pago ahora
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* Acciones específicas según el estatus */}
-        <div>
-          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-600" />
-            Próximos Pasos
-          </h3>
+      {/* Acciones según el estatus */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2">
+            {debeMostrarBloqueoPago() ? (
+              <Lock className="h-6 w-6 text-red-600" />
+            ) : (
+              <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+            )}
+            {debeMostrarBloqueoPago()
+              ? "Proceso Bloqueado"
+              : "Acciones Pendientes"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           {getActionsForStatus(solicitud.estatusActual)}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Modal de pago */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        saldoPendiente={solicitud.saldoPendiente}
+        costoTotal={solicitud.costoTotal}
+        pagosRealizados={solicitud.pagosRealizados}
+        onPagoRealizado={handlePagoRealizado}
+        documentosSubidos={
+          solicitud.documentosRequeridos.filter((doc) => doc.subido).length
+        }
+        documentosRequeridos={solicitud.documentosRequeridos.length}
+      />
+
+      {/* Modal de visualización de documentos */}
+      <RealDocumentViewer
+        isOpen={showDocumentViewer}
+        onClose={() => setShowDocumentViewer(false)}
+        documento={selectedDocument}
+      />
+    </div>
   );
 }

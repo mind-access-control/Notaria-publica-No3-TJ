@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,13 +32,46 @@ import { Header } from "@/components/header";
 import { TramiteModal } from "@/components/tramite-modal";
 import { PromotionalBanner } from "@/components/promotional-banner";
 import { FloatingCTA } from "@/components/floating-cta";
+import { AIChatbot } from "@/components/ai-chatbot";
 import { useState } from "react";
 
 export default function HomePage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [isTramiteModalOpen, setIsTramiteModalOpen] = useState(false);
   const [preselectedTramite, setPreselectedTramite] = useState<
     string | undefined
   >(undefined);
+
+  // Redirigir usuarios autenticados a su cuenta
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      if (user?.role === "admin") {
+        router.push("/admin");
+      } else if (user?.role === "notario" || user?.role === "abogado") {
+        router.push("/abogado");
+      } else {
+        router.push("/mi-cuenta");
+      }
+    }
+  }, [isAuthenticated, isLoading, user, router]);
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si el usuario está autenticado, no mostrar la landing page (se redirigirá)
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -393,6 +429,9 @@ export default function HomePage() {
           setIsTramiteModalOpen(true);
         }}
       />
+
+      {/* Chatbot solo para usuarios no autenticados */}
+      {!isAuthenticated && <AIChatbot />}
     </div>
   );
 }

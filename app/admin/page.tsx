@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import {
   Card,
   CardContent,
@@ -102,7 +104,33 @@ const usuarios = [
 ];
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Verificar autenticación
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || user?.role !== "admin")) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isLoading, user, router]);
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando credenciales...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no está autenticado o no es admin, no mostrar nada (se redirigirá)
+  if (!isAuthenticated || user?.role !== "admin") {
+    return null;
+  }
 
   // Cálculos
   const totalExpedientes = expedientes.length;

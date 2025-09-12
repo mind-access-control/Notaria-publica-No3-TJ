@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Suspense } from "react";
-import { AIChatbot } from "@/components/ai-chatbot";
 import { AuthProvider } from "@/contexts/auth-context";
 import "./globals.css";
 
@@ -32,11 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased overflow-x-hidden`}
       >
         <AuthProvider>
           <Suspense fallback={null}>{children}</Suspense>
-          <AIChatbot />
           <Analytics />
         </AuthProvider>
       </body>
