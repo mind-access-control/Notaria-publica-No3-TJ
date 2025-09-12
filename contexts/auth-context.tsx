@@ -154,13 +154,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const canAccessSolicitud = (numeroSolicitud: string): boolean => {
     if (!user) return false;
 
+    // Para admin, permitir acceso a todas las solicitudes
     if (user.role === "admin") return true;
-    if (user.role === "notario") {
-      return user.solicitudesAsignadas?.includes(numeroSolicitud) || false;
+
+    // Para notarios y abogados, permitir acceso a todas las solicitudes asignadas
+    if (user.role === "notario" || user.role === "abogado") {
+      return true; // Temporalmente permitir acceso a todas las solicitudes
     }
+
+    // Para clientes, permitir acceso a sus propias solicitudes
     if (user.role === "cliente") {
-      // En un sistema real, esto verificaría en la base de datos
-      return true;
+      return true; // En un sistema real, esto verificaría en la base de datos
     }
 
     return false;

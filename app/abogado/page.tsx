@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Solicitud, getUserSolicitudes } from "@/lib/mock-data";
 import {
+  Cita,
+  getCitasAbogado,
+  getCitasHoy,
+  getProximasCitas,
+} from "@/lib/citas-data";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -51,6 +57,10 @@ import {
   X,
   Save,
   RotateCcw,
+  CalendarDays,
+  MapPin,
+  Phone,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -91,6 +101,13 @@ export default function AbogadoPage() {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [highlightedElement, setHighlightedElement] =
     useState<HTMLElement | null>(null);
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [citasHoy, setCitasHoy] = useState<Cita[]>([]);
+  const [proximasCitas, setProximasCitas] = useState<Cita[]>([]);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [citasCargando, setCitasCargando] = useState(false);
 
   // Puntos estratégicos de revisión
   const strategicReviewPoints = [
@@ -331,6 +348,100 @@ export default function AbogadoPage() {
     return Object.values(reviewPoints).every((status) => status === "reviewed");
   };
 
+  // Funciones para manejar citas
+  const cargarCitas = async () => {
+    if (!user) return;
+
+    setCitasCargando(true);
+    try {
+      const [citasData, citasHoyData, proximasData] = await Promise.all([
+        getCitasAbogado(user.id),
+        getCitasHoy(user.id),
+        getProximasCitas(user.id),
+      ]);
+
+      setCitas(citasData);
+      setCitasHoy(citasHoyData);
+      setProximasCitas(proximasData);
+    } catch (error) {
+      console.error("Error cargando citas:", error);
+    } finally {
+      setCitasCargando(false);
+    }
+  };
+
+  const cargarCitasPorFecha = async (fecha: string) => {
+    if (!user) return;
+
+    setCitasCargando(true);
+    try {
+      const citasData = await getCitasAbogado(user.id, fecha);
+      setCitas(citasData);
+    } catch (error) {
+      console.error("Error cargando citas por fecha:", error);
+    } finally {
+      setCitasCargando(false);
+    }
+  };
+
+  const getEstadoCitaColor = (estado: string) => {
+    switch (estado) {
+      case "PROGRAMADA":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "EN_CURSO":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "COMPLETADA":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "CANCELADA":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getEstadoCitaIcon = (estado: string) => {
+    switch (estado) {
+      case "PROGRAMADA":
+        return <Clock className="h-4 w-4" />;
+      case "EN_CURSO":
+        return <AlertCircle className="h-4 w-4" />;
+      case "COMPLETADA":
+        return <CheckCircle className="h-4 w-4" />;
+      case "CANCELADA":
+        return <X className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const formatFechaCita = (fecha: string) => {
+    const fechaObj = new Date(fecha);
+    return fechaObj.toLocaleDateString("es-MX", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatHoraCita = (hora: string) => {
+    const [horas, minutos] = hora.split(":");
+    return `${horas}:${minutos}`;
+  };
+
+  const esCitaProxima = (cita: Cita) => {
+    const ahora = new Date();
+    const fechaCita = new Date(`${cita.fecha} ${cita.hora}`);
+    const diferenciaHoras =
+      (fechaCita.getTime() - ahora.getTime()) / (1000 * 60 * 60);
+
+    return (
+      diferenciaHoras <= 2 &&
+      diferenciaHoras >= 0 &&
+      cita.estado === "PROGRAMADA"
+    );
+  };
+
   // Verificar autenticación
   useEffect(() => {
     if (
@@ -398,7 +509,70 @@ export default function AbogadoPage() {
     };
 
     cargarSolicitudes();
+    cargarCitas();
   }, [isAuthenticated, user]);
+
+  // Cargar citas cuando cambie la fecha seleccionada
+  useEffect(() => {
+    if (user && fechaSeleccionada) {
+      cargarCitasPorFecha(fechaSeleccionada);
+    }
+  }, [fechaSeleccionada, user]);
+
+  // Verificar citas próximas cada minuto
+  useEffect(() => {
+    if (!user) return;
+
+    const verificarCitasProximas = () => {
+      const ahora = new Date();
+      const citasProximas = citas.filter((cita) => {
+        const fechaCita = new Date(`${cita.fecha} ${cita.hora}`);
+        const diferenciaMinutos =
+          (fechaCita.getTime() - ahora.getTime()) / (1000 * 60);
+
+        // Notificar si la cita está en los próximos 30 minutos
+        return (
+          diferenciaMinutos <= 30 &&
+          diferenciaMinutos >= 0 &&
+          cita.estado === "PROGRAMADA"
+        );
+      });
+
+      if (citasProximas.length > 0) {
+        citasProximas.forEach((cita) => {
+          const nuevaNotificacion = {
+            id: `cita-${cita.id}-${Date.now()}`,
+            tipo: "cita_proxima",
+            titulo: "Cita Próxima",
+            mensaje: `Tienes una cita con ${
+              cita.cliente.nombre
+            } a las ${formatHoraCita(cita.hora)} en ${cita.sala}`,
+            fecha: new Date().toLocaleString("es-MX"),
+            leida: false,
+            citaId: cita.id,
+            solicitudId: cita.numeroSolicitud,
+          };
+
+          setNotifications((prev) => [nuevaNotificacion, ...prev]);
+          setHasNewNotification(true);
+          setShowFloatingNotification(true);
+
+          // Ocultar notificación flotante después de 10 segundos
+          setTimeout(() => {
+            setShowFloatingNotification(false);
+          }, 10000);
+        });
+      }
+    };
+
+    // Verificar inmediatamente
+    verificarCitasProximas();
+
+    // Verificar cada minuto
+    const interval = setInterval(verificarCitasProximas, 60000);
+
+    return () => clearInterval(interval);
+  }, [citas, user]);
 
   const getStatusColor = (estatus: string) => {
     switch (estatus) {
@@ -671,13 +845,17 @@ export default function AbogadoPage() {
 
             {/* Tabs */}
             <Tabs defaultValue="solicitudes" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger
                   value="solicitudes"
                   className="flex items-center gap-2"
                 >
                   <FileText className="h-4 w-4" />
                   Mis Solicitudes Asignadas
+                </TabsTrigger>
+                <TabsTrigger value="citas" className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  Mis Citas
                 </TabsTrigger>
                 <TabsTrigger
                   value="estadisticas"
@@ -991,6 +1169,216 @@ export default function AbogadoPage() {
                 )}
               </TabsContent>
 
+              {/* Tab: Mis Citas */}
+              <TabsContent value="citas" className="space-y-6">
+                {/* Header con filtros */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900">
+                      Mis Citas
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      {citas.length} cita{citas.length !== 1 ? "s" : ""} para{" "}
+                      {fechaSeleccionada ===
+                      new Date().toISOString().split("T")[0]
+                        ? "hoy"
+                        : formatFechaCita(fechaSeleccionada)}
+                    </p>
+                  </div>
+
+                  {/* Selector de fecha */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <Input
+                        type="date"
+                        value={fechaSeleccionada}
+                        onChange={(e) => setFechaSeleccionada(e.target.value)}
+                        className="w-40"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setFechaSeleccionada(
+                          new Date().toISOString().split("T")[0]
+                        )
+                      }
+                    >
+                      Hoy
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Alertas de citas próximas */}
+                {proximasCitas.length > 0 && (
+                  <Card className="border-yellow-200 bg-yellow-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                        <div>
+                          <h4 className="font-semibold text-yellow-800">
+                            Citas Próximas
+                          </h4>
+                          <p className="text-sm text-yellow-700">
+                            Tienes {proximasCitas.length} cita
+                            {proximasCitas.length !== 1 ? "s" : ""} en las
+                            próximas 2 horas
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {citasCargando ? (
+                  <div className="text-center py-12">
+                    <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Cargando citas...</p>
+                  </div>
+                ) : citas.length === 0 ? (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No tienes citas programadas
+                      </h3>
+                      <p className="text-gray-600">
+                        {fechaSeleccionada ===
+                        new Date().toISOString().split("T")[0]
+                          ? "No tienes citas para hoy"
+                          : `No tienes citas para ${formatFechaCita(
+                              fechaSeleccionada
+                            )}`}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <div className="w-full">
+                      <div className="overflow-x-auto">
+                        <Table className="w-full min-w-max">
+                          <TableHeader>
+                            <TableRow className="bg-gray-50">
+                              <TableHead className="w-20">Hora</TableHead>
+                              <TableHead className="w-32">Cliente</TableHead>
+                              <TableHead className="w-40">
+                                Tipo de Trámite
+                              </TableHead>
+                              <TableHead className="w-24">Sala</TableHead>
+                              <TableHead className="w-20">Duración</TableHead>
+                              <TableHead className="w-24">Estado</TableHead>
+                              <TableHead className="w-20">Solicitud</TableHead>
+                              <TableHead className="w-16">Acciones</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {citas.map((cita) => (
+                              <TableRow
+                                key={cita.id}
+                                className={`${
+                                  esCitaProxima(cita)
+                                    ? "bg-yellow-50 border-l-4 border-yellow-500"
+                                    : "hover:bg-gray-50"
+                                } transition-colors`}
+                              >
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-gray-500" />
+                                    <span className="font-medium text-gray-900">
+                                      {formatHoraCita(cita.hora)}
+                                    </span>
+                                  </div>
+                                  {esCitaProxima(cita) && (
+                                    <Badge
+                                      variant="outline"
+                                      className="mt-1 text-xs border-yellow-400 text-yellow-700"
+                                    >
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      Próxima
+                                    </Badge>
+                                  )}
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="font-medium text-gray-900">
+                                    {cita.cliente.nombre}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {cita.cliente.email}
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="font-medium text-gray-900">
+                                    {cita.tipoTramite}
+                                  </div>
+                                  {cita.notas && (
+                                    <div className="text-sm text-gray-500 mt-1">
+                                      {cita.notas}
+                                    </div>
+                                  )}
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {cita.sala}
+                                    </span>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <span className="text-sm text-gray-700">
+                                    {cita.duracion} min
+                                  </span>
+                                </TableCell>
+
+                                <TableCell>
+                                  <Badge
+                                    className={getEstadoCitaColor(cita.estado)}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      {getEstadoCitaIcon(cita.estado)}
+                                      {cita.estado.replace("_", " ")}
+                                    </div>
+                                  </Badge>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="font-medium text-emerald-600">
+                                    #{cita.numeroSolicitud}
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Link
+                                        href={`/solicitud/${cita.numeroSolicitud}`}
+                                      >
+                                        <Button variant="outline" size="sm">
+                                          <Eye className="h-4 w-4" />
+                                        </Button>
+                                      </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Ver Solicitud</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </TabsContent>
+
               {/* Tab: Estadísticas */}
               <TabsContent value="estadisticas" className="space-y-6">
                 <div>
@@ -1021,13 +1409,13 @@ export default function AbogadoPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">
-                              Completadas
+                              Citas Hoy
                             </p>
-                            <p className="text-2xl font-bold text-green-600">
-                              0
+                            <p className="text-2xl font-bold text-blue-600">
+                              {citasHoy.length}
                             </p>
                           </div>
-                          <CheckCircle className="h-8 w-8 text-green-600" />
+                          <CalendarDays className="h-8 w-8 text-blue-600" />
                         </div>
                       </CardContent>
                     </Card>
@@ -1037,13 +1425,13 @@ export default function AbogadoPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">
-                              En Proceso
+                              Citas Próximas
                             </p>
                             <p className="text-2xl font-bold text-yellow-600">
-                              {filteredSolicitudes.length}
+                              {proximasCitas.length}
                             </p>
                           </div>
-                          <Clock className="h-8 w-8 text-yellow-600" />
+                          <AlertTriangle className="h-8 w-8 text-yellow-600" />
                         </div>
                       </CardContent>
                     </Card>
@@ -1115,8 +1503,8 @@ export default function AbogadoPage() {
                     </Card>
                   </div>
 
-                  {/* Distribución por estatus */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Distribución por estatus y citas */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <Card>
                       <CardHeader>
                         <CardTitle>Distribución por Estatus</CardTitle>
@@ -1250,6 +1638,70 @@ export default function AbogadoPage() {
                         </div>
                       </CardContent>
                     </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Estado de Citas</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {[
+                            {
+                              estado: "PROGRAMADA",
+                              label: "Programadas",
+                              color: "bg-blue-500",
+                            },
+                            {
+                              estado: "EN_CURSO",
+                              label: "En Curso",
+                              color: "bg-yellow-500",
+                            },
+                            {
+                              estado: "COMPLETADA",
+                              label: "Completadas",
+                              color: "bg-green-500",
+                            },
+                            {
+                              estado: "CANCELADA",
+                              label: "Canceladas",
+                              color: "bg-red-500",
+                            },
+                          ].map(({ estado, label, color }) => {
+                            const count = citas.filter(
+                              (c) => c.estado === estado
+                            ).length;
+                            const percentage =
+                              citas.length > 0
+                                ? (count / citas.length) * 100
+                                : 0;
+
+                            return (
+                              <div
+                                key={estado}
+                                className="flex items-center justify-between"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-3 h-3 rounded-full ${color}`}
+                                  ></div>
+                                  <span className="text-sm font-medium">
+                                    {label}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">
+                                    {count}
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    ({percentage.toFixed(1)}%)
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               </TabsContent>
@@ -1301,6 +1753,8 @@ export default function AbogadoPage() {
                       className={`p-3 rounded-lg border ${
                         notification.tipo === "nueva_solicitud"
                           ? "bg-blue-50 border-blue-200"
+                          : notification.tipo === "cita_proxima"
+                          ? "bg-yellow-50 border-yellow-200"
                           : notification.tipo === "rechazada"
                           ? "bg-red-50 border-red-200"
                           : "bg-green-50 border-green-200"
