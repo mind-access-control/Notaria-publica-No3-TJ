@@ -515,11 +515,12 @@ export function SolicitudReview({
               </p>
             </div>
 
-            <div className="flex-1 p-4">
+            <div className="flex-1 p-0">
               {selectedDocument ? (
-                <div className="h-full border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="h-full flex flex-col">
-                    <div className="p-3 bg-gray-50 border-b border-gray-200">
+                <div className="h-full flex flex-col">
+                  {/* Header con botones */}
+                  <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                    <div>
                       <h4 className="font-medium text-gray-900">
                         {selectedDocument.nombre}
                       </h4>
@@ -527,69 +528,68 @@ export function SolicitudReview({
                         {selectedDocument.descripcion}
                       </p>
                     </div>
-                    <div className="flex-1 p-4">
-                      <div className="h-full border border-gray-300 rounded-lg overflow-hidden">
-                        <div className="h-full flex flex-col">
-                          {/* Header con botones */}
-                          <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => {
-                                  const url = `/documentos_legales/${encodeURIComponent(
-                                    selectedDocument.archivo
-                                  )}`;
-                                  window.open(url, "_blank");
-                                }}
-                                variant="outline"
-                                size="sm"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Nueva Pestaña
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  const url = `/documentos_legales/${encodeURIComponent(
-                                    selectedDocument.archivo
-                                  )}`;
-                                  const link = document.createElement("a");
-                                  link.href = url;
-                                  link.download = selectedDocument.archivo;
-                                  link.click();
-                                }}
-                                variant="outline"
-                                size="sm"
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Descargar
-                              </Button>
-                            </div>
-                          </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          const url = `/documentos_legales/${encodeURIComponent(
+                            selectedDocument.archivo
+                          )}`;
+                          window.open(url, "_blank");
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Nueva Pestaña
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const url = `/documentos_legales/${encodeURIComponent(
+                            selectedDocument.archivo
+                          )}`;
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = selectedDocument.archivo;
+                          link.click();
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Descargar
+                      </Button>
+                    </div>
+                  </div>
 
-                          {/* Visor de PDF */}
-                          <div className="flex-1">
-                            <iframe
-                              src={`/documentos_legales/${encodeURIComponent(
-                                selectedDocument.archivo
-                              )}`}
-                              className="w-full h-full"
-                              title={selectedDocument.nombre}
-                              style={{ minHeight: "500px" }}
-                              onLoad={() =>
-                                console.log(
-                                  "PDF loaded:",
-                                  selectedDocument.archivo
-                                )
-                              }
-                              onError={() =>
-                                console.log(
-                                  "Error loading PDF:",
-                                  selectedDocument.archivo
-                                )
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
+                  {/* Visor de PDF - Aplicando los mismos estilos del panel de abogados */}
+                  <div className="flex-1 relative bg-gray-100" style={{ width: "100%" }}>
+                    <div className="h-full w-full overflow-hidden">
+                      <iframe
+                        src={`/documentos_legales/${encodeURIComponent(
+                          selectedDocument.archivo
+                        )}`}
+                        className="w-full h-full border-0"
+                        title={selectedDocument.nombre}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          minWidth: "100%",
+                          maxWidth: "100%",
+                          display: "block",
+                        }}
+                        onLoad={() =>
+                          console.log(
+                            "PDF loaded:",
+                            selectedDocument.archivo
+                          )
+                        }
+                        onError={() =>
+                          console.log(
+                            "Error loading PDF:",
+                            selectedDocument.archivo
+                          )
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -700,14 +700,23 @@ export function SolicitudReview({
 
       {/* Modal grande para ver documento principal tipo DocuSign */}
       <Dialog open={showDocumentModal} onOpenChange={setShowDocumentModal}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
-          <DialogHeader className="p-6 pb-4 border-b">
+        <DialogContent
+          className="max-w-[98vw] max-h-[95vh] w-full h-full p-0"
+          style={{
+            width: "98vw",
+            height: "95vh",
+            maxWidth: "98vw",
+            maxHeight: "95vh",
+          }}
+          showCloseButton={false}
+        >
+          <DialogHeader className="p-1 pb-0 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle className="text-xl font-bold">
+                <DialogTitle className="text-sm font-bold">
                   {selectedMainDocument?.nombre}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-gray-600">
+                <DialogDescription className="text-xs text-gray-600">
                   {selectedMainDocument?.descripcion}
                 </DialogDescription>
               </div>
@@ -785,17 +794,25 @@ export function SolicitudReview({
                 </div>
 
                 {/* Visor del documento */}
-                <div className="flex-1 bg-gray-100 p-4 overflow-auto">
-                  <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div className="h-[800px]">
-                      <iframe
-                        src={`/documentos_legales/${encodeURIComponent(
-                          selectedMainDocument?.archivo || ""
-                        )}`}
-                        className="w-full h-full border-0"
-                        title={selectedMainDocument?.nombre}
-                      />
-                    </div>
+                <div
+                  className="flex-1 relative bg-gray-100"
+                  style={{ width: "100%" }}
+                >
+                  <div className="h-full w-full overflow-hidden">
+                    <iframe
+                      src={`/documentos_legales/${encodeURIComponent(
+                        selectedMainDocument?.archivo || ""
+                      )}`}
+                      className="w-full h-full border-0"
+                      title={selectedMainDocument?.nombre}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        minWidth: "100%",
+                        maxWidth: "100%",
+                        display: "block",
+                      }}
+                    />
                   </div>
                 </div>
               </div>

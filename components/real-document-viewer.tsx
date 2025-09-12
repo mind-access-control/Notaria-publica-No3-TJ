@@ -154,28 +154,27 @@ export default function RealDocumentViewer({
       if (!documentUrl) return null;
 
       return (
-        <div className="h-full w-full bg-gray-100">
-          <iframe
-            src={documentUrl}
-            className="w-full h-full border-0"
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "none",
-              display: "block",
-            }}
-            title={
-              typeof documento.archivo === "object" && documento.archivo.name
-                ? documento.archivo.name
-                : String(documento.archivo)
-            }
-            onLoad={() => setIsLoading(false)}
-            onError={() => {
-              setError("No se pudo cargar el documento PDF");
-              setIsLoading(false);
-            }}
-          />
-        </div>
+        <iframe
+          src={documentUrl}
+          className="w-full h-full border-0"
+          style={{
+            width: "100%",
+            height: "100%",
+            minWidth: "100%",
+            maxWidth: "100%",
+            display: "block",
+          }}
+          title={
+            typeof documento.archivo === "object" && documento.archivo.name
+              ? documento.archivo.name
+              : String(documento.archivo)
+          }
+          onLoad={() => setIsLoading(false)}
+          onError={() => {
+            setError("No se pudo cargar el documento PDF");
+            setIsLoading(false);
+          }}
+        />
       );
     }
 
@@ -184,22 +183,27 @@ export default function RealDocumentViewer({
       if (!documentUrl) return null;
 
       return (
-        <div className="h-full w-full flex items-center justify-center bg-gray-50">
-          <img
-            src={documentUrl}
-            alt={
-              typeof documento.archivo === "object" && documento.archivo.name
-                ? documento.archivo.name
-                : String(documento.archivo)
-            }
-            className="max-w-full max-h-full object-contain"
-            onLoad={() => setIsLoading(false)}
-            onError={() => {
-              setError("No se pudo cargar la imagen");
-              setIsLoading(false);
-            }}
-          />
-        </div>
+        <img
+          src={documentUrl}
+          alt={
+            typeof documento.archivo === "object" && documento.archivo.name
+              ? documento.archivo.name
+              : String(documento.archivo)
+          }
+          className="w-full h-full object-contain"
+          style={{
+            width: "100%",
+            height: "100%",
+            minWidth: "100%",
+            maxWidth: "100%",
+            display: "block",
+          }}
+          onLoad={() => setIsLoading(false)}
+          onError={() => {
+            setError("No se pudo cargar la imagen");
+            setIsLoading(false);
+          }}
+        />
       );
     }
 
@@ -234,50 +238,57 @@ export default function RealDocumentViewer({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-h-[100vh] w-[100vw] max-w-none h-[100vh] p-0">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-emerald-600" />
-              {documento.nombre}
-            </DialogTitle>
-            <DialogDescription>
-              Vista previa del documento subido
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Información rápida del documento */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mx-6">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">
+        <DialogContent
+          className="max-w-[98vw] max-h-[95vh] w-full h-full p-0"
+          style={{
+            width: "98vw",
+            height: "95vh",
+            maxWidth: "98vw",
+            maxHeight: "95vh",
+          }}
+          showCloseButton={false}
+        >
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Header compacto */}
+            <div className="bg-white border-b px-3 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div>
+                  <DialogTitle className="text-sm font-bold flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-emerald-600" />
+                    {documento.nombre}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-gray-600">
+                    Vista previa del documento subido
+                  </DialogDescription>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Calendar className="h-3 w-3" />
+                  <span>
                     {documento.fechaSubida
                       ? new Date(documento.fechaSubida).toLocaleDateString(
                           "es-MX"
                         )
                       : "No especificada"}
                   </span>
+                  <Badge
+                    variant={documento.subido ? "default" : "outline"}
+                    className={
+                      documento.subido ? "bg-green-100 text-green-800 text-xs" : "text-xs"
+                    }
+                  >
+                    {documento.subido ? "Completado" : "Pendiente"}
+                  </Badge>
+                  <span>
+                    {typeof documento.archivo === "object" &&
+                    documento.archivo.name
+                      ? documento.archivo.name.split(".").pop()?.toUpperCase() ||
+                        "N/A"
+                      : typeof documento.archivo === "string"
+                      ? documento.archivo.split(".").pop()?.toUpperCase() || "N/A"
+                      : "N/A"}
+                  </span>
                 </div>
-                <Badge
-                  variant={documento.subido ? "default" : "outline"}
-                  className={
-                    documento.subido ? "bg-green-100 text-green-800" : ""
-                  }
-                >
-                  {documento.subido ? "Completado" : "Pendiente"}
-                </Badge>
-                <span className="text-sm text-gray-500">
-                  {typeof documento.archivo === "object" &&
-                  documento.archivo.name
-                    ? documento.archivo.name.split(".").pop()?.toUpperCase() ||
-                      "N/A"
-                    : typeof documento.archivo === "string"
-                    ? documento.archivo.split(".").pop()?.toUpperCase() || "N/A"
-                    : "N/A"}
-                </span>
               </div>
-
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -291,12 +302,19 @@ export default function RealDocumentViewer({
                   <Download className="h-4 w-4 mr-1" />
                   Descargar
                 </Button>
+                <Button size="sm" onClick={onClose} variant="outline">
+                  <X className="h-4 w-4 mr-1" />
+                  Cerrar
+                </Button>
               </div>
             </div>
 
             {/* Vista previa del documento */}
-            <div className="flex-1">
-              <div className="h-[85vh] overflow-hidden relative bg-gray-50">
+            <div
+              className="flex-1 relative bg-gray-100"
+              style={{ width: "100%" }}
+            >
+              <div className="h-full w-full overflow-hidden">
                 {isLoading && (
                   <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                     <div className="text-center">
@@ -319,19 +337,6 @@ export default function RealDocumentViewer({
                 )}
 
                 {!error && renderDocumentContent()}
-              </div>
-            </div>
-
-            {/* Botones de acción */}
-            <div className="flex justify-between items-center p-4 border-t mx-6">
-              <div className="text-sm text-gray-600">
-                <strong>Descripción:</strong> {documento.descripcion}
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={onClose}>
-                  <X className="h-4 w-4 mr-2" />
-                  Cerrar
-                </Button>
               </div>
             </div>
           </div>

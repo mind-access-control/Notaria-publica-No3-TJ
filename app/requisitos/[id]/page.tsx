@@ -23,10 +23,10 @@ const tramitesConfig = {
       "Contrato de compraventa privado (si aplica)",
     ],
     costos: {
-      aranceles: 15000,
-      impuestos: 5000,
-      derechos: 2000,
-      total: 22000,
+      aranceles: { min: 12000, max: 18000 },
+      impuestos: { min: 4000, max: 6000 },
+      derechos: { min: 1500, max: 2500 },
+      total: { min: 18000, max: 25000 },
     },
     tiempoEstimado: "15-20 días hábiles",
   },
@@ -44,10 +44,10 @@ const tramitesConfig = {
       "Carta de aceptación de donación",
     ],
     costos: {
-      aranceles: 12000,
-      impuestos: 3000,
-      derechos: 1500,
-      total: 16500,
+      aranceles: { min: 10000, max: 14000 },
+      impuestos: { min: 2500, max: 3500 },
+      derechos: { min: 1200, max: 1800 },
+      total: { min: 14000, max: 19000 },
     },
     tiempoEstimado: "12-15 días hábiles",
   },
@@ -65,10 +65,10 @@ const tramitesConfig = {
       "Identificación de albacea (si aplica)",
     ],
     costos: {
-      aranceles: 8000,
-      impuestos: 2000,
-      derechos: 1000,
-      total: 11000,
+      aranceles: { min: 6000, max: 10000 },
+      impuestos: { min: 1500, max: 2500 },
+      derechos: { min: 800, max: 1200 },
+      total: { min: 8500, max: 13500 },
     },
     tiempoEstimado: "5-7 días hábiles",
   },
@@ -118,10 +118,10 @@ export default function RequisitosPage() {
               
               <div class="costos">
                 <h3>Desglose de Costos:</h3>
-                <p><strong>Aranceles:</strong> $${tramiteInfo.costos.aranceles.toLocaleString()}</p>
-                <p><strong>Impuestos:</strong> $${tramiteInfo.costos.impuestos.toLocaleString()}</p>
-                <p><strong>Derechos:</strong> $${tramiteInfo.costos.derechos.toLocaleString()}</p>
-                <p><strong>Total:</strong> $${tramiteInfo.costos.total.toLocaleString()}</p>
+                <p><strong>Aranceles:</strong> $${tramiteInfo.costos.aranceles.min.toLocaleString()} - $${tramiteInfo.costos.aranceles.max.toLocaleString()}</p>
+                <p><strong>Impuestos:</strong> $${tramiteInfo.costos.impuestos.min.toLocaleString()} - $${tramiteInfo.costos.impuestos.max.toLocaleString()}</p>
+                <p><strong>Derechos:</strong> $${tramiteInfo.costos.derechos.min.toLocaleString()} - $${tramiteInfo.costos.derechos.max.toLocaleString()}</p>
+                <p><strong>Total:</strong> $${tramiteInfo.costos.total.min.toLocaleString()} - $${tramiteInfo.costos.total.max.toLocaleString()}</p>
               </div>
               
               <p><strong>Tiempo Estimado:</strong> ${tramiteInfo.tiempoEstimado}</p>
@@ -262,19 +262,19 @@ Notaría Tijuana`;
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b">
                 <span className="text-gray-600">Aranceles Notariales:</span>
-                <span className="font-semibold">${tramiteInfo.costos.aranceles.toLocaleString()}</span>
+                <span className="font-semibold">${tramiteInfo.costos.aranceles.min.toLocaleString()} - ${tramiteInfo.costos.aranceles.max.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
                 <span className="text-gray-600">Impuestos:</span>
-                <span className="font-semibold">${tramiteInfo.costos.impuestos.toLocaleString()}</span>
+                <span className="font-semibold">${tramiteInfo.costos.impuestos.min.toLocaleString()} - ${tramiteInfo.costos.impuestos.max.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
                 <span className="text-gray-600">Derechos:</span>
-                <span className="font-semibold">${tramiteInfo.costos.derechos.toLocaleString()}</span>
+                <span className="font-semibold">${tramiteInfo.costos.derechos.min.toLocaleString()} - ${tramiteInfo.costos.derechos.max.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-3 bg-blue-50 rounded-lg px-4">
                 <span className="text-lg font-bold text-blue-900">Total:</span>
-                <span className="text-xl font-bold text-blue-900">${tramiteInfo.costos.total.toLocaleString()}</span>
+                <span className="text-xl font-bold text-blue-900">${tramiteInfo.costos.total.min.toLocaleString()} - ${tramiteInfo.costos.total.max.toLocaleString()}</span>
               </div>
             </div>
           </CardContent>

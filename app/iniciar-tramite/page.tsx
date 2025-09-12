@@ -30,7 +30,7 @@ const TRAMITES_DISPONIBLES = [
     nombre: "Testamento Público Abierto",
     descripcion:
       "Documento notarial que permite disponer de bienes y derechos para después de la muerte",
-    costo: 15000,
+    costo: { min: 12000, max: 18000 },
     tiempo: "5-7 días hábiles",
     documentos: [
       "Identificación oficial vigente",
@@ -51,7 +51,7 @@ const TRAMITES_DISPONIBLES = [
     nombre: "Compraventa de Inmueble",
     descripcion:
       "Contrato notarial para la transferencia de propiedad de bienes inmuebles",
-    costo: 25000,
+    costo: { min: 20000, max: 30000 },
     tiempo: "7-10 días hábiles",
     documentos: [
       "Identificación oficial vigente",
@@ -72,7 +72,7 @@ const TRAMITES_DISPONIBLES = [
     nombre: "Poder Notarial",
     descripcion:
       "Documento que autoriza a otra persona para actuar en representación",
-    costo: 8000,
+    costo: { min: 6000, max: 10000 },
     tiempo: "3-5 días hábiles",
     documentos: [
       "Identificación oficial vigente",
@@ -357,7 +357,7 @@ export default function IniciarTramitePage() {
                             Costo base del trámite:
                           </span>
                           <span className="font-medium">
-                            ${(tramiteInfo.costo * 0.6).toLocaleString("es-MX")}
+                            ${Math.round(tramiteInfo.costo.min * 0.6).toLocaleString("es-MX")} - ${Math.round(tramiteInfo.costo.max * 0.6).toLocaleString("es-MX")}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -365,8 +365,7 @@ export default function IniciarTramitePage() {
                             Aranceles notariales:
                           </span>
                           <span className="font-medium">
-                            $
-                            {(tramiteInfo.costo * 0.25).toLocaleString("es-MX")}
+                            ${Math.round(tramiteInfo.costo.min * 0.25).toLocaleString("es-MX")} - ${Math.round(tramiteInfo.costo.max * 0.25).toLocaleString("es-MX")}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -374,15 +373,14 @@ export default function IniciarTramitePage() {
                             Gastos de gestión:
                           </span>
                           <span className="font-medium">
-                            $
-                            {(tramiteInfo.costo * 0.15).toLocaleString("es-MX")}
+                            ${Math.round(tramiteInfo.costo.min * 0.15).toLocaleString("es-MX")} - ${Math.round(tramiteInfo.costo.max * 0.15).toLocaleString("es-MX")}
                           </span>
                         </div>
                         <div className="border-t border-gray-300 pt-2 mt-2">
                           <div className="flex justify-between font-semibold text-lg">
                             <span>Total:</span>
                             <span className="text-emerald-600">
-                              ${tramiteInfo.costo.toLocaleString("es-MX")}
+                              ${tramiteInfo.costo.min.toLocaleString("es-MX")} - ${tramiteInfo.costo.max.toLocaleString("es-MX")}
                             </span>
                           </div>
                         </div>

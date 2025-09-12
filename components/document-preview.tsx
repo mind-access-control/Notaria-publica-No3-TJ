@@ -51,7 +51,7 @@ export default function DocumentPreview({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className={`max-w-6xl ${isFullscreen ? 'max-h-[95vh]' : 'max-h-[80vh]'}`}>
+        <DialogContent className={`${isFullscreen ? 'max-w-[98vw] w-[98vw] max-h-[98vh] h-[98vh]' : 'max-w-[98vw] w-[98vw] max-h-[90vh] h-[90vh]'} p-0 m-0`}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-emerald-600" />
@@ -108,11 +108,11 @@ export default function DocumentPreview({
             </div>
 
             {/* Vista previa del documento */}
-            <Card className="flex-1">
+            <Card className="flex-1 w-full">
               <CardContent className="p-0">
-                <div className={`${isFullscreen ? 'h-[70vh]' : 'h-[50vh]'} border rounded-lg overflow-hidden`}>
+                <div className={`${isFullscreen ? 'h-[85vh]' : 'h-[75vh]'} w-full border rounded-lg overflow-hidden`}>
                   {documento.subido ? (
-                    <div className="h-full flex flex-col items-center justify-center bg-gray-50">
+                    <div className="h-full flex flex-col items-center justify-center bg-white">
                       <FileText className="h-24 w-24 text-gray-400 mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
                         {documento.archivo}

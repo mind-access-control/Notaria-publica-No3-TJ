@@ -67,7 +67,7 @@ const tramites = [
     description: "Protege el futuro de tu familia",
     color: "bg-red-50 border-red-200 text-red-700",
     iconColor: "text-red-600",
-    estimatedCost: "$3,200",
+    estimatedCost: "$2,500 - $3,500",
     timeRequired: "1-2 horas",
     keywords: [
       "testamento",
@@ -91,7 +91,7 @@ const tramites = [
     description: "Escrituración segura de propiedades",
     color: "bg-blue-50 border-blue-200 text-blue-700",
     iconColor: "text-blue-600",
-    estimatedCost: "$25,000",
+    estimatedCost: "$20,000 - $30,000",
     timeRequired: "2-4 horas",
     keywords: [
       "compraventa",
@@ -117,7 +117,7 @@ const tramites = [
     description: "Transferencia gratuita de bienes",
     color: "bg-pink-50 border-pink-200 text-pink-700",
     iconColor: "text-pink-600",
-    estimatedCost: "$4,500",
+    estimatedCost: "$3,500 - $5,500",
     timeRequired: "1-2 horas",
     keywords: ["donación", "regalo", "donar", "transferir", "ceder"],
     requirements: [
@@ -134,7 +134,7 @@ const tramites = [
     description: "Intercambio de propiedades",
     color: "bg-orange-50 border-orange-200 text-orange-700",
     iconColor: "text-orange-600",
-    estimatedCost: "$12,000",
+    estimatedCost: "$10,000 - $15,000",
     timeRequired: "2-3 horas",
     keywords: ["permuta", "intercambio", "cambio", "trueque", "canje"],
     requirements: [
@@ -151,7 +151,7 @@ const tramites = [
     description: "Financiamiento para vivienda",
     color: "bg-indigo-50 border-indigo-200 text-indigo-700",
     iconColor: "text-indigo-600",
-    estimatedCost: "$12,000",
+    estimatedCost: "$10,000 - $15,000",
     timeRequired: "2-3 horas",
     keywords: [
       "crédito",
@@ -177,7 +177,7 @@ const tramites = [
     description: "Préstamo de dinero con garantía",
     color: "bg-cyan-50 border-cyan-200 text-cyan-700",
     iconColor: "text-cyan-600",
-    estimatedCost: "$3,000",
+    estimatedCost: "$2,500 - $4,000",
     timeRequired: "1-2 horas",
     keywords: ["mutuo", "préstamo", "dinero", "garantía", "intereses"],
     requirements: [
@@ -194,7 +194,7 @@ const tramites = [
     description: "Reconocimiento formal de deuda",
     color: "bg-yellow-50 border-yellow-200 text-yellow-700",
     iconColor: "text-yellow-600",
-    estimatedCost: "$1,800",
+    estimatedCost: "$1,500 - $2,500",
     timeRequired: "30-60 minutos",
     keywords: ["adeudo", "deuda", "reconocimiento", "obligación", "pagar"],
     requirements: [
@@ -210,7 +210,7 @@ const tramites = [
     description: "Herencia testamentaria e intestamentaria",
     color: "bg-amber-50 border-amber-200 text-amber-700",
     iconColor: "text-amber-600",
-    estimatedCost: "$8,500",
+    estimatedCost: "$7,000 - $10,000",
     timeRequired: "2-4 horas",
     keywords: [
       "adjudicación",
@@ -233,7 +233,7 @@ const tramites = [
     description: "Formaliza tu empresa",
     color: "bg-purple-50 border-purple-200 text-purple-700",
     iconColor: "text-purple-600",
-    estimatedCost: "$15,000",
+    estimatedCost: "$12,000 - $18,000",
     timeRequired: "2-3 horas",
     keywords: [
       "sociedad",
@@ -258,7 +258,7 @@ const tramites = [
     description: "División de propiedad en común",
     color: "bg-slate-50 border-slate-200 text-slate-700",
     iconColor: "text-slate-600",
-    estimatedCost: "$8,500",
+    estimatedCost: "$7,000 - $10,000",
     timeRequired: "2-3 horas",
     keywords: ["copropiedad", "liquidación", "división", "común", "partir"],
     requirements: [
@@ -275,7 +275,7 @@ const tramites = [
     description: "Transferencia de derechos patrimoniales",
     color: "bg-violet-50 border-violet-200 text-violet-700",
     iconColor: "text-violet-600",
-    estimatedCost: "$3,500",
+    estimatedCost: "$2,500 - $4,500",
     timeRequired: "1-2 horas",
     keywords: ["cesión", "derechos", "transferir", "ceder", "patrimoniales"],
     requirements: [
@@ -291,7 +291,7 @@ const tramites = [
     description: "Derecho de uso sobre propiedad ajena",
     color: "bg-lime-50 border-lime-200 text-lime-700",
     iconColor: "text-lime-600",
-    estimatedCost: "$4,500",
+    estimatedCost: "$3,500 - $5,500",
     timeRequired: "1-2 horas",
     keywords: ["servidumbre", "derecho", "uso", "paso", "servicio"],
     requirements: [
@@ -308,7 +308,7 @@ const tramites = [
     description: "Modificación de contratos existentes",
     color: "bg-rose-50 border-rose-200 text-rose-700",
     iconColor: "text-rose-600",
-    estimatedCost: "$3,000",
+    estimatedCost: "$2,500 - $4,000",
     timeRequired: "1-2 horas",
     keywords: ["convenio", "modificación", "contrato", "cambiar", "alterar"],
     requirements: [
@@ -325,7 +325,7 @@ const tramites = [
     description: "Elevación de sentencia a escritura",
     color: "bg-emerald-50 border-emerald-200 text-emerald-700",
     iconColor: "text-emerald-600",
-    estimatedCost: "$8,500",
+    estimatedCost: "$7,000 - $10,000",
     timeRequired: "2-3 horas",
     keywords: ["elevación", "judicial", "sentencia", "escritura", "juez"],
     requirements: [
@@ -342,7 +342,7 @@ const tramites = [
     description: "Pago de deuda con bienes",
     color: "bg-teal-50 border-teal-200 text-teal-700",
     iconColor: "text-teal-600",
-    estimatedCost: "$4,500",
+    estimatedCost: "$3,500 - $5,500",
     timeRequired: "1-2 horas",
     keywords: ["dación", "pago", "deuda", "bienes", "satisfacer"],
     requirements: [
@@ -359,7 +359,7 @@ const tramites = [
     description: "Elevación de contrato privado a escritura",
     color: "bg-indigo-50 border-indigo-200 text-indigo-700",
     iconColor: "text-indigo-600",
-    estimatedCost: "$5,500",
+    estimatedCost: "$4,500 - $7,000",
     timeRequired: "1-2 horas",
     keywords: ["formalización", "contrato", "privado", "escritura", "elevar"],
     requirements: [
@@ -376,7 +376,7 @@ const tramites = [
     description: "Constitución y transmisión de fideicomisos",
     color: "bg-teal-50 border-teal-200 text-teal-700",
     iconColor: "text-teal-600",
-    estimatedCost: "$18,000",
+    estimatedCost: "$15,000 - $22,000",
     timeRequired: "3-4 horas",
     keywords: ["fideicomiso", "fiduciario", "fideicomitente", "fideicomisario"],
     requirements: [
@@ -393,7 +393,7 @@ const tramites = [
     description: "Inicio de proceso sucesorio",
     color: "bg-amber-50 border-amber-200 text-amber-700",
     iconColor: "text-amber-600",
-    estimatedCost: "$8,500",
+    estimatedCost: "$7,000 - $10,000",
     timeRequired: "2-4 horas",
     keywords: [
       "sucesión",
@@ -416,7 +416,7 @@ const tramites = [
     description: "Liberación de gravamen hipotecario",
     color: "bg-emerald-50 border-emerald-200 text-emerald-700",
     iconColor: "text-emerald-600",
-    estimatedCost: "$4,500",
+    estimatedCost: "$3,500 - $5,500",
     timeRequired: "1-2 horas",
     keywords: ["cancelación", "hipoteca", "liberar", "pagar", "crédito"],
     requirements: [
@@ -433,7 +433,7 @@ const tramites = [
     description: "Protocolización de actas de asamblea",
     color: "bg-blue-50 border-blue-200 text-blue-700",
     iconColor: "text-blue-600",
-    estimatedCost: "$3,000",
+    estimatedCost: "$2,500 - $4,000",
     timeRequired: "1-2 horas",
     keywords: ["protocolización", "acta", "asamblea", "sociedad", "reunión"],
     requirements: [
@@ -450,7 +450,7 @@ const tramites = [
     description: "Modificación del régimen matrimonial",
     color: "bg-pink-50 border-pink-200 text-pink-700",
     iconColor: "text-pink-600",
-    estimatedCost: "$4,500",
+    estimatedCost: "$3,500 - $5,500",
     timeRequired: "1-2 horas",
     keywords: ["régimen", "matrimonial", "cambio", "bienes", "mancomunado"],
     requirements: [
@@ -467,7 +467,7 @@ const tramites = [
     description: "Comparación de documentos",
     color: "bg-gray-50 border-gray-200 text-gray-700",
     iconColor: "text-gray-600",
-    estimatedCost: "$800",
+    estimatedCost: "$600 - $1,200",
     timeRequired: "15-30 minutos",
     keywords: ["cotejo", "comparar", "documento", "verificar", "igual"],
     requirements: [
@@ -483,7 +483,7 @@ const tramites = [
     description: "Constancia notarial de hechos",
     color: "bg-slate-50 border-slate-200 text-slate-700",
     iconColor: "text-slate-600",
-    estimatedCost: "$1,800",
+    estimatedCost: "$1,500 - $2,500",
     timeRequired: "30-60 minutos",
     keywords: ["fe", "hechos", "constancia", "notarial", "testimonio"],
     requirements: [
@@ -499,7 +499,7 @@ const tramites = [
     description: "Representación legal confiable",
     color: "bg-green-50 border-green-200 text-green-700",
     iconColor: "text-green-600",
-    estimatedCost: "$2,200",
+    estimatedCost: "$1,800 - $3,000",
     timeRequired: "30-60 minutos",
     keywords: ["poder", "representar", "apoderado", "facultades", "delegar"],
     requirements: [
@@ -516,7 +516,7 @@ const tramites = [
     description: "Corrección de errores en escrituras",
     color: "bg-orange-50 border-orange-200 text-orange-700",
     iconColor: "text-orange-600",
-    estimatedCost: "$3,000",
+    estimatedCost: "$2,500 - $4,000",
     timeRequired: "1-2 horas",
     keywords: [
       "rectificación",
@@ -741,75 +741,75 @@ export function TramiteModal({
   const obtenerDesgloseCosto = (tramiteId: string) => {
     const desgloses = {
       testamento: {
-        honorariosNotario: 1500,
-        impuestos: 1200,
-        gastosRegistro: 500,
-        total: 3200,
+        honorariosNotario: { min: 1200, max: 1800 },
+        impuestos: { min: 1000, max: 1400 },
+        gastosRegistro: { min: 300, max: 700 },
+        total: { min: 2500, max: 3500 },
       },
       compraventa: {
-        honorariosNotario: 8000,
-        impuestos: 12000,
-        gastosRegistro: 3000,
-        avaluo: 2000,
-        total: 25000,
+        honorariosNotario: { min: 6000, max: 10000 },
+        impuestos: { min: 10000, max: 15000 },
+        gastosRegistro: { min: 2000, max: 4000 },
+        avaluo: { min: 1500, max: 2500 },
+        total: { min: 20000, max: 30000 },
       },
       donacion: {
-        honorariosNotario: 2000,
-        impuestos: 1500,
-        gastosRegistro: 1000,
-        total: 4500,
+        honorariosNotario: { min: 1500, max: 2500 },
+        impuestos: { min: 1200, max: 1800 },
+        gastosRegistro: { min: 800, max: 1200 },
+        total: { min: 3500, max: 5500 },
       },
       permuta: {
-        honorariosNotario: 4000,
-        impuestos: 5000,
-        gastosRegistro: 2000,
-        avaluo: 1000,
-        total: 12000,
+        honorariosNotario: { min: 3000, max: 5000 },
+        impuestos: { min: 4000, max: 6000 },
+        gastosRegistro: { min: 1500, max: 2500 },
+        avaluo: { min: 800, max: 1200 },
+        total: { min: 10000, max: 15000 },
       },
       "credito-hipotecario": {
-        honorariosNotario: 4000,
-        impuestos: 5000,
-        gastosRegistro: 2000,
-        avaluo: 1000,
-        total: 12000,
+        honorariosNotario: { min: 3000, max: 5000 },
+        impuestos: { min: 4000, max: 6000 },
+        gastosRegistro: { min: 1500, max: 2500 },
+        avaluo: { min: 800, max: 1200 },
+        total: { min: 10000, max: 15000 },
       },
       sociedad: {
-        honorariosNotario: 8000,
-        impuestos: 4000,
-        gastosRegistro: 2000,
-        gastosPublicacion: 1000,
-        total: 15000,
+        honorariosNotario: { min: 6000, max: 10000 },
+        impuestos: { min: 3000, max: 5000 },
+        gastosRegistro: { min: 1500, max: 2500 },
+        gastosPublicacion: { min: 800, max: 1200 },
+        total: { min: 12000, max: 18000 },
       },
       fideicomiso: {
-        honorariosNotario: 10000,
-        impuestos: 5000,
-        gastosRegistro: 2000,
-        gastosPublicacion: 1000,
-        total: 18000,
+        honorariosNotario: { min: 8000, max: 12000 },
+        impuestos: { min: 4000, max: 6000 },
+        gastosRegistro: { min: 1500, max: 2500 },
+        gastosPublicacion: { min: 800, max: 1200 },
+        total: { min: 15000, max: 22000 },
       },
       "adjudicacion-hereditaria": {
-        honorariosNotario: 4000,
-        impuestos: 3000,
-        gastosRegistro: 1500,
-        total: 8500,
+        honorariosNotario: { min: 3000, max: 5000 },
+        impuestos: { min: 2500, max: 3500 },
+        gastosRegistro: { min: 1200, max: 1800 },
+        total: { min: 7000, max: 10000 },
       },
       "liquidacion-copropiedad": {
-        honorariosNotario: 4000,
-        impuestos: 3000,
-        gastosRegistro: 1500,
-        total: 8500,
+        honorariosNotario: { min: 3000, max: 5000 },
+        impuestos: { min: 2500, max: 3500 },
+        gastosRegistro: { min: 1200, max: 1800 },
+        total: { min: 7000, max: 10000 },
       },
       "elevacion-judicial": {
-        honorariosNotario: 4000,
-        impuestos: 3000,
-        gastosRegistro: 1500,
-        total: 8500,
+        honorariosNotario: { min: 3000, max: 5000 },
+        impuestos: { min: 2500, max: 3500 },
+        gastosRegistro: { min: 1200, max: 1800 },
+        total: { min: 7000, max: 10000 },
       },
       "inicio-sucesion": {
-        honorariosNotario: 4000,
-        impuestos: 3000,
-        gastosRegistro: 1500,
-        total: 8500,
+        honorariosNotario: { min: 3000, max: 5000 },
+        impuestos: { min: 2500, max: 3500 },
+        gastosRegistro: { min: 1200, max: 1800 },
+        total: { min: 7000, max: 10000 },
       },
     };
 
@@ -847,14 +847,14 @@ export function TramiteModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
         {/* Header fijo */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-6">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-2">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <DialogTitle className="text-2xl font-bold text-center">
+              <DialogTitle className="text-lg font-bold text-center">
                 {step === 1 && "¿Qué trámite necesitas realizar?"}
                 {step === 2 && `Asesoría para ${tramite?.name}`}
               </DialogTitle>
-              <DialogDescription className="text-center mt-2">
+              <DialogDescription className="text-center text-xs">
                 {step === 1 &&
                   "Selecciona el tipo de trámite que necesitas y te ayudaremos con toda la información"}
                 {step === 2 &&
@@ -873,16 +873,16 @@ export function TramiteModal({
         </div>
 
         {/* Contenido scrolleable */}
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6 pb-8">
+        <div className="overflow-y-auto max-h-[calc(90vh-60px)] p-3 pb-4">
           {step === 1 && (
-            <div className="space-y-6 mt-6">
+            <div className="space-y-3 mt-2">
               {/* Buscador */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900">
                     ¿Qué deseas hacer?
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs text-gray-600 mt-0.5">
                     Escribe o dicta lo que necesitas y te ayudamos a encontrar
                     el trámite correcto
                   </p>
@@ -1218,10 +1218,7 @@ export function TramiteModal({
                                   Honorarios Notario:
                                 </span>
                                 <span className="font-medium">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.honorariosNotario.toLocaleString()}
+                                  ${obtenerDesgloseCosto(tramite.id)?.honorariosNotario.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.honorariosNotario.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1231,10 +1228,7 @@ export function TramiteModal({
                                   Impuestos:
                                 </span>
                                 <span className="font-medium">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.impuestos.toLocaleString()}
+                                  ${obtenerDesgloseCosto(tramite.id)?.impuestos.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.impuestos.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1245,10 +1239,7 @@ export function TramiteModal({
                                   Gastos de Registro:
                                 </span>
                                 <span className="font-medium">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.gastosRegistro.toLocaleString()}
+                                  ${obtenerDesgloseCosto(tramite.id)?.gastosRegistro.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.gastosRegistro.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1257,10 +1248,7 @@ export function TramiteModal({
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Avalúo:</span>
                                 <span className="font-medium">
-                                  $
-                                  {(
-                                    obtenerDesgloseCosto(tramite.id) as any
-                                  )?.avaluo.toLocaleString()}
+                                  ${(obtenerDesgloseCosto(tramite.id) as any)?.avaluo.min.toLocaleString()} - ${(obtenerDesgloseCosto(tramite.id) as any)?.avaluo.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1271,10 +1259,7 @@ export function TramiteModal({
                                   Gastos de Publicación:
                                 </span>
                                 <span className="font-medium">
-                                  $
-                                  {(
-                                    obtenerDesgloseCosto(tramite.id) as any
-                                  )?.gastosPublicacion.toLocaleString()}
+                                  ${(obtenerDesgloseCosto(tramite.id) as any)?.gastosPublicacion.min.toLocaleString()} - ${(obtenerDesgloseCosto(tramite.id) as any)?.gastosPublicacion.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1282,10 +1267,7 @@ export function TramiteModal({
                               <div className="flex justify-between font-bold">
                                 <span>Total:</span>
                                 <span className="text-green-600">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.total.toLocaleString()}
+                                  ${obtenerDesgloseCosto(tramite.id)?.total.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.total.max.toLocaleString()}
                                 </span>
                               </div>
                             </div>
