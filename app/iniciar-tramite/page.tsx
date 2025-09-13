@@ -257,7 +257,8 @@ export default function IniciarTramitePage() {
                           <div className="flex items-center gap-4 text-sm text-gray-500">
                             <div className="flex items-center gap-1">
                               <DollarSign className="h-4 w-4" />$
-                              {tramite.costo.toLocaleString("es-MX")}
+                              {tramite.costo.min.toLocaleString("es-MX")} - $
+                              {tramite.costo.max.toLocaleString("es-MX")}
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
@@ -357,7 +358,14 @@ export default function IniciarTramitePage() {
                             Costo base del trámite:
                           </span>
                           <span className="font-medium">
-                            ${Math.round(tramiteInfo.costo.min * 0.6).toLocaleString("es-MX")} - ${Math.round(tramiteInfo.costo.max * 0.6).toLocaleString("es-MX")}
+                            $
+                            {Math.round(
+                              tramiteInfo.costo.min * 0.6
+                            ).toLocaleString("es-MX")}{" "}
+                            - $
+                            {Math.round(
+                              tramiteInfo.costo.max * 0.6
+                            ).toLocaleString("es-MX")}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -365,7 +373,14 @@ export default function IniciarTramitePage() {
                             Aranceles notariales:
                           </span>
                           <span className="font-medium">
-                            ${Math.round(tramiteInfo.costo.min * 0.25).toLocaleString("es-MX")} - ${Math.round(tramiteInfo.costo.max * 0.25).toLocaleString("es-MX")}
+                            $
+                            {Math.round(
+                              tramiteInfo.costo.min * 0.25
+                            ).toLocaleString("es-MX")}{" "}
+                            - $
+                            {Math.round(
+                              tramiteInfo.costo.max * 0.25
+                            ).toLocaleString("es-MX")}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -373,14 +388,22 @@ export default function IniciarTramitePage() {
                             Gastos de gestión:
                           </span>
                           <span className="font-medium">
-                            ${Math.round(tramiteInfo.costo.min * 0.15).toLocaleString("es-MX")} - ${Math.round(tramiteInfo.costo.max * 0.15).toLocaleString("es-MX")}
+                            $
+                            {Math.round(
+                              tramiteInfo.costo.min * 0.15
+                            ).toLocaleString("es-MX")}{" "}
+                            - $
+                            {Math.round(
+                              tramiteInfo.costo.max * 0.15
+                            ).toLocaleString("es-MX")}
                           </span>
                         </div>
                         <div className="border-t border-gray-300 pt-2 mt-2">
                           <div className="flex justify-between font-semibold text-lg">
                             <span>Total:</span>
                             <span className="text-emerald-600">
-                              ${tramiteInfo.costo.min.toLocaleString("es-MX")} - ${tramiteInfo.costo.max.toLocaleString("es-MX")}
+                              ${tramiteInfo.costo.min.toLocaleString("es-MX")} -
+                              ${tramiteInfo.costo.max.toLocaleString("es-MX")}
                             </span>
                           </div>
                         </div>

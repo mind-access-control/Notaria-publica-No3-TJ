@@ -5,7 +5,13 @@ import { Solicitud } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, CreditCard, AlertCircle, CheckCircle2, Plus } from "lucide-react";
+import {
+  DollarSign,
+  CreditCard,
+  AlertCircle,
+  CheckCircle2,
+  Plus,
+} from "lucide-react";
 import PaymentModal from "./payment-modal";
 
 interface SolicitudInfoProps {
@@ -13,11 +19,42 @@ interface SolicitudInfoProps {
   onSolicitudUpdate?: (solicitud: Solicitud) => void;
 }
 
-export function SolicitudInfo({ solicitud, onSolicitudUpdate }: SolicitudInfoProps) {
+export function SolicitudInfo({
+  solicitud,
+  onSolicitudUpdate,
+}: SolicitudInfoProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  
-  const porcentajePagado = (solicitud.pagosRealizados / solicitud.costoTotal) * 100;
+
+  const porcentajePagado =
+    (solicitud.pagosRealizados / solicitud.costoTotal) * 100;
   const tieneSaldoPendiente = solicitud.saldoPendiente > 0;
+
+  // Función para determinar si debe mostrar el bloqueo por pago
+  const debeMostrarBloqueoPago = () => {
+    const documentosSubidos = solicitud.documentosRequeridos.filter(
+      (doc) => doc.subido
+    ).length;
+
+    // Si no hay saldo pendiente, no hay bloqueo
+    if (solicitud.saldoPendiente === 0) {
+      return false;
+    }
+
+    // Si el usuario ya realizó al menos un pago, NUNCA bloquear de nuevo
+    // Esto indica que ya configuró un método de pago y puede continuar
+    const yaConfiguroMetodoPago = solicitud.pagosRealizados > 0;
+    if (yaConfiguroMetodoPago) {
+      return false; // Nunca bloquear si ya hizo un pago
+    }
+
+    // Bloquear solo si:
+    // 1. Hay saldo pendiente Y
+    // 2. Se han subido al menos 2 documentos Y
+    // 3. NO se ha realizado ningún pago (no se ha configurado método de pago)
+    const debeBloquear = solicitud.saldoPendiente > 0 && documentosSubidos >= 2;
+
+    return debeBloquear;
+  };
 
   const handlePagoRealizado = (monto: number) => {
     if (onSolicitudUpdate) {
@@ -43,22 +80,28 @@ export function SolicitudInfo({ solicitud, onSolicitudUpdate }: SolicitudInfoPro
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Costo total:</span>
-              <span className="font-semibold">${solicitud.costoTotal.toLocaleString('es-MX')}</span>
+              <span className="font-semibold">
+                ${solicitud.costoTotal.toLocaleString("es-MX")}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Pagado:</span>
               <span className="font-semibold text-emerald-600">
-                ${solicitud.pagosRealizados.toLocaleString('es-MX')}
+                ${solicitud.pagosRealizados.toLocaleString("es-MX")}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Saldo pendiente:</span>
-              <span className={`font-semibold ${tieneSaldoPendiente ? 'text-red-600' : 'text-emerald-600'}`}>
-                ${solicitud.saldoPendiente.toLocaleString('es-MX')}
+              <span
+                className={`font-semibold ${
+                  tieneSaldoPendiente ? "text-red-600" : "text-emerald-600"
+                }`}
+              >
+                ${solicitud.saldoPendiente.toLocaleString("es-MX")}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${porcentajePagado}%` }}
               ></div>
@@ -66,45 +109,6 @@ export function SolicitudInfo({ solicitud, onSolicitudUpdate }: SolicitudInfoPro
             <div className="text-xs text-gray-500 text-center">
               {porcentajePagado.toFixed(0)}% pagado
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Estado de pagos */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-blue-600" />
-              Estado de Pagos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {tieneSaldoPendiente ? (
-              <div className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Pago pendiente</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-emerald-600">
-                <CheckCircle2 className="h-4 w-4" />
-                <span className="text-sm font-medium">Pago completo</span>
-              </div>
-            )}
-            
-            {tieneSaldoPendiente && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800 mb-3">
-                  Para continuar con el trámite, es necesario completar el pago pendiente.
-                </p>
-                <Button 
-                  onClick={() => setShowPaymentModal(true)}
-                  size="sm"
-                  className="w-full bg-red-600 hover:bg-red-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Realizar pago ahora
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -117,9 +121,13 @@ export function SolicitudInfo({ solicitud, onSolicitudUpdate }: SolicitudInfoPro
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="font-medium text-gray-900">{solicitud.notario.nombre}</p>
+            <p className="font-medium text-gray-900">
+              {solicitud.notario.nombre}
+            </p>
             <p className="text-sm text-gray-600">{solicitud.notario.email}</p>
-            <p className="text-sm text-gray-600">{solicitud.notario.telefono}</p>
+            <p className="text-sm text-gray-600">
+              {solicitud.notario.telefono}
+            </p>
             <Badge variant="outline" className="mt-2">
               Disponible para consultas
             </Badge>
@@ -135,7 +143,9 @@ export function SolicitudInfo({ solicitud, onSolicitudUpdate }: SolicitudInfoPro
         costoTotal={solicitud.costoTotal}
         pagosRealizados={solicitud.pagosRealizados}
         onPagoRealizado={handlePagoRealizado}
-        documentosSubidos={solicitud.documentosRequeridos.filter(doc => doc.subido).length}
+        documentosSubidos={
+          solicitud.documentosRequeridos.filter((doc) => doc.subido).length
+        }
         documentosRequeridos={solicitud.documentosRequeridos.length}
       />
     </>

@@ -111,14 +111,27 @@ export default function SolicitudStatusPage() {
     const documentosRequeridos = solicitud.documentosRequeridos.length;
     const todosDocumentosSubidos = documentosSubidos === documentosRequeridos;
     const sinSaldoPendiente = solicitud.saldoPendiente === 0;
+    const tienePagoParcial = solicitud.pagosRealizados > 0;
 
-    // Solo permitir cambio si todos los documentos están subidos y no hay saldo pendiente
-    if (!todosDocumentosSubidos || !sinSaldoPendiente) {
+    // Permitir cambio si:
+    // 1. Todos los documentos están subidos Y
+    // 2. (No hay saldo pendiente O hay pago parcial)
+    const puedeAvanzar =
+      todosDocumentosSubidos && (sinSaldoPendiente || tienePagoParcial);
+
+    if (!puedeAvanzar) {
+      let mensaje = "No se puede avanzar de estatus.";
+      if (!todosDocumentosSubidos) {
+        mensaje += " Faltan documentos por subir.";
+      }
+      if (!sinSaldoPendiente && !tienePagoParcial) {
+        mensaje += " Hay saldo pendiente sin pago parcial.";
+      }
+
       setNotificationModal({
         isOpen: true,
         title: "No se puede avanzar",
-        message:
-          "No se puede avanzar de estatus. Faltan documentos por subir o hay saldo pendiente.",
+        message: mensaje,
         type: "warning",
       });
       return;
@@ -304,8 +317,8 @@ export default function SolicitudStatusPage() {
 
           {/* Información general de la solicitud - INMEDIATAMENTE DESPUÉS DEL PROGRESO */}
           <div className="mt-8">
-            <SolicitudInfo 
-              solicitud={solicitud} 
+            <SolicitudInfo
+              solicitud={solicitud}
               onSolicitudUpdate={handleSolicitudUpdate}
             />
           </div>

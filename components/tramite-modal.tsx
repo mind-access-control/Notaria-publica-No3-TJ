@@ -978,7 +978,9 @@ export function TramiteModal({
               <Card className="border-2 border-emerald-200 bg-emerald-50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <tramite.icon className={`h-16 w-16 ${tramite.iconColor}`} />
+                    <tramite.icon
+                      className={`h-16 w-16 ${tramite.iconColor}`}
+                    />
                     <div>
                       <CardTitle className="text-xl">{tramite.name}</CardTitle>
                       <CardDescription className="text-base">
@@ -1218,7 +1220,14 @@ export function TramiteModal({
                                   Honorarios Notario:
                                 </span>
                                 <span className="font-medium">
-                                  ${obtenerDesgloseCosto(tramite.id)?.honorariosNotario.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.honorariosNotario.max.toLocaleString()}
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.honorariosNotario.min.toLocaleString()}{" "}
+                                  - $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.honorariosNotario.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1228,7 +1237,14 @@ export function TramiteModal({
                                   Impuestos:
                                 </span>
                                 <span className="font-medium">
-                                  ${obtenerDesgloseCosto(tramite.id)?.impuestos.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.impuestos.max.toLocaleString()}
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.impuestos.min.toLocaleString()}{" "}
+                                  - $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.impuestos.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1239,7 +1255,14 @@ export function TramiteModal({
                                   Gastos de Registro:
                                 </span>
                                 <span className="font-medium">
-                                  ${obtenerDesgloseCosto(tramite.id)?.gastosRegistro.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.gastosRegistro.max.toLocaleString()}
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.gastosRegistro.min.toLocaleString()}{" "}
+                                  - $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.gastosRegistro.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1248,7 +1271,14 @@ export function TramiteModal({
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Avalúo:</span>
                                 <span className="font-medium">
-                                  ${(obtenerDesgloseCosto(tramite.id) as any)?.avaluo.min.toLocaleString()} - ${(obtenerDesgloseCosto(tramite.id) as any)?.avaluo.max.toLocaleString()}
+                                  $
+                                  {(
+                                    obtenerDesgloseCosto(tramite.id) as any
+                                  )?.avaluo.min.toLocaleString()}{" "}
+                                  - $
+                                  {(
+                                    obtenerDesgloseCosto(tramite.id) as any
+                                  )?.avaluo.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1259,7 +1289,14 @@ export function TramiteModal({
                                   Gastos de Publicación:
                                 </span>
                                 <span className="font-medium">
-                                  ${(obtenerDesgloseCosto(tramite.id) as any)?.gastosPublicacion.min.toLocaleString()} - ${(obtenerDesgloseCosto(tramite.id) as any)?.gastosPublicacion.max.toLocaleString()}
+                                  $
+                                  {(
+                                    obtenerDesgloseCosto(tramite.id) as any
+                                  )?.gastosPublicacion.min.toLocaleString()}{" "}
+                                  - $
+                                  {(
+                                    obtenerDesgloseCosto(tramite.id) as any
+                                  )?.gastosPublicacion.max.toLocaleString()}
                                 </span>
                               </div>
                             )}
@@ -1267,7 +1304,14 @@ export function TramiteModal({
                               <div className="flex justify-between font-bold">
                                 <span>Total:</span>
                                 <span className="text-green-600">
-                                  ${obtenerDesgloseCosto(tramite.id)?.total.min.toLocaleString()} - ${obtenerDesgloseCosto(tramite.id)?.total.max.toLocaleString()}
+                                  $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.total.min.toLocaleString()}{" "}
+                                  - $
+                                  {obtenerDesgloseCosto(
+                                    tramite.id
+                                  )?.total.max.toLocaleString()}
                                 </span>
                               </div>
                             </div>

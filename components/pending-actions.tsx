@@ -80,9 +80,11 @@ export function PendingActions({
           (doc) => doc.subido
         ).length;
 
+      // Solo abrir modal si NO se ha hecho ningún pago (primera vez)
       if (
         solicitudActualizada.saldoPendiente > 0 &&
-        documentosSubidosDespues >= 2
+        documentosSubidosDespues >= 2 &&
+        solicitudActualizada.pagosRealizados === 0
       ) {
         // Abrir modal de pago automáticamente
         setTimeout(() => {
@@ -185,9 +187,11 @@ export function PendingActions({
           (doc) => doc.subido
         ).length;
 
+      // Solo abrir modal si NO se ha hecho ningún pago (primera vez)
       if (
         solicitudActualizada.saldoPendiente > 0 &&
-        documentosSubidosDespues >= 2
+        documentosSubidosDespues >= 2 &&
+        solicitudActualizada.pagosRealizados === 0
       ) {
         // Abrir modal de pago automáticamente
         setTimeout(() => {
@@ -234,17 +238,18 @@ export function PendingActions({
       return false;
     }
 
-    // Si hay saldo pendiente pero el usuario ya realizó al menos un pago, no bloquear
-    // Esto indica que ya configuró un método de pago
+    // Si el usuario ya realizó al menos un pago, NUNCA bloquear de nuevo
+    // Esto indica que ya configuró un método de pago y puede continuar
     const yaConfiguroMetodoPago = solicitud.pagosRealizados > 0;
+    if (yaConfiguroMetodoPago) {
+      return false; // Nunca bloquear si ya hizo un pago
+    }
 
     // Bloquear solo si:
     // 1. Hay saldo pendiente Y
     // 2. Se han subido al menos 2 documentos Y
     // 3. NO se ha realizado ningún pago (no se ha configurado método de pago)
-    const debeBloquear = solicitud.saldoPendiente > 0 && 
-                        documentosSubidos >= 2 && 
-                        !yaConfiguroMetodoPago;
+    const debeBloquear = solicitud.saldoPendiente > 0 && documentosSubidos >= 2;
 
     console.log("🔍 Debug bloqueo:", {
       saldoPendiente: solicitud.saldoPendiente,
