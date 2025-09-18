@@ -235,7 +235,27 @@ export function SolicitudReview({
     // Determinar el documento principal según el tipo de trámite
     const tramiteType = solicitud.tipoTramite.toLowerCase();
 
-    if (tramiteType.includes("testamento")) {
+    if (tramiteType.includes("compraventa") || tramiteType.includes("escritura")) {
+      return {
+        nombre: "Documentos de Compraventa",
+        archivo: "Contrato_Compraventa_Tijuana_Dummy_FirmasEspaciadas%20(1).docx.pdf",
+        descripcion: "Documentos requeridos para el trámite de compraventa",
+        tipo: "compraventa",
+        documentos: [
+          { id: 1, nombre: "Identificación Oficial", descripcion: "INE o pasaporte vigente", subido: true },
+          { id: 2, nombre: "CURP", descripcion: "Clave Única de Registro de Población", subido: true },
+          { id: 3, nombre: "RFC y Constancia de Situación Fiscal (CSF)", descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal", subido: true },
+          { id: 4, nombre: "Acta de Nacimiento", descripcion: "Acta de nacimiento reciente o legible", subido: true },
+          { id: 5, nombre: "Comprobante de Domicilio", descripcion: "Agua/luz/estado de cuenta, no mayor a 3 meses", subido: true },
+          { id: 6, nombre: "Datos Bancarios", descripcion: "CLABE y banco para dispersión y comprobación de fondos", subido: true },
+          { id: 7, nombre: "Acta de Matrimonio", descripcion: "Acta de matrimonio (si aplica)", subido: false },
+          { id: 8, nombre: "Carta oferta", descripcion: "Carta oferta o condiciones del banco", subido: true },
+          { id: 9, nombre: "Avalúo Bancario", descripcion: "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)", subido: false },
+          { id: 10, nombre: "Pólizas Requeridas por el Crédito", descripcion: "Pólizas de vida/daños, si aplican", subido: false },
+          { id: 11, nombre: "Instrucciones de Dispersión del Banco", descripcion: "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca", subido: false }
+        ]
+      };
+    } else if (tramiteType.includes("testamento")) {
       return {
         nombre: "Testamento Público Abierto",
         archivo: "Copia_de_32689.docx.md",
@@ -362,346 +382,97 @@ export function SolicitudReview({
       </div>
 
       <div className="flex h-[calc(100vh-120px)]">
-        {/* Panel Izquierdo - Información */}
-        <div className="w-1/2 p-6 overflow-y-auto">
-          {/* Lista de Secciones */}
-          <div className="space-y-4">
-            {reviewSections.map((section) => (
-              <Card
-                key={section.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{section.title}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(section.status)}
-                      <Badge className={getStatusColor(section.status)}>
-                        {section.status === "reviewed"
-                          ? "Revisado"
-                          : section.status === "needs_correction"
-                          ? "Requiere Corrección"
-                          : "Pendiente"}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {Object.entries(section.data).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="font-medium text-gray-600 capitalize">
-                          {key.replace(/([A-Z])/g, " $1").trim()}:
-                        </span>
-                        <span className="text-gray-900">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Documentos de esta sección */}
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-700">Documentos:</h4>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => {
-                            setSelectedSection(section.id);
-                            fileInputRef.current?.click();
-                          }}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Upload className="h-4 w-4 mr-1" />
-                          Subir
-                        </Button>
-                        <Button
-                          onClick={() => handleEditData(section.id)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Editar
-                        </Button>
-                      </div>
-                    </div>
-
-                    {section.documents.length > 0 && (
-                      <div className="space-y-1">
-                        {section.documents.map((doc, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedDocument(doc)}
-                            className="w-full justify-start"
+        {/* Panel Completo - Visor de Documentos */}
+        <div className="w-full bg-white">
+          {(getMainDocument().tipo === "compraventa" || solicitud.tipoTramite.toLowerCase().includes("escritura")) ? (
+            // Vista especial para compraventa - solo visor de documentos
+            <div className="h-full flex">
+              {/* Panel izquierdo - Lista de documentos */}
+              <div className="w-1/2 p-4 overflow-y-auto border-r border-gray-200">
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                    {getMainDocument().nombre}
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    {getMainDocument().descripcion}
+                  </p>
+                </div>
+                
+                <div className="space-y-1.5">
+                  {getMainDocument().documentos?.map((doc: any) => (
+                    <div
+                      key={doc.id}
+                      className="bg-gray-50 rounded-lg border border-gray-100 p-2.5 hover:bg-gray-100 hover:border-gray-200 transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-6 h-6 bg-blue-50 rounded-md flex items-center justify-center flex-shrink-0">
+                            <FileText className="h-3.5 w-3.5 text-blue-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xs font-medium text-gray-800 truncate leading-tight">
+                              {doc.nombre}
+                            </h3>
+                            <p className="text-xs text-gray-500 truncate leading-tight mt-0.5">
+                              {doc.descripcion}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <Badge 
+                            variant={doc.subido ? "default" : "secondary"}
+                            className={`text-xs px-1.5 py-0.5 h-5 ${doc.subido ? "bg-green-100 text-green-600 border-green-200" : "bg-amber-100 text-amber-600 border-amber-200"}`}
                           >
-                            <FileText className="h-4 w-4 mr-2" />
-                            {doc.nombre}
+                            {doc.subido ? "✓" : "⏳"}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded"
+                          >
+                            <Eye className="h-3 w-3" />
                           </Button>
-                        ))}
+                        </div>
                       </div>
-                    )}
-
-                    {/* Input oculto para subir archivos */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </div>
-
-                  {/* Acciones */}
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        handleSectionReview(section.id, "reviewed")
-                      }
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Aprobar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        handleSectionReview(section.id, "needs_correction")
-                      }
-                      className="border-red-300 text-red-600 hover:bg-red-50"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Rechazar
-                    </Button>
-                  </div>
-
-                  {/* Mensaje de corrección */}
-                  {section.status === "needs_correction" && (
-                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <textarea
-                        value={correctionMessage}
-                        onChange={(e) => setCorrectionMessage(e.target.value)}
-                        placeholder="Describe qué necesita ser corregido..."
-                        className="w-full p-2 border border-red-300 rounded text-sm"
-                        rows={3}
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => handleSendCorrection(section.id)}
-                        className="mt-2 bg-red-600 hover:bg-red-700"
-                      >
-                        <Send className="h-4 w-4 mr-1" />
-                        Enviar Corrección
-                      </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Panel Derecho - Visor de Documentos */}
-        <div className="w-1/2 border-l border-gray-200 bg-white">
-          <div className="h-full flex flex-col">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold">Visor de Documentos</h3>
-              <p className="text-sm text-gray-600">
-                {selectedDocument
-                  ? selectedDocument.nombre
-                  : "Selecciona un documento para revisar"}
-              </p>
-            </div>
-
-            <div className="flex-1 p-0">
-              {selectedDocument ? (
-                <div className="h-full flex flex-col">
-                  {/* Header con botones - ULTRA COMPACTO */}
-                  <div className="px-2 py-1 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-medium text-gray-900 truncate">
-                        {selectedDocument.nombre}
-                      </h4>
-                      <span className="text-xs text-gray-500">•</span>
-                      <p className="text-xs text-gray-600 truncate">
-                        {selectedDocument.descripcion}
-                      </p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        onClick={() => {
-                          const url = `/documentos_legales/${encodeURIComponent(
-                            selectedDocument.archivo
-                          )}`;
-                          window.open(url, "_blank");
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        Nueva Pestaña
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          const url = `/documentos_legales/${encodeURIComponent(
-                            selectedDocument.archivo
-                          )}`;
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = selectedDocument.archivo;
-                          link.click();
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                      >
-                        <Download className="h-3 w-3 mr-1" />
-                        Descargar
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Visor de PDF - Aplicando los mismos estilos del panel de abogados */}
-                  <div className="flex-1 relative bg-gray-100" style={{ width: "100%" }}>
-                    <div className="h-full w-full overflow-hidden">
-                      <iframe
-                        src={`/documentos_legales/${encodeURIComponent(
-                          selectedDocument.archivo
-                        )}`}
-                        className="w-full h-full border-0"
-                        title={selectedDocument.nombre}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          minWidth: "100%",
-                          maxWidth: "100%",
-                          display: "block",
-                        }}
-                        onLoad={() =>
-                          console.log(
-                            "PDF loaded:",
-                            selectedDocument.archivo
-                          )
-                        }
-                        onError={() =>
-                          console.log(
-                            "Error loading PDF:",
-                            selectedDocument.archivo
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                    <p>
-                      Selecciona un documento del panel izquierdo para comenzar
-                      la revisión
-                    </p>
-                  </div>
+              </div>
+
+              {/* Panel derecho - Visor de documentos */}
+              <div className="w-1/2 flex flex-col">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900">Contrato de Compraventa</h3>
                 </div>
-              )}
+                <div className="flex-1 relative">
+                  <iframe
+                    src="/documentos_legales/Contrato_Compraventa_Tijuana_Dummy_FirmasEspaciadas%20(1).docx.pdf"
+                    className="w-full h-full border-0"
+                    title="Contrato de Compraventa"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minWidth: "100%",
+                      maxWidth: "100%",
+                      display: "block",
+                    }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            // Vista normal para otros tipos de trámites
+            <div className="p-6">
+              <div className="text-center text-gray-500">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <p>Vista normal para otros tipos de trámites</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Modal para editar datos */}
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar Datos</DialogTitle>
-            <DialogDescription>
-              Modifica los datos de esta sección
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {Object.entries(editingData).map(([key, value]) => (
-              <div key={key} className="space-y-2">
-                <Label htmlFor={key} className="text-sm font-medium">
-                  {key.replace(/([A-Z])/g, " $1").trim()}:
-                </Label>
-                <Input
-                  id={key}
-                  value={value as string}
-                  onChange={(e) =>
-                    setEditingData((prev) => ({
-                      ...prev,
-                      [key]: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
-            <div className="flex gap-2 pt-4">
-              <Button
-                onClick={() => handleSaveData(selectedSection)}
-                className="flex-1"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Guardar
-              </Button>
-              <Button
-                onClick={() => setIsEditing(false)}
-                variant="outline"
-                className="flex-1"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal para subir documento */}
-      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Subir Documento</DialogTitle>
-            <DialogDescription>
-              Confirma la subida del documento
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {uploadingFile && (
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <p className="font-medium">{uploadingFile.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {(uploadingFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleUploadDocument} className="flex-1">
-                <Upload className="h-4 w-4 mr-2" />
-                Subir Documento
-              </Button>
-              <Button
-                onClick={() => setShowUploadDialog(false)}
-                variant="outline"
-                className="flex-1"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal grande para ver documento principal tipo DocuSign */}
+      {/* Modal de Documento Principal */}
       <Dialog open={showDocumentModal} onOpenChange={setShowDocumentModal}>
         <DialogContent
           className="max-w-[98vw] max-h-[95vh] w-full h-full p-0"
@@ -713,8 +484,6 @@ export function SolicitudReview({
           }}
           showCloseButton={false}
         >
-          {/* ELIMINADO COMPLETAMENTE: DialogHeader - ya no existe */}
-          
           <div className="flex-1 overflow-hidden">
             {/* Barra de herramientas superior - ULTRA COMPACTA */}
             <div className="bg-gray-100 border-b px-2 py-1 flex items-center justify-between text-xs">
@@ -728,17 +497,13 @@ export function SolicitudReview({
               </div>
               <div className="flex items-center gap-1">
                 <Button
-                  onClick={() => {
-                    // Simular edición de escritura
-                    console.log("Editando escritura:", selectedMainDocument?.nombre);
-                    // Aquí iría la lógica para abrir el editor
-                  }}
-                  variant="ghost"
+                  onClick={() => setShowDocumentModal(false)}
+                  variant="outline"
                   size="sm"
-                  className="h-6 w-auto px-2 text-xs"
+                  className="h-6 px-2 text-xs"
                 >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Editar
+                  <X className="h-3 w-3 mr-1" />
+                  Cerrar
                 </Button>
                 <Button
                   onClick={() => {
@@ -747,35 +512,63 @@ export function SolicitudReview({
                     )}`;
                     window.open(url, "_blank");
                   }}
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-6 w-auto px-2 text-xs"
+                  className="h-6 px-2 text-xs"
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   Nueva Pestaña
                 </Button>
                 <Button
-                  onClick={() => setShowDocumentModal(false)}
-                  variant="ghost"
+                  onClick={() => {
+                    const url = `/documentos_legales/${encodeURIComponent(
+                      selectedMainDocument?.archivo || ""
+                    )}`;
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = selectedMainDocument?.archivo || "";
+                    link.click();
+                  }}
+                  variant="outline"
                   size="sm"
-                  className="h-6 w-6 p-0"
+                  className="h-6 px-2 text-xs"
                 >
-                  <X className="h-3 w-3" />
+                  <Download className="h-3 w-3 mr-1" />
+                  Descargar
                 </Button>
               </div>
             </div>
 
-            {/* Contenido del documento */}
-            <div className="h-full overflow-auto bg-gray-100">
-              {selectedMainDocument && (
+            {/* Visor de PDF - Aplicando los mismos estilos del panel de abogados */}
+            <div className="flex-1 relative bg-gray-100" style={{ width: "100%" }}>
+              <div className="h-full w-full overflow-hidden">
                 <iframe
                   src={`/documentos_legales/${encodeURIComponent(
-                    selectedMainDocument.archivo
+                    selectedMainDocument?.archivo || ""
                   )}`}
                   className="w-full h-full border-0"
-                  title="Vista previa del documento"
+                  title={selectedMainDocument?.nombre}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    minWidth: "100%",
+                    maxWidth: "100%",
+                    display: "block",
+                  }}
+                  onLoad={() =>
+                    console.log(
+                      "PDF loaded:",
+                      selectedMainDocument?.archivo
+                    )
+                  }
+                  onError={() =>
+                    console.log(
+                      "Error loading PDF:",
+                      selectedMainDocument?.archivo
+                    )
+                  }
                 />
-              )}
+              </div>
             </div>
           </div>
         </DialogContent>

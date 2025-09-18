@@ -683,7 +683,27 @@ export default function AbogadoPage() {
   const getMainDocument = (solicitud: Solicitud) => {
     const tramiteType = solicitud.tipoTramite.toLowerCase();
 
-    if (tramiteType.includes("testamento")) {
+    if (tramiteType.includes("compraventa")) {
+      return {
+        nombre: "Documentos de Compraventa",
+        archivo: "compraventa.pdf",
+        descripcion: "Documentos requeridos para el trámite de compraventa",
+        tipo: "compraventa",
+        documentos: [
+          { id: 1, nombre: "Identificación Oficial", descripcion: "INE o pasaporte vigente", subido: true },
+          { id: 2, nombre: "CURP", descripcion: "Clave Única de Registro de Población", subido: true },
+          { id: 3, nombre: "RFC y Constancia de Situación Fiscal (CSF)", descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal", subido: true },
+          { id: 4, nombre: "Acta de Nacimiento", descripcion: "Acta de nacimiento reciente o legible", subido: true },
+          { id: 5, nombre: "Comprobante de Domicilio", descripcion: "Agua/luz/estado de cuenta, no mayor a 3 meses", subido: true },
+          { id: 6, nombre: "Datos Bancarios", descripcion: "CLABE y banco para dispersión y comprobación de fondos", subido: true },
+          { id: 7, nombre: "Acta de Matrimonio", descripcion: "Acta de matrimonio (si aplica)", subido: true },
+          { id: 8, nombre: "Carta oferta", descripcion: "Carta oferta o condiciones del banco", subido: true },
+          { id: 9, nombre: "Avalúo Bancario", descripcion: "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)", subido: true },
+          { id: 10, nombre: "Pólizas Requeridas por el Crédito", descripcion: "Pólizas de vida/daños, si aplican", subido: true },
+          { id: 11, nombre: "Instrucciones de Dispersión del Banco", descripcion: "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca", subido: true }
+        ]
+      };
+    } else if (tramiteType.includes("testamento")) {
       return {
         nombre: "Testamento Público Abierto",
         archivo: "Copia_de_32689.docx.md",
@@ -1915,20 +1935,99 @@ export default function AbogadoPage() {
                   style={{ width: "100%" }}
                 >
                   <div className="h-full w-full overflow-hidden">
-                    <iframe
-                      src={`/documentos_legales/${encodeURIComponent(
-                        selectedMainDocument?.archivo || ""
-                      )}`}
-                      className="w-full h-full border-0"
-                      title={selectedMainDocument?.nombre}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        minWidth: "100%",
-                        maxWidth: "100%",
-                        display: "block",
-                      }}
-                    />
+                    {selectedMainDocument?.tipo === "compraventa" ? (
+                      // Vista de documentos de compraventa con layout de dos columnas
+                      <div className="h-full w-full flex">
+                        {/* Panel izquierdo - Lista de documentos */}
+                        <div className="w-1/2 p-4 overflow-y-auto border-r border-gray-200">
+                          <div className="mb-4">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                              {selectedMainDocument.nombre}
+                            </h2>
+                            <p className="text-sm text-gray-600">
+                              {selectedMainDocument.descripcion}
+                            </p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {selectedMainDocument.documentos?.map((doc: any) => (
+                              <div
+                                key={doc.id}
+                                className="bg-white rounded-md border border-gray-200 p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-blue-50 rounded-md flex items-center justify-center">
+                                      <FileText className="h-4 w-4 text-blue-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                                        {doc.nombre}
+                                      </h3>
+                                      <p className="text-xs text-gray-500 truncate">
+                                        {doc.descripcion}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <Badge 
+                                      variant={doc.subido ? "default" : "secondary"}
+                                      className={`text-xs ${doc.subido ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                                    >
+                                      {doc.subido ? "✓" : "⏳"}
+                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Panel derecho - Visor de documentos */}
+                        <div className="w-1/2 flex flex-col">
+                          <div className="p-4 border-b border-gray-200">
+                            <h3 className="text-sm font-medium text-gray-900">Visor de Documentos</h3>
+                          </div>
+                          <div className="flex-1 relative">
+                            <iframe
+                              src="/documentos_legales/Contrato_Compraventa_Tijuana_Dummy_FirmasEspaciadas%20(1).docx.pdf"
+                              className="w-full h-full border-0"
+                              title="Contrato de Compraventa"
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                minWidth: "100%",
+                                maxWidth: "100%",
+                                display: "block",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Vista normal con iframe para otros tipos de documentos
+                      <iframe
+                        src={`/documentos_legales/${encodeURIComponent(
+                          selectedMainDocument?.archivo || ""
+                        )}`}
+                        className="w-full h-full border-0"
+                        title={selectedMainDocument?.nombre}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          minWidth: "100%",
+                          maxWidth: "100%",
+                          display: "block",
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
 
