@@ -211,77 +211,11 @@ class SolicitudesPersistence {
   // Inicializar datos de ejemplo si no existen
   public initializeDefaultData(): void {
     const solicitudes = this.getSolicitudes();
-    if (solicitudes.length === 0) {
-      const solicitudEjemplo: SolicitudPersistente = {
-        numeroSolicitud: "NT3-2025-17905",
-        tipoTramite: "compraventa",
-        fechaCreacion: "2025-01-18T10:00:00Z",
-        costoTotal: 25000,
-        saldoPendiente: 25000,
-        documentos: [
-          {
-            id: "doc-1",
-            nombre: "INE del Comprador",
-            descripcion: "Identificación oficial del comprador",
-            requerido: true,
-            subido: false,
-            fechaSubida: null,
-            datosExtraidos: null,
-          },
-          {
-            id: "doc-2",
-            nombre: "INE del Vendedor",
-            descripcion: "Identificación oficial del vendedor",
-            requerido: true,
-            subido: false,
-            fechaSubida: null,
-            datosExtraidos: null,
-          },
-          {
-            id: "doc-3",
-            nombre: "Avalúo del Inmueble",
-            descripcion: "Avalúo oficial del inmueble",
-            requerido: true,
-            subido: false,
-            fechaSubida: null,
-            datosExtraidos: null,
-          },
-          {
-            id: "doc-4",
-            nombre: "Escritura Pública",
-            descripcion: "Escritura pública de la propiedad",
-            requerido: true,
-            subido: false,
-            fechaSubida: null,
-            datosExtraidos: null,
-          },
-          {
-            id: "doc-5",
-            nombre: "Certificado de Libertad de Gravamen",
-            descripcion: "CLG del inmueble",
-            requerido: true,
-            subido: false,
-            fechaSubida: null,
-            datosExtraidos: null,
-          },
-        ],
-        historial: [
-          {
-            id: "hist-1",
-            fecha: "2025-01-18T10:00:00Z",
-            accion: "Solicitud creada",
-            detalles:
-              "Se creó la solicitud NT3-2025-17905 para compraventa de inmueble",
-            usuario: "Cliente",
-          },
-        ],
-        estado: "ARMANDO_EXPEDIENTE",
-        ultimaActualizacion: "2025-01-18T10:00:00Z",
-        pagos: [],
-      };
-
-      this.saveSolicitud(solicitudEjemplo);
-    }
+    // NO crear solicitudes de ejemplo automáticamente
+    // Solo verificar la estructura del localStorage
+    console.log(
+      `localStorage inicializado. Solicitudes existentes: ${solicitudes.length}`
+    );
   }
 }
 

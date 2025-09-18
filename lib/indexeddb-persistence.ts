@@ -297,15 +297,42 @@ class IndexedDBPersistence {
   }
 
   // Generar número de solicitud único
-  public generateSolicitudNumber(): string {
+  public async generateSolicitudNumber(): Promise<string> {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
-    const random = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, "0");
-    return `NT3-${year}-${month}${day}${random}`;
+
+    // Generar número único verificando que no exista
+    let numeroSolicitud: string;
+    let attempts = 0;
+    const maxAttempts = 100;
+
+    do {
+      const random = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0");
+      numeroSolicitud = `NT3-${year}-${month}${day}${random}`;
+      attempts++;
+
+      // Verificar si ya existe esta solicitud
+      const existingSolicitud = await this.getSolicitud(numeroSolicitud);
+      if (!existingSolicitud) {
+        break;
+      }
+
+      if (attempts >= maxAttempts) {
+        // Si después de 100 intentos no encontramos un número único, usar timestamp
+        const timestamp = now.getTime().toString().slice(-4);
+        numeroSolicitud = `NT3-${year}-${month}${day}${timestamp}`;
+        break;
+      }
+    } while (true);
+
+    console.log(
+      `Número de solicitud generado: ${numeroSolicitud} (intentos: ${attempts})`
+    );
+    return numeroSolicitud;
   }
 
   // Crear una nueva solicitud
@@ -392,11 +419,11 @@ class IndexedDBPersistence {
     await this.ensureDB();
 
     const solicitudes = await this.getSolicitudes();
-    if (solicitudes.length === 0) {
-      // Crear una solicitud de ejemplo
-      await this.createSolicitud("NT3-2025-17905", "compraventa", 25000);
-      console.log("Datos de ejemplo inicializados en IndexedDB");
-    }
+    // NO crear solicitudes de ejemplo automáticamente
+    // Solo inicializar la estructura de la base de datos
+    console.log(
+      `IndexedDB inicializada. Solicitudes existentes: ${solicitudes.length}`
+    );
   }
 
   // Limpiar todos los datos (para testing)

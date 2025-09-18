@@ -55,6 +55,7 @@ export default function MiCuentaPage() {
     solicitudes: solicitudesPersistentes,
     loading: loadingPersistentes,
     error: errorPersistentes,
+    clearAllData,
   } = useSolicitudesPersistence();
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -73,10 +74,15 @@ export default function MiCuentaPage() {
       return;
     }
 
+    // Solo ejecutar si hay un usuario válido
+    if (!user?.id) {
+      return;
+    }
+
     const cargarSolicitudes = async () => {
       try {
         // Cargar solicitudes mock para compatibilidad
-        const userSolicitudes = await getUserSolicitudes(user?.id || "");
+        const userSolicitudes = await getUserSolicitudes(user.id);
         setSolicitudes(userSolicitudes);
       } catch (error) {
         console.error("Error cargando solicitudes:", error);
@@ -97,11 +103,31 @@ export default function MiCuentaPage() {
 
     cargarSolicitudes();
     cargarNotificaciones();
+  }, [isAuthenticated, user?.id, router]);
+
+  // useEffect separado para manejar notificaciones demo después de cargar solicitudes
+  useEffect(() => {
+    if (
+      !isAuthenticated ||
+      !user?.id ||
+      loadingPersistentes ||
+      solicitudesPersistentes.length === 0
+    ) {
+      return;
+    }
 
     // Simular notificaciones demo - solo 2 únicas
+    let timeout1: NodeJS.Timeout;
+    let timeout2: NodeJS.Timeout;
+    let timeout3: NodeJS.Timeout;
+    let timeout4: NodeJS.Timeout;
+
     const simularNotificacionesDemo = () => {
+      // Usar el ID de la primera solicitud disponible
+      const solicitudId = solicitudesPersistentes[0].numeroSolicitud;
+
       // Primera notificación a los 5 segundos - Estado del documento
-      setTimeout(() => {
+      timeout1 = setTimeout(() => {
         const nuevaNotificacion1 = {
           id: "demo-notif-1-unica",
           tipo: "revision_expediente" as const,
@@ -110,7 +136,7 @@ export default function MiCuentaPage() {
             "Tu documento está siendo revisado por nuestro equipo legal. Te notificaremos cuando esté listo para firma.",
           fecha: new Date().toISOString(),
           leida: false,
-          solicitudId: "NT3-2025-001",
+          solicitudId: solicitudId,
           acciones: [
             { texto: "Ver Progreso", accion: "ver_documento" as const },
           ],
@@ -123,13 +149,13 @@ export default function MiCuentaPage() {
         });
         setHasNewNotification(true);
         setShowFloatingNotification(true);
-        setTimeout(() => {
+        timeout3 = setTimeout(() => {
           setShowFloatingNotification(false);
         }, 8000);
       }, 5000);
 
       // Segunda notificación a los 10 segundos (5 segundos después de la primera) - Cita disponible
-      setTimeout(() => {
+      timeout2 = setTimeout(() => {
         const nuevaNotificacion2 = {
           id: "demo-notif-2-unica",
           tipo: "documento_listo_firma" as const,
@@ -138,7 +164,7 @@ export default function MiCuentaPage() {
             "¡Tu documento está listo! Puedes agendar tu cita para la firma. Selecciona el horario que mejor te convenga.",
           fecha: new Date().toISOString(),
           leida: false,
-          solicitudId: "NT3-2025-001",
+          solicitudId: solicitudId,
           acciones: [
             { texto: "Agendar Cita", accion: "agendar_cita" as const },
           ],
@@ -151,17 +177,22 @@ export default function MiCuentaPage() {
         });
         setHasNewNotification(true);
         setShowFloatingNotification(true);
-        setTimeout(() => {
+        timeout4 = setTimeout(() => {
           setShowFloatingNotification(false);
         }, 8000);
       }, 10000);
     };
 
-    // Solo ejecutar la simulación si está autenticado
-    if (isAuthenticated && user?.id) {
-      simularNotificacionesDemo();
-    }
-  }, [isAuthenticated, user?.id, router]);
+    simularNotificacionesDemo();
+
+    // Cleanup function para limpiar timeouts
+    return () => {
+      if (timeout1) clearTimeout(timeout1);
+      if (timeout2) clearTimeout(timeout2);
+      if (timeout3) clearTimeout(timeout3);
+      if (timeout4) clearTimeout(timeout4);
+    };
+  }, [isAuthenticated, user?.id, loadingPersistentes, solicitudesPersistentes]);
 
   const getStatusColor = (estatus: string) => {
     switch (estatus) {
@@ -241,18 +272,20 @@ export default function MiCuentaPage() {
   ) => {
     switch (action) {
       case "agendar_cita":
-        // Usar la primera solicitud disponible o el ID de la notificación
+        // Usar las solicitudes persistentes primero, luego el ID de la notificación
         const solicitudParaCita =
-          solicitudes.length > 0
-            ? solicitudes[0].numeroSolicitud
+          solicitudesPersistentes.length > 0
+            ? solicitudesPersistentes[0].numeroSolicitud
             : notification.solicitudId || "";
         setSelectedSolicitudForCita(solicitudParaCita);
         setShowCitaModal(true);
         break;
       case "ver_documento":
-        // Navegar a la primera solicitud disponible (como "Ver Detalles")
-        if (solicitudes.length > 0) {
-          router.push(`/solicitud/${solicitudes[0].numeroSolicitud}`);
+        // Navegar usando las solicitudes persistentes primero
+        if (solicitudesPersistentes.length > 0) {
+          router.push(
+            `/solicitud/${solicitudesPersistentes[0].numeroSolicitud}`
+          );
         } else if (notification.solicitudId) {
           router.push(`/solicitud/${notification.solicitudId}`);
         }
@@ -369,11 +402,23 @@ export default function MiCuentaPage() {
                 <h2 className="text-2xl font-semibold text-gray-900">
                   Mis Solicitudes
                 </h2>
-                <p className="text-sm text-gray-600">
-                  {solicitudesPersistentes.length} solicitud
-                  {solicitudesPersistentes.length !== 1 ? "es" : ""} encontrada
-                  {solicitudesPersistentes.length !== 1 ? "s" : ""}
-                </p>
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-gray-600">
+                    {solicitudesPersistentes.length} solicitud
+                    {solicitudesPersistentes.length !== 1 ? "es" : ""}{" "}
+                    encontrada
+                    {solicitudesPersistentes.length !== 1 ? "s" : ""}
+                  </p>
+                  {/* Botón temporal para limpiar datos durante desarrollo */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearAllData}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Limpiar Datos
+                  </Button>
+                </div>
               </div>
 
               {loading || loadingPersistentes ? (

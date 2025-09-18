@@ -94,8 +94,8 @@ export const useSolicitudesPersistence = () => {
   };
 
   // Generar número de solicitud único
-  const generateSolicitudNumber = () => {
-    return indexedDBPersistence.generateSolicitudNumber();
+  const generateSolicitudNumber = async () => {
+    return await indexedDBPersistence.generateSolicitudNumber();
   };
 
   // Crear nueva solicitud
@@ -123,6 +123,18 @@ export const useSolicitudesPersistence = () => {
     loadSolicitudes();
   }, []);
 
+  // Limpiar todos los datos (para desarrollo/testing)
+  const clearAllData = async () => {
+    try {
+      await indexedDBPersistence.clearAllData();
+      setSolicitudes([]);
+      console.log("Todos los datos han sido eliminados");
+    } catch (err) {
+      console.error("Error limpiando datos:", err);
+      setError("Error al limpiar los datos");
+    }
+  };
+
   return {
     solicitudes,
     loading,
@@ -135,5 +147,6 @@ export const useSolicitudesPersistence = () => {
     addHistorial,
     createSolicitud,
     generateSolicitudNumber,
+    clearAllData,
   };
 };

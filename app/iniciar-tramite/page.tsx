@@ -158,7 +158,7 @@ export default function IniciarTramitePage() {
 
     try {
       // Generar número de solicitud único
-      const numeroSolicitud = generateSolicitudNumber();
+      const numeroSolicitud = await generateSolicitudNumber();
 
       // Crear la solicitud en IndexedDB
       await createSolicitudPersistente(
