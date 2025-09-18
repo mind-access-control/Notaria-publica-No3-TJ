@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Modal extra ancho para expedientes */
+.modal-expediente-ancho {
+  width: 95vw !important;
+  max-width: none !important;
+  height: 90vh !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

@@ -21,7 +21,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
     fechaCreacion: "2025-01-15T10:30:00Z",
     fechaUltimaActualizacion: "2025-01-15T14:20:00Z",
     estado: "RECIBIDO",
-    tipoTramite: "compraventas",
+    tipoTramite: "compraventa",
     comprador: {
       id: "comp-001",
       nombre: "Juan Carlos",
@@ -294,7 +294,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-1",
+    abogadoAsignado: "abogado-2",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -462,7 +462,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-1",
+    abogadoAsignado: "abogado-2",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -686,7 +686,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-1",
+    abogadoAsignado: "abogado-2",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -790,8 +790,8 @@ export const expedientesMock: ExpedienteCompraventa[] = [
     numeroSolicitud: "NT3-2025-005",
     fechaCreacion: "2025-01-10T09:15:00Z",
     fechaUltimaActualizacion: "2025-01-15T11:30:00Z",
-    estado: "EN_VALIDACION",
-    tipoTramite: "testamentos",
+    estado: "RECIBIDO",
+    tipoTramite: "testamento",
     comprador: {
       id: "comp-005",
       nombre: "Roberto Carlos",
@@ -954,8 +954,8 @@ export const expedientesMock: ExpedienteCompraventa[] = [
     numeroSolicitud: "NT3-2025-006",
     fechaCreacion: "2025-01-08T14:20:00Z",
     fechaUltimaActualizacion: "2025-01-14T16:45:00Z",
-    estado: "EN_PREPARACION",
-    tipoTramite: "donaciones",
+    estado: "RECIBIDO",
+    tipoTramite: "donacion",
     comprador: {
       id: "comp-006",
       nombre: "Patricia Elena",

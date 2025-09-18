@@ -66,6 +66,10 @@ import {
   addComentarioExpediente,
 } from "@/lib/expedientes-data";
 import { expedientesMock } from "@/lib/expedientes-data";
+import {
+  aiValidationService,
+  ExpedienteValidationReport,
+} from "@/lib/ai-validation-service";
 
 interface AbogadoKanbanDashboardProps {
   abogadoId: string;
@@ -118,16 +122,16 @@ const TRAMITE_TYPES = [
     icon: <FileText className="h-4 w-4" />,
   },
   {
-    id: "compraventas",
+    id: "compraventa",
     name: "Compraventas",
     icon: <Home className="h-4 w-4" />,
   },
   {
-    id: "testamentos",
+    id: "testamento",
     name: "Testamentos",
     icon: <FileText className="h-4 w-4" />,
   },
-  { id: "donaciones", name: "Donaciones", icon: <Users className="h-4 w-4" /> },
+  { id: "donacion", name: "Donaciones", icon: <Users className="h-4 w-4" /> },
   { id: "permutas", name: "Permutas", icon: <Building className="h-4 w-4" /> },
   {
     id: "creditos_hipotecarios",
@@ -273,10 +277,378 @@ export function AbogadoKanbanDashboard({
     saldoPendiente: number;
     total: number;
   }>({ expediente: null, saldoPendiente: 0, total: 0 });
+  const [validationReports, setValidationReports] = useState<
+    Record<string, ExpedienteValidationReport>
+  >({});
+  const [validatingExpedientes, setValidatingExpedientes] = useState<
+    Set<string>
+  >(new Set());
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+  const [manualValidations, setManualValidations] = useState<
+    Record<string, Record<string, { approved: boolean; reason?: string }>>
+  >({});
+  const [revalidatingExpedientes, setRevalidatingExpedientes] = useState<
+    Set<string>
+  >(new Set());
+
+  // Lista completa de documentos para compraventa con documentos reales
+  const documentosCompraventa = [
+    {
+      id: "doc-comprador-ine",
+      categoria: "Documentos del Comprador",
+      nombre: "INE del Comprador",
+      descripcion: "Identificación oficial vigente del comprador",
+      archivo: "/documentos_legales/2 Identificación Oficial.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T10:30:00Z",
+    },
+    {
+      id: "doc-comprador-acta",
+      categoria: "Documentos del Comprador",
+      nombre: "Acta de Nacimiento del Comprador",
+      descripcion: "Acta de nacimiento certificada del comprador",
+      archivo:
+        "/documentos_legales/1 Acta_de_Nacimiento_HEGJ860702HMCRNN07.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T10:32:00Z",
+    },
+    {
+      id: "doc-comprador-curp",
+      categoria: "Documentos del Comprador",
+      nombre: "CURP del Comprador",
+      descripcion: "Clave Única de Registro de Población",
+      archivo: "/documentos_legales/CURP_HEGJ860702HMCRNN07.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T10:35:00Z",
+    },
+    {
+      id: "doc-comprador-rfc",
+      categoria: "Documentos del Comprador",
+      nombre: "RFC del Comprador",
+      descripcion: "Registro Federal de Contribuyentes",
+      archivo: "/documentos_legales/11 RFC.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T10:38:00Z",
+    },
+    {
+      id: "doc-comprador-domicilio",
+      categoria: "Documentos del Comprador",
+      nombre: "Comprobante de Domicilio del Comprador",
+      descripcion: "Comprobante de domicilio no mayor a 3 meses",
+      archivo: "/documentos_legales/4 Comprobante de domicilio Luz.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T10:40:00Z",
+    },
+    {
+      id: "doc-comprador-estado-cuenta",
+      categoria: "Documentos del Comprador",
+      nombre: "Estado de Cuenta del Comprador",
+      descripcion: "Estado de cuenta bancario para verificar solvencia",
+      archivo: "/documentos_legales/12 EstadoDeCuentaBanorte.pdf",
+      estado: "validado",
+      requerido: false,
+      fechaSubida: "2025-01-15T10:45:00Z",
+    },
+    {
+      id: "doc-vendedor-ine",
+      categoria: "Documentos del Vendedor",
+      nombre: "INE del Vendedor",
+      descripcion: "Identificación oficial vigente del vendedor",
+      archivo: "/documentos_legales/2 Identificación Oficial.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T11:00:00Z",
+    },
+    {
+      id: "doc-vendedor-acta",
+      categoria: "Documentos del Vendedor",
+      nombre: "Acta de Nacimiento del Vendedor",
+      descripcion: "Acta de nacimiento certificada del vendedor",
+      archivo:
+        "/documentos_legales/1 Acta_de_Nacimiento_HEGJ860702HMCRNN07.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T11:05:00Z",
+    },
+    {
+      id: "doc-vendedor-rfc",
+      categoria: "Documentos del Vendedor",
+      nombre: "RFC del Vendedor",
+      descripcion: "Registro Federal de Contribuyentes del vendedor",
+      archivo: "/documentos_legales/7 CEDULA DE IDENTIFICACION FISCAL.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T11:10:00Z",
+    },
+    {
+      id: "doc-inmueble-escritura",
+      categoria: "Documentos del Inmueble",
+      nombre: "Escritura Pública del Inmueble",
+      descripcion: "Escritura pública que acredita la propiedad",
+      archivo: "/documentos_legales/Copia_de_32689.docx.md",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T11:15:00Z",
+    },
+    {
+      id: "doc-inmueble-avaluo",
+      categoria: "Documentos del Inmueble",
+      nombre: "Avalúo del Inmueble",
+      descripcion: "Avalúo comercial vigente (no mayor a 6 meses)",
+      archivo: "/documentos_legales/Avaluo M0332025.pdf",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T11:20:00Z",
+    },
+    {
+      id: "doc-inmueble-clg",
+      categoria: "Documentos del Inmueble",
+      nombre: "Certificado de Libertad de Gravamen (CLG)",
+      descripcion:
+        "Certificado que acredita que el inmueble está libre de gravámenes",
+      archivo: "/documentos_legales/CLG_Certificado_Libertad_Gravamen.md",
+      estado: "validado",
+      requerido: true,
+      fechaSubida: "2025-01-15T11:25:00Z",
+    },
+  ];
+
+  // Función para abrir documento
+  const handleOpenDocument = (archivo: string) => {
+    setSelectedDocument(archivo);
+    setShowDocumentViewer(true);
+  };
+
+  // Función para aprobar/rechazar validación manual
+  const handleManualValidation = (
+    expedienteId: string,
+    documentType: string,
+    approved: boolean,
+    reason?: string
+  ) => {
+    setManualValidations((prev) => ({
+      ...prev,
+      [expedienteId]: {
+        ...prev[expedienteId],
+        [documentType]: { approved, reason },
+      },
+    }));
+
+    // Agregar comentario sobre la decisión manual
+    const accion = approved ? "aprobó" : "rechazó";
+    const razonTexto = reason ? ` Razón: ${reason}` : "";
+    const comentario = `👨‍💼 REVISIÓN MANUAL: El abogado ${accion} la validación de "${documentType}".${razonTexto}`;
+
+    addComentarioExpediente(
+      expedienteId,
+      comentario,
+      "Abogado",
+      approved ? "general" : "requerimiento"
+    );
+
+    // Verificar si todas las validaciones están completas
+    const report = validationReports[expedienteId];
+    if (report) {
+      const manualDecisions = manualValidations[expedienteId] || {};
+      const allValidated = report.validations.every(
+        (v) => manualDecisions[v.documentType] !== undefined
+      );
+
+      if (allValidated) {
+        const allApproved = report.validations.every(
+          (v) => manualDecisions[v.documentType]?.approved === true
+        );
+
+        if (!allApproved) {
+          // Regresar a validación si no está 100% aprobado
+          updateExpedienteEstado(expedienteId, "EN_VALIDACION", "abogado-1");
+
+          // Generar comentario para el cliente
+          const problemasRechazados = report.validations
+            .filter((v) => manualDecisions[v.documentType]?.approved === false)
+            .map(
+              (v) =>
+                `• ${v.documentType}: ${
+                  manualDecisions[v.documentType]?.reason ||
+                  "Requiere corrección"
+                }`
+            )
+            .join("\n");
+
+          const comentarioCliente = `📋 CORRECCIONES REQUERIDAS
+
+Se requieren las siguientes correcciones antes de continuar:
+
+${problemasRechazados}
+
+Por favor, proporciona los documentos corregidos o la información solicitada.`;
+
+          addComentarioExpediente(
+            expedienteId,
+            comentarioCliente,
+            "Notaría",
+            "requerimiento"
+          );
+        }
+      }
+    }
+  };
+
+  // Función para revalidar expediente
+  const handleRevalidation = async (expedienteId: string) => {
+    console.log(`🔄 Iniciando REVALIDACIÓN para expediente ${expedienteId}`);
+
+    // Limpiar validaciones manuales previas
+    setManualValidations((prev) => ({
+      ...prev,
+      [expedienteId]: {},
+    }));
+
+    // Agregar a lista de revalidación
+    setRevalidatingExpedientes((prev) => new Set([...prev, expedienteId]));
+    setValidatingExpedientes((prev) => new Set([...prev, expedienteId]));
+
+    try {
+      // Ejecutar revalidación IA (siempre 100% exitosa)
+      const validationReport = await aiValidationService.validateExpediente(
+        expedienteId,
+        true // isRevalidation = true
+      );
+
+      // Guardar el reporte
+      aiValidationService.saveValidation(validationReport);
+
+      // Actualizar estado local
+      setValidationReports((prev) => ({
+        ...prev,
+        [expedienteId]: validationReport,
+      }));
+
+      // Agregar comentario de revalidación exitosa
+      addComentarioExpediente(
+        expedienteId,
+        "🔄 REVALIDACIÓN COMPLETADA: Todos los documentos han sido corregidos y aprobados exitosamente.",
+        "IA Assistant",
+        "general"
+      );
+
+      console.log(
+        `✅ Revalidación completada exitosamente para ${expedienteId}`
+      );
+    } catch (error) {
+      console.error(`❌ Error en revalidación para ${expedienteId}:`, error);
+    } finally {
+      // Remover de listas de validación
+      setValidatingExpedientes((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(expedienteId);
+        return newSet;
+      });
+      setRevalidatingExpedientes((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(expedienteId);
+        return newSet;
+      });
+    }
+  };
+
+  // Datos de pagos simulados para la demo
+  const pagosDemoExpediente = [
+    {
+      id: "pago-001",
+      monto: 7500,
+      metodo: "Transferencia Bancaria",
+      referencia: "NP3-COMP-001-2025",
+      tipo: "parcial",
+      fecha: "2025-01-15T16:45:00Z",
+      estado: "confirmado",
+      concepto: "Anticipo de honorarios notariales y derechos registrales",
+      comprobante: "/documentos_legales/Comprobante_Pago_7500.md",
+      banco: "BBVA México",
+      autorizacion: "789456123",
+    },
+  ];
+
+  // Calcular totales de pago
+  const costoTotalExpediente = 25000; // Costo total del trámite
+  const totalPagado = pagosDemoExpediente.reduce(
+    (sum, pago) => sum + pago.monto,
+    0
+  );
+  const saldoPendiente = costoTotalExpediente - totalPagado;
+  const porcentajePagado = (totalPagado / costoTotalExpediente) * 100;
+
+  // Función para obtener el título del trámite según su tipo
+  const getTramiteTitle = (expediente: ExpedienteCompraventa) => {
+    const tipo = expediente.tipoTramite || "desconocido";
+    switch (tipo) {
+      case "compraventa":
+        return `Compraventa - ${expediente.inmueble.tipo}`;
+      case "testamento":
+        return `Testamento Público Abierto`;
+      case "donacion":
+        return `Donación - ${expediente.inmueble.tipo}`;
+      case "poder":
+        return `Poder Notarial`;
+      case "mutuo":
+        return `Contrato de Mutuo`;
+      default:
+        return `Trámite ${tipo}`;
+    }
+  };
+
+  // Función para obtener la descripción del trámite
+  const getTramiteDescription = (expediente: ExpedienteCompraventa) => {
+    const tipo = expediente.tipoTramite || "desconocido";
+    switch (tipo) {
+      case "compraventa":
+        return `${expediente.comprador.nombre} ${expediente.comprador.apellidoPaterno} → ${expediente.vendedor.nombre} ${expediente.vendedor.apellidoPaterno}`;
+      case "testamento":
+        return `Testador: ${expediente.comprador.nombre} ${expediente.comprador.apellidoPaterno}`;
+      case "donacion":
+        return `${expediente.vendedor.nombre} ${expediente.vendedor.apellidoPaterno} → ${expediente.comprador.nombre} ${expediente.comprador.apellidoPaterno}`;
+      case "poder":
+        return `Poderdante: ${expediente.comprador.nombre} ${expediente.comprador.apellidoPaterno}`;
+      default:
+        return `${expediente.comprador.nombre} ${expediente.comprador.apellidoPaterno}`;
+    }
+  };
+
+  // Función para obtener el icono del trámite
+  const getTramiteIcon = (tipoTramite: string) => {
+    switch (tipoTramite) {
+      case "compraventa":
+        return <Home className="h-4 w-4 text-emerald-600" />;
+      case "testamento":
+        return <FileText className="h-4 w-4 text-blue-600" />;
+      case "donacion":
+        return <Users className="h-4 w-4 text-purple-600" />;
+      case "poder":
+        return <Shield className="h-4 w-4 text-orange-600" />;
+      default:
+        return <FileText className="h-4 w-4 text-gray-600" />;
+    }
+  };
 
   useEffect(() => {
     // Cargar expedientes del abogado
     const expedientesAbogado = getExpedientesByAbogado(abogadoId);
+    console.log(
+      `📋 Expedientes cargados para abogado ${abogadoId}:`,
+      expedientesAbogado
+    );
+    console.log(`📊 Total expedientes: ${expedientesAbogado.length}`);
+    expedientesAbogado.forEach((exp) => {
+      console.log(
+        `  - ${exp.numeroSolicitud}: ${exp.tipoTramite} (${exp.estado}) - Asignado a: ${exp.abogadoAsignado}`
+      );
+    });
     setExpedientes(expedientesAbogado);
     setFilteredExpedientes(expedientesAbogado);
   }, [abogadoId]);
@@ -287,8 +659,17 @@ export function AbogadoKanbanDashboard({
 
     // Filtrar por tipo de trámite
     if (selectedTramiteType !== "todos") {
+      console.log(`🏷️ Filtrando por tipo: ${selectedTramiteType}`);
+      console.log(
+        `📋 Expedientes antes del filtro:`,
+        expedientes.map((e) => `${e.numeroSolicitud}: ${e.tipoTramite}`)
+      );
       filtered = filtered.filter((exp) => {
         return exp.tipoTramite === selectedTramiteType;
+      });
+      console.log(`📝 Expedientes después del filtro: ${filtered.length}`);
+      filtered.forEach((exp) => {
+        console.log(`  ✅ ${exp.numeroSolicitud}: ${exp.tipoTramite}`);
       });
     }
     // Si es "todos", no filtrar por tipo
@@ -335,7 +716,65 @@ export function AbogadoKanbanDashboard({
     e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = (e: React.DragEvent, nuevoEstado: EstadoExpediente) => {
+  // Función para ejecutar validación IA automática
+  const executeAIValidation = async (expedienteId: string) => {
+    console.log(`🤖 [INICIO] Validación IA para expediente ${expedienteId}`);
+    console.log(
+      `📍 Estado actual del expediente:`,
+      expedientes.find((e) => e.id === expedienteId)
+    );
+
+    // Agregar a la lista de expedientes en validación
+    setValidatingExpedientes((prev) => {
+      console.log(`📝 Agregando ${expedienteId} a lista de validación`);
+      return new Set([...prev, expedienteId]);
+    });
+
+    try {
+      console.log(`🔄 Ejecutando validación IA para ${expedienteId}...`);
+
+      // Ejecutar validación IA
+      const validationReport = await aiValidationService.validateExpediente(
+        expedienteId
+      );
+
+      console.log(`📊 Reporte de validación generado:`, validationReport);
+
+      // Guardar el reporte
+      aiValidationService.saveValidation(validationReport);
+
+      // Actualizar estado local
+      setValidationReports((prev) => ({
+        ...prev,
+        [expedienteId]: validationReport,
+      }));
+
+      console.log(
+        `✅ Validación IA completada exitosamente para ${expedienteId}`
+      );
+    } catch (error) {
+      console.error(`❌ Error en validación IA para ${expedienteId}:`, error);
+      console.error(`📍 Stack trace:`, error);
+
+      // NO agregar comentario de error automáticamente
+      // El abogado debe poder ver que la validación falló y decidir qué hacer
+      console.log(
+        `⚠️ Validación IA falló para ${expedienteId}, pero no se agrega comentario automático`
+      );
+    } finally {
+      // Remover de la lista de validación
+      setValidatingExpedientes((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(expedienteId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDrop = async (
+    e: React.DragEvent,
+    nuevoEstado: EstadoExpediente
+  ) => {
     e.preventDefault();
 
     if (!draggedExpediente) return;
@@ -373,6 +812,21 @@ export function AbogadoKanbanDashboard({
       // Refrescar expedientes desde el backend para obtener el historial actualizado
       const expedientesActualizados = getExpedientesByAbogado(abogadoId);
       setExpedientes(expedientesActualizados);
+
+      // 🤖 VALIDACIÓN IA AUTOMÁTICA: Si se mueve a EN_VALIDACION, ejecutar validación IA
+      if (nuevoEstado === "EN_VALIDACION") {
+        console.log(
+          `🤖 Tarjeta movida a EN_VALIDACION - Iniciando validación IA automática para ${draggedExpediente}`
+        );
+
+        // Ejecutar validación IA de forma asíncrona con un pequeño delay
+        setTimeout(() => {
+          console.log(
+            `⏰ Ejecutando validación IA después de delay para ${draggedExpediente}`
+          );
+          executeAIValidation(draggedExpediente);
+        }, 1000);
+      }
     }
 
     setDraggedExpediente(null);
@@ -437,12 +891,18 @@ export function AbogadoKanbanDashboard({
   };
 
   const renderExpedienteCard = (expediente: ExpedienteCompraventa) => {
+    // Contar documentos que están subidos (no solo validados)
     const documentosCompletados = expediente.documentos.filter(
-      (doc: any) => doc.estado === "validado"
+      (doc: any) => doc.estado === "validado" || doc.estado === "subido"
     ).length;
     const totalDocumentos = expediente.documentos.length;
     const progresoDocumentos =
       totalDocumentos > 0 ? (documentosCompletados / totalDocumentos) * 100 : 0;
+
+    // Estado de validación IA
+    const isValidating = validatingExpedientes.has(expediente.id);
+    const validationReport = validationReports[expediente.id];
+    const hasValidation = validationReport !== undefined;
 
     // Calcular estado del pago
     const pagoCompleto = expediente.costos.saldoPendiente === 0;
@@ -459,34 +919,21 @@ export function AbogadoKanbanDashboard({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-sm font-medium text-gray-900">
+              <div className="flex items-center gap-2 mb-1">
+                {getTramiteIcon(expediente.tipoTramite || "")}
+                <CardTitle className="text-sm font-medium text-gray-900">
+                  {getTramiteTitle(expediente)}
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs text-gray-600">
                 {expediente.numeroSolicitud}
-              </CardTitle>
-              <CardDescription className="text-xs text-gray-600 mt-1">
-                {expediente.comprador.nombre}{" "}
-                {expediente.comprador.apellidoPaterno}
+              </CardDescription>
+              <CardDescription className="text-xs text-gray-500 mt-1">
+                {getTramiteDescription(expediente)}
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <Badge variant="outline" className="text-xs">
-                {formatCurrency(expediente.costos.total)}
-              </Badge>
-              {pagoCompleto ? (
-                <Badge className="bg-green-100 text-green-800 text-xs">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Pagado
-                </Badge>
-              ) : tienePagosParciales ? (
-                <Badge className="bg-yellow-100 text-yellow-800 text-xs">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  Parcial
-                </Badge>
-              ) : (
-                <Badge className="bg-red-100 text-red-800 text-xs">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Pendiente
-                </Badge>
-              )}
+              {/* El estado se define por la columna */}
             </div>
           </div>
         </CardHeader>
@@ -495,47 +942,103 @@ export function AbogadoKanbanDashboard({
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <Home className="h-3 w-3" />
               <span>
-                {expediente.inmueble.tipo} - {expediente.inmueble.superficie}m²
+                {expediente.tipoTramite === "testamento"
+                  ? `Bienes: ${expediente.inmueble.tipo}`
+                  : expediente.tipoTramite === "donacion"
+                  ? `Donación: ${expediente.inmueble.tipo} - ${expediente.inmueble.superficie}m²`
+                  : `${expediente.inmueble.tipo} - ${expediente.inmueble.superficie}m²`}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <FileText className="h-3 w-3" />
-              <span>
-                {documentosCompletados}/{totalDocumentos} documentos
-              </span>
-            </div>
-
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
-              <div
-                className="bg-emerald-600 h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${progresoDocumentos}%` }}
-              />
-            </div>
-
-            {!pagoCompleto && (
-              <div className="flex items-center gap-2 text-xs text-red-600">
-                <DollarSign className="h-3 w-3" />
+            {expediente.comentarios.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                <MessageSquare className="h-3 w-3" />
                 <span>
-                  Saldo: {formatCurrency(expediente.costos.saldoPendiente)}
+                  {expediente.comentarios.length} comentario
+                  {expediente.comentarios.length !== 1 ? "s" : ""}
                 </span>
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-xs text-gray-500 pt-1 border-t border-gray-100">
-              <Calendar className="h-3 w-3" />
-              <span>{formatDate(expediente.fechaUltimaActualizacion)}</span>
-            </div>
+            {/* 🤖 Indicadores de Validación IA */}
+            {(isValidating || hasValidation) && (
+              <div className="pt-2 border-t border-gray-100">
+                {isValidating && (
+                  <div className="flex items-center gap-2 text-xs text-blue-600">
+                    <div className="animate-spin">
+                      <Shield className="h-3 w-3" />
+                    </div>
+                    <span className="font-medium">IA validando...</span>
+                  </div>
+                )}
 
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>{formatDate(expediente.fechaCreacion)}</span>
-              {expediente.comentarios.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  <span>{expediente.comentarios.length}</span>
-                </div>
-              )}
-            </div>
+                {hasValidation && !isValidating && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs">
+                      <div
+                        className={`flex items-center gap-1 ${
+                          validationReport.status === "passed"
+                            ? "text-green-600"
+                            : validationReport.status === "warning"
+                            ? "text-yellow-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {validationReport.status === "passed" && (
+                          <CheckCircle className="h-3 w-3" />
+                        )}
+                        {validationReport.status === "warning" && (
+                          <AlertCircle className="h-3 w-3" />
+                        )}
+                        {validationReport.status === "failed" && (
+                          <AlertCircle className="h-3 w-3" />
+                        )}
+                        <span className="font-medium">
+                          IA: {validationReport.overallScore}%
+                        </span>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs px-1 py-0 ${
+                          validationReport.status === "passed"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : validationReport.status === "warning"
+                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            : "bg-red-50 text-red-700 border-red-200"
+                        }`}
+                      >
+                        {validationReport.status === "passed" && "✅ Aprobado"}
+                        {validationReport.status === "warning" &&
+                          "⚠️ Observaciones"}
+                        {validationReport.status === "failed" && "❌ Errores"}
+                      </Badge>
+                    </div>
+
+                    {validationReport.status !== "passed" && (
+                      <div className="text-xs text-gray-600">
+                        {
+                          validationReport.validations.filter(
+                            (v) => !v.result.isValid
+                          ).length
+                        }{" "}
+                        validación
+                        {validationReport.validations.filter(
+                          (v) => !v.result.isValid
+                        ).length !== 1
+                          ? "es"
+                          : ""}{" "}
+                        pendiente
+                        {validationReport.validations.filter(
+                          (v) => !v.result.isValid
+                        ).length !== 1
+                          ? "s"
+                          : ""}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -547,7 +1050,7 @@ export function AbogadoKanbanDashboard({
 
     return (
       <Dialog open={showExpedienteModal} onOpenChange={setShowExpedienteModal}>
-        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+        <DialogContent className="modal-expediente-ancho flex flex-col">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-emerald-600" />
@@ -561,11 +1064,26 @@ export function AbogadoKanbanDashboard({
 
           <div className="overflow-y-auto flex-1 pr-2">
             <Tabs defaultValue="informacion" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="informacion">Información</TabsTrigger>
-                <TabsTrigger value="documentos">Documentos</TabsTrigger>
-                <TabsTrigger value="pagos">Pagos</TabsTrigger>
-                <TabsTrigger value="historial">Historial</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5 h-12">
+                <TabsTrigger value="informacion" className="text-xs">
+                  Info
+                </TabsTrigger>
+                <TabsTrigger value="documentos" className="text-xs">
+                  Documentos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="validaciones"
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <Shield className="h-3 w-3" />
+                  IA
+                </TabsTrigger>
+                <TabsTrigger value="pagos" className="text-xs">
+                  Pagos
+                </TabsTrigger>
+                <TabsTrigger value="historial" className="text-xs">
+                  Historial
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="informacion" className="space-y-6">
@@ -699,71 +1217,477 @@ export function AbogadoKanbanDashboard({
               </TabsContent>
 
               <TabsContent value="documentos" className="space-y-6">
-                {/* Documentos */}
+                {/* Documentos de Compraventa */}
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Documentos</CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setSortOrder(
-                            sortOrder === "newest" ? "oldest" : "newest"
-                          )
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        {sortOrder === "newest" ? (
-                          <>
-                            <ArrowDown className="h-3 w-3" />
-                            Más reciente
-                          </>
-                        ) : (
-                          <>
-                            <ArrowUp className="h-3 w-3" />
-                            Más antiguo
-                          </>
-                        )}
-                      </Button>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-emerald-600" />
+                        Documentos de Compraventa
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-50 text-emerald-700"
+                        >
+                          {
+                            documentosCompraventa.filter(
+                              (d) => d.estado === "validado"
+                            ).length
+                          }{" "}
+                          de {documentosCompraventa.length} validados
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {selectedExpediente.documentos
-                        .sort((a: any, b: any) => {
-                          const dateA = new Date(a.fechaSubida).getTime();
-                          const dateB = new Date(b.fechaSubida).getTime();
-                          return sortOrder === "newest"
-                            ? dateB - dateA
-                            : dateA - dateB;
-                        })
-                        .map((doc: any) => (
-                          <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-2 border rounded"
-                          >
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-gray-600" />
-                              <span className="text-sm">{doc.nombre}</span>
+                    <div className="space-y-6">
+                      {/* Agrupar por categoría */}
+                      {[
+                        "Documentos del Comprador",
+                        "Documentos del Vendedor",
+                        "Documentos del Inmueble",
+                      ].map((categoria) => {
+                        const docsCategoria = documentosCompraventa.filter(
+                          (doc) => doc.categoria === categoria
+                        );
+                        return (
+                          <div key={categoria} className="space-y-3">
+                            <h3 className="font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
+                              {categoria === "Documentos del Comprador" && (
+                                <User className="h-4 w-4 text-blue-600" />
+                              )}
+                              {categoria === "Documentos del Vendedor" && (
+                                <Users className="h-4 w-4 text-purple-600" />
+                              )}
+                              {categoria === "Documentos del Inmueble" && (
+                                <Building className="h-4 w-4 text-orange-600" />
+                              )}
+                              {categoria}
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs"
+                              >
+                                {
+                                  docsCategoria.filter(
+                                    (d) => d.estado === "validado"
+                                  ).length
+                                }
+                                /{docsCategoria.length}
+                              </Badge>
+                            </h3>
+                            <div className="grid gap-2">
+                              {docsCategoria.map((doc) => (
+                                <div
+                                  key={doc.id}
+                                  className="flex items-center justify-between p-3 border rounded-lg hover:shadow-sm transition-shadow cursor-pointer group"
+                                  onClick={() =>
+                                    handleOpenDocument(doc.archivo)
+                                  }
+                                >
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-gray-600" />
+                                      {doc.requerido && (
+                                        <span className="text-red-500 text-xs">
+                                          *
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">
+                                          {doc.nombre}
+                                        </span>
+                                        {!doc.requerido && (
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs bg-gray-50 text-gray-600"
+                                          >
+                                            Opcional
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-xs text-gray-600 mt-1">
+                                        {doc.descripcion}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Subido:{" "}
+                                        {new Date(
+                                          doc.fechaSubida
+                                        ).toLocaleDateString("es-MX", {
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge
+                                      variant="outline"
+                                      className={
+                                        doc.estado === "validado"
+                                          ? "bg-green-100 text-green-800 border-green-200"
+                                          : doc.estado === "subido"
+                                          ? "bg-blue-100 text-blue-800 border-blue-200"
+                                          : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                      }
+                                    >
+                                      {doc.estado === "validado" && (
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                      )}
+                                      {doc.estado === "subido" && (
+                                        <Clock className="h-3 w-3 mr-1" />
+                                      )}
+                                      {doc.estado === "pendiente" && (
+                                        <AlertCircle className="h-3 w-3 mr-1" />
+                                      )}
+                                      {doc.estado.charAt(0).toUpperCase() +
+                                        doc.estado.slice(1)}
+                                    </Badge>
+                                    <Eye className="h-4 w-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                            <Badge
-                              variant={
-                                doc.estado === "validado"
-                                  ? "default"
-                                  : "outline"
-                              }
-                              className={
-                                doc.estado === "validado"
-                                  ? "bg-green-100 text-green-800"
-                                  : ""
-                              }
-                            >
-                              {doc.estado}
-                            </Badge>
                           </div>
-                        ))}
+                        );
+                      })}
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Nueva pestaña de Validaciones IA */}
+              <TabsContent value="validaciones" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Shield className="h-5 w-5 text-emerald-600" />
+                          Validaciones de Inteligencia Artificial
+                        </CardTitle>
+                        <CardDescription>
+                          Resultados de validación automática de documentos
+                        </CardDescription>
+                      </div>
+                      {validationReports[selectedExpediente.id] && (
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            handleRevalidation(selectedExpediente.id)
+                          }
+                          disabled={validatingExpedientes.has(
+                            selectedExpediente.id
+                          )}
+                          className="flex items-center gap-2"
+                        >
+                          {validatingExpedientes.has(selectedExpediente.id) ? (
+                            <>
+                              <div className="animate-spin">
+                                <Shield className="h-4 w-4" />
+                              </div>
+                              {revalidatingExpedientes.has(
+                                selectedExpediente.id
+                              )
+                                ? "Revalidando..."
+                                : "Validando..."}
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="h-4 w-4" />
+                              Revalidar Documentos
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {validationReports[selectedExpediente.id] ? (
+                      <div className="space-y-4">
+                        {/* Resumen general */}
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                validationReports[selectedExpediente.id]
+                                  .status === "passed"
+                                  ? "bg-green-100"
+                                  : validationReports[selectedExpediente.id]
+                                      .status === "warning"
+                                  ? "bg-yellow-100"
+                                  : "bg-red-100"
+                              }`}
+                            >
+                              {validationReports[selectedExpediente.id]
+                                .status === "passed" && (
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              )}
+                              {validationReports[selectedExpediente.id]
+                                .status === "warning" && (
+                                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                              )}
+                              {validationReports[selectedExpediente.id]
+                                .status === "failed" && (
+                                <AlertCircle className="h-5 w-5 text-red-600" />
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">
+                                Validación{" "}
+                                {validationReports[selectedExpediente.id]
+                                  .status === "passed"
+                                  ? "Exitosa"
+                                  : validationReports[selectedExpediente.id]
+                                      .status === "warning"
+                                  ? "Con Observaciones"
+                                  : "Fallida"}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                {
+                                  validationReports[
+                                    selectedExpediente.id
+                                  ].validations.filter((v) => v.result.isValid)
+                                    .length
+                                }{" "}
+                                de{" "}
+                                {
+                                  validationReports[selectedExpediente.id]
+                                    .validations.length
+                                }{" "}
+                                documentos aprobados
+                              </p>
+                            </div>
+                          </div>
+                          <Badge
+                            className={
+                              validationReports[selectedExpediente.id]
+                                .status === "passed"
+                                ? "bg-green-100 text-green-800"
+                                : validationReports[selectedExpediente.id]
+                                    .status === "warning"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }
+                          >
+                            {
+                              validationReports[selectedExpediente.id]
+                                .overallScore
+                            }
+                            % Completado
+                          </Badge>
+                        </div>
+
+                        {/* Tabla de resultados */}
+                        <div className="border rounded-lg overflow-hidden">
+                          <div className="bg-gray-50 px-6 py-4 border-b">
+                            <h4 className="font-semibold text-gray-900 text-lg">
+                              Resultados por Documento
+                            </h4>
+                          </div>
+                          <div className="divide-y">
+                            {validationReports[
+                              selectedExpediente.id
+                            ].validations.map((validation, index) => {
+                              // Mapear a documento real
+                              const documentoReal = documentosCompraventa.find(
+                                (doc) =>
+                                  doc.nombre
+                                    .toLowerCase()
+                                    .includes(
+                                      validation.documentType.toLowerCase()
+                                    ) ||
+                                  (validation.documentType ===
+                                    "INE vs Escritura" &&
+                                    doc.nombre.includes("INE")) ||
+                                  (validation.documentType === "Avalúo" &&
+                                    doc.nombre.includes("Avalúo")) ||
+                                  (validation.documentType ===
+                                    "Escritura Pública" &&
+                                    doc.nombre.includes("Escritura")) ||
+                                  (validation.documentType === "CLG" &&
+                                    doc.nombre.includes("CLG"))
+                              );
+
+                              return (
+                                <div
+                                  key={index}
+                                  className="p-6 hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 flex-1">
+                                      <div
+                                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                          validation.result.isValid
+                                            ? "bg-green-100"
+                                            : "bg-red-100"
+                                        }`}
+                                      >
+                                        {validation.result.isValid ? (
+                                          <CheckCircle className="h-4 w-4 text-green-600" />
+                                        ) : (
+                                          <AlertCircle className="h-4 w-4 text-red-600" />
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <h5 className="font-medium text-gray-900">
+                                            {validation.documentType}
+                                          </h5>
+                                          <Badge
+                                            variant="outline"
+                                            className={
+                                              validation.result.isValid
+                                                ? "bg-green-50 text-green-700 border-green-200"
+                                                : "bg-red-50 text-red-700 border-red-200"
+                                            }
+                                          >
+                                            {validation.result.isValid
+                                              ? "Aprobado"
+                                              : "Requiere Atención"}
+                                          </Badge>
+                                        </div>
+                                        {validation.result.issues.length >
+                                          0 && (
+                                          <p className="text-sm text-gray-600 mb-1">
+                                            {
+                                              validation.result.issues[0]
+                                                .message
+                                            }
+                                          </p>
+                                        )}
+                                        {validation.result.suggestions &&
+                                          validation.result.suggestions.length >
+                                            0 && (
+                                            <p className="text-xs text-blue-600">
+                                              💡{" "}
+                                              {validation.result.suggestions[0]}
+                                            </p>
+                                          )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {documentoReal && (
+                                        <Button
+                                          variant="outline"
+                                          size="default"
+                                          onClick={() =>
+                                            handleOpenDocument(
+                                              documentoReal.archivo
+                                            )
+                                          }
+                                          className="text-sm"
+                                        >
+                                          <Eye className="h-4 w-4 mr-2" />
+                                          Ver Documento
+                                        </Button>
+                                      )}
+
+                                      {/* Botones de aprobación/rechazo manual */}
+                                      {!manualValidations[
+                                        selectedExpediente.id
+                                      ]?.[validation.documentType] ? (
+                                        <div className="flex gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="default"
+                                            onClick={() =>
+                                              handleManualValidation(
+                                                selectedExpediente.id,
+                                                validation.documentType,
+                                                true
+                                              )
+                                            }
+                                            className="text-sm bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                          >
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                            Aprobar
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="default"
+                                            onClick={() => {
+                                              const reason = prompt(
+                                                "¿Por qué rechazas esta validación?"
+                                              );
+                                              if (reason) {
+                                                handleManualValidation(
+                                                  selectedExpediente.id,
+                                                  validation.documentType,
+                                                  false,
+                                                  reason
+                                                );
+                                              }
+                                            }}
+                                            className="text-sm bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                                          >
+                                            <AlertCircle className="h-4 w-4 mr-2" />
+                                            Rechazar
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <Badge
+                                          className={
+                                            manualValidations[
+                                              selectedExpediente.id
+                                            ][validation.documentType].approved
+                                              ? "bg-green-100 text-green-800 border-green-200"
+                                              : "bg-red-100 text-red-800 border-red-200"
+                                          }
+                                        >
+                                          {manualValidations[
+                                            selectedExpediente.id
+                                          ][validation.documentType].approved
+                                            ? "✅ Aprobado"
+                                            : "❌ Rechazado"}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Acciones recomendadas */}
+                        {validationReports[selectedExpediente.id]
+                          .recommendedActions.length > 0 && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                              <TrendingUp className="h-4 w-4" />
+                              Acciones Recomendadas
+                            </h4>
+                            <ul className="text-sm text-blue-800 space-y-1">
+                              {validationReports[
+                                selectedExpediente.id
+                              ].recommendedActions.map((action, idx) => (
+                                <li key={idx}>• {action}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Sin Validaciones IA
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          Este expediente aún no ha sido validado por IA
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Arrastra la tarjeta a "En Validación" para activar la
+                          validación automática
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -804,110 +1728,237 @@ export function AbogadoKanbanDashboard({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                    <div className="space-y-6">
+                      {/* Resumen financiero */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="text-center p-4 bg-gray-50 rounded-lg">
                           <Label className="text-sm font-medium text-gray-600">
-                            Total Requerido
+                            Costo Total
                           </Label>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {formatCurrency(selectedExpediente.costos.total)}
+                          <p className="text-xl font-bold text-gray-900 mt-1">
+                            {formatCurrency(costoTotalExpediente)}
                           </p>
                         </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                          <Label className="text-sm font-medium text-green-600">
+                            Total Pagado
+                          </Label>
+                          <p className="text-xl font-bold text-green-700 mt-1">
+                            {formatCurrency(totalPagado)}
+                          </p>
+                        </div>
+                        <div className="text-center p-4 bg-red-50 rounded-lg">
+                          <Label className="text-sm font-medium text-red-600">
                             Saldo Pendiente
                           </Label>
-                          <p
-                            className={`text-lg font-semibold ${
-                              selectedExpediente.costos.saldoPendiente === 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {formatCurrency(
-                              selectedExpediente.costos.saldoPendiente
-                            )}
+                          <p className="text-xl font-bold text-red-700 mt-1">
+                            {formatCurrency(saldoPendiente)}
                           </p>
                         </div>
                       </div>
 
-                      {selectedExpediente.pagos.length > 0 && (
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600 mb-2 block">
-                            Historial de Pagos
-                          </Label>
-                          <div className="space-y-2">
-                            {selectedExpediente.pagos
-                              .sort((a: any, b: any) => {
-                                const dateA = new Date(a.fecha).getTime();
-                                const dateB = new Date(b.fecha).getTime();
-                                return sortOrder === "newest"
-                                  ? dateB - dateA
-                                  : dateA - dateB;
-                              })
-                              .map((pago: any) => (
-                                <div
-                                  key={pago.id}
-                                  className="flex items-center justify-between p-3 border rounded-lg"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className={`w-3 h-3 rounded-full ${
-                                        pago.estado === "confirmado"
-                                          ? "bg-green-500"
-                                          : pago.estado === "pendiente"
-                                          ? "bg-yellow-500"
-                                          : "bg-red-500"
-                                      }`}
-                                    />
-                                    <div>
-                                      <p className="text-sm font-medium">
+                      {/* Barra de progreso */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            Progreso de Pagos
+                          </span>
+                          <span className="font-medium">
+                            {porcentajePagado.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-emerald-600 h-3 rounded-full transition-all duration-500"
+                            style={{ width: `${porcentajePagado}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Historial de pagos */}
+                      <div>
+                        <Label className="text-lg font-semibold text-gray-900 mb-4 block">
+                          Historial de Pagos
+                        </Label>
+                        <div className="space-y-3">
+                          {pagosDemoExpediente.map((pago) => (
+                            <div
+                              key={pago.id}
+                              className="border rounded-lg p-4 hover:shadow-sm transition-shadow"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <div
+                                    className={`w-4 h-4 rounded-full mt-1 ${
+                                      pago.estado === "confirmado"
+                                        ? "bg-green-500"
+                                        : pago.estado === "pendiente"
+                                        ? "bg-yellow-500"
+                                        : "bg-red-500"
+                                    }`}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <p className="text-lg font-semibold text-gray-900">
                                         {formatCurrency(pago.monto)}
                                       </p>
-                                      <p className="text-xs text-gray-600">
-                                        {formatDate(pago.fecha)} - {pago.metodo}
-                                      </p>
+                                      <Badge
+                                        className={
+                                          pago.estado === "confirmado"
+                                            ? "bg-green-100 text-green-800 border-green-200"
+                                            : pago.estado === "pendiente"
+                                            ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                            : "bg-red-100 text-red-800 border-red-200"
+                                        }
+                                      >
+                                        {pago.estado === "confirmado" && (
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                        )}
+                                        {pago.estado === "pendiente" && (
+                                          <Clock className="h-3 w-3 mr-1" />
+                                        )}
+                                        {pago.estado.charAt(0).toUpperCase() +
+                                          pago.estado.slice(1)}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      {pago.concepto}
+                                    </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                                      <div>
+                                        <span className="font-medium">
+                                          Fecha:
+                                        </span>{" "}
+                                        {new Date(
+                                          pago.fecha
+                                        ).toLocaleDateString("es-MX", {
+                                          year: "numeric",
+                                          month: "long",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Método:
+                                        </span>{" "}
+                                        {pago.metodo}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Banco:
+                                        </span>{" "}
+                                        {pago.banco}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Referencia:
+                                        </span>{" "}
+                                        {pago.referencia}
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <Badge
-                                      className={
-                                        pago.estado === "confirmado"
-                                          ? "bg-green-100 text-green-800"
-                                          : pago.estado === "pendiente"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : "bg-red-100 text-red-800"
-                                      }
-                                    >
-                                      {pago.estado}
-                                    </Badge>
-                                    {pago.referencia && (
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        Ref: {pago.referencia}
-                                      </p>
-                                    )}
-                                  </div>
                                 </div>
-                              ))}
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleOpenDocument(pago.comprobante)
+                                    }
+                                    className="text-xs"
+                                  >
+                                    <Eye className="h-3 w-3 mr-1" />
+                                    Ver Comprobante
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Próximos pagos */}
+                      <div>
+                        <Label className="text-lg font-semibold text-gray-900 mb-4 block">
+                          Próximos Pagos Programados
+                        </Label>
+                        <div className="space-y-3">
+                          <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-semibold text-gray-900">
+                                  Segundo Pago (30%)
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Avance de trámite y preparación de documentos
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Vence: 30 de enero de 2025
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-yellow-700">
+                                  $7,500.00
+                                </p>
+                                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Pendiente
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="border rounded-lg p-4 bg-orange-50 border-orange-200">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-semibold text-gray-900">
+                                  Pago Final (40%)
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Liquidación final y gastos de escrituración
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Al momento de la firma
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-orange-700">
+                                  $10,000.00
+                                </p>
+                                <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  Por confirmar
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      )}
+                      </div>
 
-                      {selectedExpediente.costos.saldoPendiente > 0 && (
-                        <Alert>
+                      {/* Notas importantes */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
                           <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>
-                            <strong>Pago pendiente:</strong> Este expediente no
-                            puede ser movido a "Listo para Firma" hasta que se
-                            complete el pago de{" "}
-                            {formatCurrency(
-                              selectedExpediente.costos.saldoPendiente
-                            )}
-                            .
-                          </AlertDescription>
-                        </Alert>
-                      )}
+                          Notas Importantes
+                        </h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li>
+                            • Los pagos deben realizarse antes de las fechas
+                            límite
+                          </li>
+                          <li>
+                            • El pago final se debe liquidar al momento de la
+                            firma
+                          </li>
+                          <li>
+                            • Todos los comprobantes están disponibles para
+                            descarga
+                          </li>
+                          <li>• Los pagos anticipados no son reembolsables</li>
+                        </ul>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1343,6 +2394,54 @@ export function AbogadoKanbanDashboard({
 
       {/* Modal de pago pendiente */}
       {renderPaymentModal()}
+
+      {/* Modal de Visualización de Documentos */}
+      <Dialog open={showDocumentViewer} onOpenChange={setShowDocumentViewer}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-emerald-600" />
+              Visualización de Documento
+            </DialogTitle>
+            <DialogDescription>
+              Documento legal para trámite de compraventa
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden">
+            {selectedDocument && (
+              <iframe
+                src={selectedDocument}
+                className="w-full h-full border rounded-lg"
+                title="Documento PDF"
+              />
+            )}
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="text-sm text-gray-600">
+              💡 Documento real utilizado para demostración
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  selectedDocument && window.open(selectedDocument, "_blank")
+                }
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Abrir en Nueva Pestaña
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDocumentViewer(false)}
+              >
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
