@@ -43,6 +43,7 @@ import {
   UserNotification,
   getUserNotifications,
 } from "@/lib/user-notifications-data";
+import { useSolicitudesPersistence } from "@/hooks/use-solicitudes-persistence";
 import CitaSchedulingModal from "@/components/cita-scheduling-modal";
 import Link from "next/link";
 
@@ -50,6 +51,11 @@ export default function MiCuentaPage() {
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  const {
+    solicitudes: solicitudesPersistentes,
+    loading: loadingPersistentes,
+    error: errorPersistentes,
+  } = useSolicitudesPersistence();
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
@@ -69,6 +75,7 @@ export default function MiCuentaPage() {
 
     const cargarSolicitudes = async () => {
       try {
+        // Cargar solicitudes mock para compatibilidad
         const userSolicitudes = await getUserSolicitudes(user?.id || "");
         setSolicitudes(userSolicitudes);
       } catch (error) {
@@ -363,18 +370,34 @@ export default function MiCuentaPage() {
                   Mis Solicitudes
                 </h2>
                 <p className="text-sm text-gray-600">
-                  {solicitudes.length} solicitud
-                  {solicitudes.length !== 1 ? "es" : ""} encontrada
-                  {solicitudes.length !== 1 ? "s" : ""}
+                  {solicitudesPersistentes.length} solicitud
+                  {solicitudesPersistentes.length !== 1 ? "es" : ""} encontrada
+                  {solicitudesPersistentes.length !== 1 ? "s" : ""}
                 </p>
               </div>
 
-              {loading ? (
+              {loading || loadingPersistentes ? (
                 <div className="text-center py-12">
                   <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                   <p className="text-gray-600">Cargando solicitudes...</p>
                 </div>
-              ) : solicitudes.length === 0 ? (
+              ) : errorPersistentes ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Error al cargar solicitudes
+                    </h3>
+                    <p className="text-gray-600 mb-6">{errorPersistentes}</p>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      variant="outline"
+                    >
+                      Reintentar
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : solicitudesPersistentes.length === 0 ? (
                 <Card>
                   <CardContent className="text-center py-12">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -394,99 +417,106 @@ export default function MiCuentaPage() {
                 </Card>
               ) : (
                 <div className="grid gap-6">
-                  {solicitudes.map((solicitud) => (
-                    <Card
-                      key={solicitud.numeroSolicitud}
-                      className="hover:shadow-md transition-shadow"
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2">
-                              <FileText className="h-5 w-5 text-emerald-600" />
-                              {solicitud.tipoTramite}
-                            </CardTitle>
-                            <CardDescription className="mt-2">
-                              Solicitud #{solicitud.numeroSolicitud}
-                            </CardDescription>
-                          </div>
-                          <Badge
-                            className={getStatusColor(solicitud.estatusActual)}
-                          >
-                            <div className="flex items-center gap-1">
-                              {getStatusIcon(solicitud.estatusActual)}
-                              {solicitud.estatusActual.replace(/_/g, " ")}
+                  {solicitudesPersistentes.map((solicitud) => {
+                    const documentosCompletados = solicitud.documentos.filter(
+                      (doc) => doc.subido
+                    ).length;
+                    const documentosRequeridos = solicitud.documentos.filter(
+                      (doc) => doc.requerido
+                    ).length;
+
+                    return (
+                      <Card
+                        key={solicitud.numeroSolicitud}
+                        className="hover:shadow-md transition-shadow"
+                      >
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <CardTitle className="flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-emerald-600" />
+                                {solicitud.tipoTramite}
+                              </CardTitle>
+                              <CardDescription className="mt-2">
+                                Solicitud #{solicitud.numeroSolicitud}
+                              </CardDescription>
                             </div>
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="h-4 w-4" />
-                            <span>Fecha: {solicitud.fechaCreacion}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <DollarSign className="h-4 w-4" />
-                            <span>
-                              Costo: $
-                              {solicitud.costoTotal.toLocaleString("es-MX")}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <FileText className="h-4 w-4" />
-                            <span>
-                              {
-                                solicitud.documentosRequeridos.filter(
-                                  (doc) => doc.subido
-                                ).length
-                              }
-                              /{solicitud.documentosRequeridos.length}{" "}
-                              documentos
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Estatus:</span>
-                            <Badge
-                              className={getStatusColor(
-                                solicitud.estatusActual
-                              )}
-                            >
+                            <Badge className={getStatusColor(solicitud.estado)}>
                               <div className="flex items-center gap-1">
-                                {getStatusIcon(solicitud.estatusActual)}
-                                {formatStatusText(solicitud.estatusActual)}
+                                {getStatusIcon(solicitud.estado)}
+                                {solicitud.estado.replace(/_/g, " ")}
                               </div>
                             </Badge>
                           </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t">
-                          <div className="text-sm text-gray-600">
-                            <p>
-                              Última actualización:{" "}
-                              {solicitud.fechaUltimaActualizacion}
-                            </p>
-                            {solicitud.saldoPendiente > 0 && (
-                              <p className="text-orange-600 font-medium">
-                                Saldo pendiente: $
-                                {solicitud.saldoPendiente.toLocaleString(
-                                  "es-MX"
-                                )}
-                              </p>
-                            )}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Calendar className="h-4 w-4" />
+                              <span>
+                                Fecha:{" "}
+                                {new Date(
+                                  solicitud.fechaCreacion
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <DollarSign className="h-4 w-4" />
+                              <span>
+                                Costo: $
+                                {solicitud.costoTotal.toLocaleString("es-MX")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <FileText className="h-4 w-4" />
+                              <span>
+                                {documentosCompletados}/{documentosRequeridos}{" "}
+                                documentos
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-gray-600">Estatus:</span>
+                              <Badge
+                                className={getStatusColor(solicitud.estado)}
+                              >
+                                <div className="flex items-center gap-1">
+                                  {getStatusIcon(solicitud.estado)}
+                                  {formatStatusText(solicitud.estado)}
+                                </div>
+                              </Badge>
+                            </div>
                           </div>
-                          <Link
-                            href={`/solicitud/${solicitud.numeroSolicitud}`}
-                          >
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-2" />
-                              Ver Detalles
-                            </Button>
-                          </Link>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+
+                          <div className="flex items-center justify-between pt-4 border-t">
+                            <div className="text-sm text-gray-600">
+                              <p>
+                                Última actualización:{" "}
+                                {new Date(
+                                  solicitud.ultimaActualizacion
+                                ).toLocaleDateString()}
+                              </p>
+                              {solicitud.saldoPendiente > 0 && (
+                                <p className="text-red-600 font-medium">
+                                  Saldo pendiente: $
+                                  {solicitud.saldoPendiente.toLocaleString(
+                                    "es-MX"
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                            <Link
+                              href={`/solicitud/${solicitud.numeroSolicitud}`}
+                            >
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ver Detalles
+                              </Button>
+                            </Link>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>

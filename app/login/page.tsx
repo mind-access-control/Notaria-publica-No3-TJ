@@ -247,23 +247,86 @@ export default function LoginPage() {
                     </Button>
                   </form>
 
-                  <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600 mb-4">
+                  <div className="mt-6">
+                    <p className="text-sm text-gray-600 mb-4 text-center">
                       Credenciales de prueba:
                     </p>
-                    <div className="space-y-2 text-xs text-gray-500">
-                      <p>
-                        <strong>Cliente:</strong> juan.perez@email.com /
-                        cliente123
-                      </p>
-                      <p>
-                        <strong>Notario:</strong>{" "}
-                        maria.rodriguez@notaria3tijuana.com / notario123
-                      </p>
-                      <p>
-                        <strong>Admin:</strong> admin@notaria3tijuana.com /
-                        admin123
-                      </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({
+                            email: "cliente@notaria3tijuana.com",
+                            password: "cliente123",
+                          });
+                        }}
+                        className="text-xs justify-start"
+                      >
+                        <User className="h-3 w-3 mr-2" />
+                        Cliente: cliente@notaria3tijuana.com
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({
+                            email: "abogado@notaria3tijuana.com",
+                            password: "abogado123",
+                          });
+                        }}
+                        className="text-xs justify-start"
+                      >
+                        <Shield className="h-3 w-3 mr-2" />
+                        Abogado: abogado@notaria3tijuana.com
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({
+                            email: "maria.rodriguez@notaria3tijuana.com",
+                            password: "notario123",
+                          });
+                        }}
+                        className="text-xs justify-start"
+                      >
+                        <Shield className="h-3 w-3 mr-2" />
+                        Notario: maria.rodriguez@notaria3tijuana.com
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({
+                            email: "cajero@notaria3tijuana.com",
+                            password: "cajero123",
+                          });
+                        }}
+                        className="text-xs justify-start"
+                      >
+                        <User className="h-3 w-3 mr-2" />
+                        Cajero: cajero@notaria3tijuana.com
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLoginData({
+                            email: "admin@notaria3tijuana.com",
+                            password: "admin123",
+                          });
+                        }}
+                        className="text-xs justify-start"
+                      >
+                        <Shield className="h-3 w-3 mr-2" />
+                        Admin: admin@notaria3tijuana.com
+                      </Button>
                     </div>
                   </div>
                 </TabsContent>

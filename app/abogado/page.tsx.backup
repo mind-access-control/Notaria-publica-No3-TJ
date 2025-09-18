@@ -235,6 +235,112 @@ export default function AbogadoDashboard() {
             <AbogadoKanbanDashboard abogadoId={user.id} />
           </TabsContent>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Lista de Expedientes</CardTitle>
+                <CardDescription>
+                  Vista detallada de todos tus expedientes asignados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {expedientesAbogado.map((expediente) => (
+                    <Card
+                      key={expediente.id}
+                      className="hover:shadow-md transition-shadow"
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg">
+                              {expediente.numeroSolicitud}
+                            </CardTitle>
+                            <CardDescription className="mt-2">
+                              Compraventa de {expediente.inmueble.tipo} -{" "}
+                              {expediente.inmueble.superficie}m²
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={
+                                expediente.estado === "RECIBIDO"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : expediente.estado === "EN_VALIDACION"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : expediente.estado === "EN_PREPARACION"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : expediente.estado === "LISTO_PARA_FIRMA"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-emerald-100 text-emerald-800"
+                              }
+                            >
+                              {expediente.estado.replace(/_/g, " ")}
+                            </Badge>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver Detalles
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="h-4 w-4" />
+                            <span>
+                              Comprador: {expediente.comprador.nombre}{" "}
+                              {expediente.comprador.apellidoPaterno}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="h-4 w-4" />
+                            <span>
+                              Vendedor: {expediente.vendedor.nombre}{" "}
+                              {expediente.vendedor.apellidoPaterno}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <DollarSign className="h-4 w-4" />
+                            <span>
+                              Costo: $
+                              {expediente.costos.total.toLocaleString("es-MX")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="h-4 w-4" />
+                            <span>
+                              Creado:{" "}
+                              {new Date(
+                                expediente.fechaCreacion
+                              ).toLocaleDateString("es-MX")}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {expedientesAbogado.length === 0 && (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No tienes expedientes asignados
+                        </h3>
+                        <p className="text-gray-600">
+                          Los expedientes aparecerán aquí cuando te sean
+                          asignados
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Reportes */}
           <TabsContent value="reportes" className="space-y-6">
             <Card>
               <CardHeader>

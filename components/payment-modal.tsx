@@ -1,498 +1,413 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
   CreditCard,
-  Wallet,
-  Lock,
-  AlertTriangle,
-  CheckCircle2,
   DollarSign,
-  Calendar,
-  FileText,
+  CheckCircle,
+  AlertCircle,
   X,
-  Building2,
-  Smartphone,
-  Banknote,
-  Calculator,
+  Loader2,
+  Shield,
+  Clock,
 } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  saldoPendiente: number;
-  costoTotal: number;
-  pagosRealizados: number;
-  onPagoRealizado: (monto: number) => void;
-  documentosSubidos: number;
-  documentosRequeridos: number;
+  onPaymentSuccess: (paymentData: PaymentData) => void;
+  expedienteData: {
+    numeroSolicitud: string;
+    tipoTramite: string;
+    costoEstimado: number;
+    documentosCompletos: number;
+    documentosRequeridos: number;
+  };
 }
 
-export default function PaymentModal({
+interface PaymentData {
+  monto: number;
+  metodo: string;
+  referencia?: string;
+  tipo: "parcial" | "total";
+}
+
+export function PaymentModal({
   isOpen,
   onClose,
-  saldoPendiente,
-  costoTotal,
-  pagosRealizados,
-  onPagoRealizado,
-  documentosSubidos,
-  documentosRequeridos,
+  onPaymentSuccess,
+  expedienteData,
 }: PaymentModalProps) {
+  const [paymentData, setPaymentData] = useState<PaymentData>({
+    monto: 0,
+    metodo: "",
+    tipo: "parcial",
+  });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [montoPago, setMontoPago] = useState<number>(saldoPendiente);
-  const [metodoPago, setMetodoPago] = useState<string>("tarjeta");
-  const [montoPersonalizado, setMontoPersonalizado] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const handlePago = async (monto: number) => {
+  const costoTotal = expedienteData.costoEstimado;
+  const montoMinimo = Math.ceil(costoTotal * 0.3); // 30% mínimo
+  const montoMaximo = costoTotal;
+
+  const handlePayment = async () => {
+    if (!paymentData.monto || !paymentData.metodo) {
+      return;
+    }
+
+    if (paymentData.monto < montoMinimo) {
+      alert(`El pago mínimo es de $${montoMinimo.toLocaleString()}`);
+      return;
+    }
+
     setIsProcessing(true);
 
     // Simular procesamiento de pago
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    onPagoRealizado(monto);
     setIsProcessing(false);
-    onClose();
+    setShowSuccess(true);
+
+    // Después de 2 segundos, cerrar y continuar
+    setTimeout(() => {
+      onPaymentSuccess(paymentData);
+      onClose();
+    }, 2000);
   };
 
-  const porcentajeCompletado = (documentosSubidos / documentosRequeridos) * 100;
-  const porcentajePago = (pagosRealizados / costoTotal) * 100;
+  const handleMontoChange = (value: string) => {
+    const monto = parseFloat(value) || 0;
+    setPaymentData((prev) => ({
+      ...prev,
+      monto,
+      tipo: monto >= costoTotal ? "total" : "parcial",
+    }));
+  };
 
-  // Hacer scroll hacia arriba cuando se abre el modal
-  useEffect(() => {
-    if (isOpen) {
-      // Pequeño delay para asegurar que el modal esté completamente renderizado
-      setTimeout(() => {
-        // Buscar el contenedor del modal por ID específico
-        const modalContent = document.getElementById("payment-modal-content");
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+    }).format(amount);
+  };
 
-        if (modalContent) {
-          modalContent.scrollTop = 0;
-          modalContent.scrollTo({ top: 0, behavior: "smooth" });
-        }
-
-        // También hacer scroll del body por si acaso
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 150);
-    }
-  }, [isOpen]);
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        id="payment-modal-content"
-        className="max-w-4xl max-h-[90vh] overflow-y-auto scroll-smooth"
-      >
-        <div className="scroll-mt-0">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-800">
-              <Lock className="h-6 w-6" />
-              ¡Proceso Bloqueado por Falta de Pago!
-            </DialogTitle>
-            <DialogDescription>
-              <strong>Te hemos bloqueado el proceso</strong> porque has subido{" "}
-              {documentosSubidos} documentos pero aún tienes un saldo pendiente
-              de <strong>${saldoPendiente.toLocaleString("es-MX")}</strong>.
-              Para continuar subiendo documentos, debes realizar un pago.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Alerta de bloqueo */}
-            <Alert className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                <strong>¡Atención!</strong> Has subido {documentosSubidos} de{" "}
-                {documentosRequeridos} documentos, pero el proceso está
-                bloqueado porque tienes un saldo pendiente de{" "}
-                <strong>${saldoPendiente.toLocaleString("es-MX")}</strong>. Para
-                continuar subiendo documentos, realiza un pago ahora.
-              </AlertDescription>
-            </Alert>
-
-            {/* Estado de progreso */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Progreso de documentos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                    Documentos Subidos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Progreso</span>
-                      <span>
-                        {documentosSubidos} de {documentosRequeridos}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${porcentajeCompletado}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {documentosSubidos === documentosRequeridos ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Completado
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          {porcentajeCompletado.toFixed(0)}% Completado
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Estado de pagos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4 text-emerald-600" />
-                    Estado de Pagos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Progreso</span>
-                      <span>
-                        ${pagosRealizados.toLocaleString("es-MX")} de $
-                        {costoTotal.toLocaleString("es-MX")}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${porcentajePago}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {saldoPendiente === 0 ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Pagado
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          {porcentajePago.toFixed(0)}% Pagado
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
-
-            {/* Detalles de pago */}
-            <Card className="border-red-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800">
-                  <AlertTriangle className="h-5 w-5" />
-                  Pago Pendiente
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Resumen de costos */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">
-                      Resumen de Costos
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          Costo total del trámite:
-                        </span>
-                        <span className="font-medium">
-                          ${costoTotal.toLocaleString("es-MX")}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Pagos realizados:</span>
-                        <span className="font-medium text-green-600">
-                          ${pagosRealizados.toLocaleString("es-MX")}
-                        </span>
-                      </div>
-                      <div className="border-t border-gray-300 pt-2">
-                        <div className="flex justify-between font-semibold text-lg">
-                          <span className="text-red-600">Saldo pendiente:</span>
-                          <span className="text-red-600">
-                            ${saldoPendiente.toLocaleString("es-MX")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Opciones de pago */}
-                  <div className="space-y-6">
-                    <h4 className="font-medium text-gray-900">
-                      Opciones de Pago
-                    </h4>
-
-                    {/* Monto a pagar */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">
-                        Monto a Pagar
-                      </Label>
-                      <RadioGroup
-                        value={montoPago.toString()}
-                        onValueChange={(value) => setMontoPago(Number(value))}
-                      >
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem
-                              value={saldoPendiente.toString()}
-                              id="completo"
-                            />
-                            <Label
-                              htmlFor="completo"
-                              className="flex-1 cursor-pointer"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">
-                                  Pago Completo
-                                </span>
-                                <span className="text-emerald-600 font-semibold">
-                                  ${saldoPendiente.toLocaleString("es-MX")}
-                                </span>
-                              </div>
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem value="0" id="parcial" />
-                            <Label
-                              htmlFor="parcial"
-                              className="flex-1 cursor-pointer"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">
-                                  Pago Parcial
-                                </span>
-                                <span className="text-gray-600">
-                                  Personalizado
-                                </span>
-                              </div>
-                            </Label>
-                          </div>
-                        </div>
-                      </RadioGroup>
-
-                      {montoPago === 0 && (
-                        <div className="space-y-2">
-                          <Label htmlFor="monto-personalizado">
-                            Monto Personalizado
-                          </Label>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-600">$</span>
-                            <Input
-                              id="monto-personalizado"
-                              type="number"
-                              value={montoPersonalizado}
-                              onChange={(e) =>
-                                setMontoPersonalizado(e.target.value)
-                              }
-                              placeholder="Ingresa el monto"
-                              min="1000"
-                              max={saldoPendiente}
-                              step="1000"
-                              className="w-32"
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                const monto = Number(montoPersonalizado);
-                                if (monto >= 1000 && monto <= saldoPendiente) {
-                                  setMontoPago(monto);
-                                }
-                              }}
-                            >
-                              <Calculator className="h-4 w-4 mr-1" />
-                              Aplicar
-                            </Button>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            Mínimo: $1,000 | Máximo: $
-                            {saldoPendiente.toLocaleString("es-MX")}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Métodos de pago */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">
-                        Método de Pago
-                      </Label>
-                      <RadioGroup
-                        value={metodoPago}
-                        onValueChange={setMetodoPago}
-                      >
-                        <div className="grid grid-cols-1 gap-3">
-                          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem value="tarjeta" id="tarjeta" />
-                            <CreditCard className="h-5 w-5 text-blue-600" />
-                            <div className="flex-1">
-                              <Label
-                                htmlFor="tarjeta"
-                                className="cursor-pointer"
-                              >
-                                <div className="font-medium">
-                                  Tarjeta de Crédito/Débito
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  Visa, Mastercard, American Express
-                                </div>
-                              </Label>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem
-                              value="transferencia"
-                              id="transferencia"
-                            />
-                            <Building2 className="h-5 w-5 text-green-600" />
-                            <div className="flex-1">
-                              <Label
-                                htmlFor="transferencia"
-                                className="cursor-pointer"
-                              >
-                                <div className="font-medium">
-                                  Transferencia Bancaria
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  BBVA, Santander, Banorte, etc.
-                                </div>
-                              </Label>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem value="efectivo" id="efectivo" />
-                            <Banknote className="h-5 w-5 text-yellow-600" />
-                            <div className="flex-1">
-                              <Label
-                                htmlFor="efectivo"
-                                className="cursor-pointer"
-                              >
-                                <div className="font-medium">
-                                  Pago en Efectivo
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  En caja de la notaría
-                                </div>
-                              </Label>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem value="deposito" id="deposito" />
-                            <Smartphone className="h-5 w-5 text-purple-600" />
-                            <div className="flex-1">
-                              <Label
-                                htmlFor="deposito"
-                                className="cursor-pointer"
-                              >
-                                <div className="font-medium">
-                                  Depósito en OXXO/7-Eleven
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  Pago en tiendas de conveniencia
-                                </div>
-                              </Label>
-                            </div>
-                          </div>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {/* Botón de pago */}
-                    <div className="pt-4 border-t">
-                      <Button
-                        onClick={() => {
-                          const monto =
-                            montoPago === 0
-                              ? Number(montoPersonalizado)
-                              : montoPago;
-                          if (monto >= 1000 && monto <= saldoPendiente) {
-                            handlePago(monto);
-                          }
-                        }}
-                        disabled={
-                          isProcessing ||
-                          (montoPago === 0 &&
-                            (Number(montoPersonalizado) < 1000 ||
-                              Number(montoPersonalizado) > saldoPendiente)) ||
-                          (montoPago > 0 && montoPago > saldoPendiente)
-                        }
-                        className="w-full bg-emerald-600 hover:bg-emerald-700"
-                        size="lg"
-                      >
-                        {isProcessing ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                            Procesando Pago...
-                          </>
-                        ) : (
-                          <>
-                            <Wallet className="h-5 w-5 mr-2" />
-                            Pagar $
-                            {(montoPago === 0
-                              ? Number(montoPersonalizado) || 0
-                              : montoPago
-                            ).toLocaleString("es-MX")}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Información adicional */}
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>Importante:</strong> Una vez realizado el pago,
-                      podrás continuar con el proceso de tu trámite. El pago se
-                      procesará de forma segura y recibirás una confirmación por
-                      email.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Botones de acción */}
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={onClose}>
-                <X className="h-4 w-4 mr-2" />
-                Cerrar
-              </Button>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Validación y Pre-pago
+              </h2>
+              <p className="text-sm text-gray-600">
+                Confirma tu solicitud y realiza el pago inicial
+              </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="p-6 space-y-6">
+          {/* Resumen de la solicitud */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-emerald-600" />
+                Resumen de tu Solicitud
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-gray-600">
+                    Número de Solicitud
+                  </Label>
+                  <p className="font-semibold text-gray-900">
+                    {expedienteData.numeroSolicitud}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-600">
+                    Tipo de Trámite
+                  </Label>
+                  <p className="font-semibold text-gray-900 capitalize">
+                    {expedienteData.tipoTramite}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-gray-600">
+                    Documentos Completados
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        expedienteData.documentosCompletos ===
+                        expedienteData.documentosRequeridos
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {expedienteData.documentosCompletos}/
+                      {expedienteData.documentosRequeridos}
+                    </Badge>
+                    {expedienteData.documentosCompletos ===
+                    expedienteData.documentosRequeridos ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-600">
+                    Costo Total Estimado
+                  </Label>
+                  <p className="text-xl font-bold text-emerald-600">
+                    {formatCurrency(expedienteData.costoEstimado)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Información de pago */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-emerald-600" />
+                Información de Pago
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-900">
+                    Política de Pagos
+                  </span>
+                </div>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>
+                    • Pago mínimo: {formatCurrency(montoMinimo)} (30% del total)
+                  </li>
+                  <li>• Puedes pagar el total o un pago parcial</li>
+                  <li>• El saldo restante se pagará antes de la firma</li>
+                  <li>
+                    • Tu solicitud se activará inmediatamente después del pago
+                  </li>
+                </ul>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="monto">Monto a Pagar</Label>
+                  <Input
+                    id="monto"
+                    type="number"
+                    placeholder="0.00"
+                    value={paymentData.monto || ""}
+                    onChange={(e) => handleMontoChange(e.target.value)}
+                    min={montoMinimo}
+                    max={montoMaximo}
+                    step="0.01"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleMontoChange(montoMinimo.toString())}
+                    >
+                      Mínimo ({formatCurrency(montoMinimo)})
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleMontoChange(costoTotal.toString())}
+                    >
+                      Total ({formatCurrency(costoTotal)})
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="metodo">Método de Pago</Label>
+                  <Select
+                    value={paymentData.metodo}
+                    onValueChange={(value) =>
+                      setPaymentData((prev) => ({ ...prev, metodo: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona método" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="transferencia">
+                        Transferencia Bancaria
+                      </SelectItem>
+                      <SelectItem value="efectivo">Efectivo</SelectItem>
+                      <SelectItem value="tarjeta">
+                        Tarjeta de Débito/Crédito
+                      </SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {paymentData.metodo === "transferencia" && (
+                <div>
+                  <Label htmlFor="referencia">Número de Referencia</Label>
+                  <Input
+                    id="referencia"
+                    placeholder="Ingresa el número de referencia"
+                    value={paymentData.referencia || ""}
+                    onChange={(e) =>
+                      setPaymentData((prev) => ({
+                        ...prev,
+                        referencia: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
+
+              {/* Resumen del pago */}
+              {paymentData.monto > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">Resumen del Pago</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Monto a pagar:</span>
+                      <span className="font-semibold">
+                        {formatCurrency(paymentData.monto)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tipo de pago:</span>
+                      <Badge
+                        variant={
+                          paymentData.tipo === "total" ? "default" : "secondary"
+                        }
+                      >
+                        {paymentData.tipo === "total"
+                          ? "Pago Total"
+                          : "Pago Parcial"}
+                      </Badge>
+                    </div>
+                    {paymentData.tipo === "parcial" && (
+                      <div className="flex justify-between">
+                        <span>Saldo pendiente:</span>
+                        <span className="font-semibold text-orange-600">
+                          {formatCurrency(costoTotal - paymentData.monto)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Alertas */}
+          {paymentData.monto > 0 && paymentData.monto < montoMinimo && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                El pago mínimo requerido es de {formatCurrency(montoMinimo)}{" "}
+                para activar tu solicitud.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {paymentData.monto > 0 && paymentData.metodo && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>¡Perfecto!</strong> Tu solicitud será activada
+                inmediatamente después del pago.
+                {paymentData.tipo === "parcial" &&
+                  " El saldo restante se pagará antes de la firma del documento."}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
+          <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handlePayment}
+            disabled={
+              !paymentData.monto ||
+              !paymentData.metodo ||
+              paymentData.monto < montoMinimo ||
+              isProcessing
+            }
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              <>
+                <DollarSign className="h-4 w-4 mr-2" />
+                Confirmar Pago
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Modal de éxito */}
+        {showSuccess && (
+          <div className="absolute inset-0 bg-white bg-opacity-95 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                ¡Pago Confirmado!
+              </h3>
+              <p className="text-gray-600">
+                Tu solicitud ha sido activada exitosamente.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

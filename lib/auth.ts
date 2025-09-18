@@ -1,4 +1,4 @@
-export type UserRole = "cliente" | "notario" | "abogado" | "admin";
+export type UserRole = "cliente" | "notario" | "abogado" | "cajero" | "admin";
 
 export interface User {
   id: string;
@@ -10,7 +10,9 @@ export interface User {
   activo: boolean;
   fechaCreacion: string;
   ultimoAcceso?: string;
-  solicitudesAsignadas?: string[]; // Para notarios
+  solicitudesAsignadas?: string[]; // Para notarios y abogados
+  permisos?: string[]; // Permisos específicos del usuario
+  especialidades?: string[]; // Para abogados y notarios
 }
 
 export interface LoginCredentials {
@@ -29,7 +31,7 @@ export interface AuthResponse {
 export const mockUsers: User[] = [
   {
     id: "user-1",
-    email: "juan.perez@email.com",
+    email: "cliente@notaria3tijuana.com",
     telefono: "+52 664 123 4567",
     nombre: "Juan Carlos Pérez García",
     password: "cliente123",
@@ -58,7 +60,7 @@ export const mockUsers: User[] = [
   },
   {
     id: "abogado-1",
-    email: "carlos.lopez@notaria3tijuana.com",
+    email: "abogado@notaria3tijuana.com",
     telefono: "+52 664 555 1111",
     nombre: "Carlos López Martínez",
     password: "abogado123",
@@ -75,6 +77,22 @@ export const mockUsers: User[] = [
     ],
   },
   {
+    id: "cajero-1",
+    email: "cajero@notaria3tijuana.com",
+    telefono: "+52 664 555 2222",
+    nombre: "Ana García López",
+    password: "cajero123",
+    role: "cajero",
+    activo: true,
+    fechaCreacion: "2025-01-01",
+    ultimoAcceso: "2025-01-15",
+    permisos: [
+      "gestionar_pagos",
+      "ver_expedientes",
+      "generar_reportes_financieros",
+    ],
+  },
+  {
     id: "admin-1",
     email: "admin@notaria3tijuana.com",
     telefono: "+52 664 555 0000",
@@ -84,6 +102,7 @@ export const mockUsers: User[] = [
     activo: true,
     fechaCreacion: "2025-01-01",
     ultimoAcceso: "2025-01-15",
+    permisos: ["*"], // Todos los permisos
   },
 ];
 

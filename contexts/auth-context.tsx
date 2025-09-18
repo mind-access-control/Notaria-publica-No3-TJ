@@ -103,6 +103,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               response.user?.role === "abogado"
             ) {
               window.location.href = "/abogado";
+            } else if (response.user?.role === "cajero") {
+              window.location.href = "/admin/cobros";
             } else {
               window.location.href = "/mi-cuenta";
             }

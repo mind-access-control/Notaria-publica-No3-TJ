@@ -17,7 +17,7 @@ import {
 
 export function Header() {
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isActive = (path: string) => {
@@ -104,7 +104,12 @@ export function Header() {
             </Link>
 
             {/* Botones de autenticación */}
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin"></div>
+                <span className="text-sm text-gray-600">Verificando...</span>
+              </div>
+            ) : isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

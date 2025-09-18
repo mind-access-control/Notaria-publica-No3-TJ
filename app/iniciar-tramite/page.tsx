@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { createSolicitud } from "@/lib/mock-data";
-import { Header } from "@/components/header";
+import { useSolicitudesPersistence } from "@/hooks/use-solicitudes-persistence";
 import { Footer } from "@/components/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import {
   User,
   AlertCircle,
   Plus,
+  LogOut,
+  Settings,
 } from "lucide-react";
 
 // Configuración de trámites disponibles
@@ -54,17 +56,19 @@ const TRAMITES_DISPONIBLES = [
     costo: { min: 20000, max: 30000 },
     tiempo: "7-10 días hábiles",
     documentos: [
-      "Identificación oficial vigente",
-      "Comprobante de domicilio",
-      "Escritura de propiedad",
+      "Identificaciones Oficiales (INE) del comprador y del vendedor",
       "Avalúo del inmueble",
-      "Comprobante de ingresos",
+      "Escritura Pública de la propiedad del vendedor",
+      "Certificado de Libertad de Gravamen (CLG)",
+      "Comprobantes de Pago del acuerdo privado",
     ],
     requisitos: [
       "Ser mayor de edad",
       "Tener capacidad legal",
-      "Documentos de propiedad",
+      "Documentos de propiedad vigentes",
       "Avalúo vigente del inmueble",
+      "Certificado de Libertad de Gravamen actualizado",
+      "Comprobantes de pago del acuerdo privado",
     ],
   },
   {
@@ -92,13 +96,20 @@ const TRAMITES_DISPONIBLES = [
 export default function IniciarTramitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  // Hook para persistencia
+  const {
+    createSolicitud: createSolicitudPersistente,
+    generateSolicitudNumber,
+  } = useSolicitudesPersistence();
 
   const [tramiteSeleccionado, setTramiteSeleccionado] = useState<string | null>(
     null
   );
   const [isCreandoSolicitud, setIsCreandoSolicitud] = useState(false);
   const [showTramiteModal, setShowTramiteModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const tramitePreseleccionado = searchParams.get("tramite");
 
@@ -146,15 +157,18 @@ export default function IniciarTramitePage() {
     setIsCreandoSolicitud(true);
 
     try {
-      // Crear la solicitud asociada al usuario
-      const solicitud = await createSolicitud(user.id, tramiteSeleccionado);
+      // Generar número de solicitud único
+      const numeroSolicitud = generateSolicitudNumber();
 
-      if (solicitud) {
-        // Redirigir a la página de estatus de la solicitud
-        router.push(`/solicitud/${solicitud.numeroSolicitud}`);
-      } else {
-        console.error("Error: No se pudo crear la solicitud");
-      }
+      // Crear la solicitud en IndexedDB
+      await createSolicitudPersistente(
+        numeroSolicitud,
+        tramiteSeleccionado,
+        25000
+      );
+
+      // Redirigir directamente a la página de la solicitud creada
+      router.push(`/solicitud/${numeroSolicitud}`);
     } catch (error) {
       console.error("Error creando solicitud:", error);
     } finally {
@@ -183,8 +197,52 @@ export default function IniciarTramitePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <div className="pt-20">
+      {/* Header personalizado */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-8 w-8 text-emerald-600" />
+              <div className="text-lg font-bold text-gray-900">
+                Notaría Pública No. 3
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                {user?.role === "cliente"
+                  ? "Cliente"
+                  : user?.role === "notario"
+                  ? "Notario"
+                  : "Administrador"}
+              </Badge>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Configuración
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    setIsLoggingOut(true);
+                    await logout();
+                    router.push("/");
+                  } finally {
+                    setIsLoggingOut(false);
+                  }
+                }}
+                className="text-red-600"
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="pt-8">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
