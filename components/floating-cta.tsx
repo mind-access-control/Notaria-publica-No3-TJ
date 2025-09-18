@@ -35,7 +35,7 @@ export function FloatingCTA({ onOpenTramiteModal }: FloatingCTAProps) {
   return (
     <div className="fixed bottom-6 left-6 z-50 max-w-sm">
       <Card
-        className={`shadow-2xl border-0 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white overflow-hidden transition-all duration-500 ${
+        className={`shadow-2xl border-0 bg-gradient-to-r from-blue-500 to-blue-900 text-white overflow-hidden transition-all duration-500 ${
           isMinimized ? "w-16 h-16" : "w-80"
         }`}
       >
@@ -65,7 +65,7 @@ export function FloatingCTA({ onOpenTramiteModal }: FloatingCTAProps) {
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="h-5 w-5 text-yellow-300" />
-                  <span className="text-emerald-100 text-sm font-medium uppercase tracking-wide">
+                  <span className="text-blue-100 text-sm font-medium uppercase tracking-wide">
                     Asesoría Gratuita
                   </span>
                 </div>
@@ -74,7 +74,7 @@ export function FloatingCTA({ onOpenTramiteModal }: FloatingCTAProps) {
                   ¿Qué trámite necesitas realizar?
                 </h3>
 
-                <p className="text-emerald-100 text-sm mb-4 leading-relaxed">
+                <p className="text-blue-100 text-sm mb-4 leading-relaxed">
                   Te ayudamos a encontrar exactamente lo que necesitas.
                   <span className="font-semibold text-white">
                     100% gratuito
@@ -85,7 +85,7 @@ export function FloatingCTA({ onOpenTramiteModal }: FloatingCTAProps) {
                 <Button
                   onClick={onOpenTramiteModal}
                   size="sm"
-                  className="w-full bg-white text-emerald-700 hover:bg-emerald-50 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                  className="w-full bg-white text-blue-800 hover:bg-blue-50 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
                 >
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Iniciar Mi Trámite

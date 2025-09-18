@@ -20,7 +20,7 @@ const promotionalCampaigns = [
     description:
       "Durante todo el mes, obtén un 20% de descuento en la elaboración de testamentos. Aprovecha esta oportunidad única para asegurar el bienestar de tus seres queridos.",
     icon: Heart,
-    color: "bg-emerald-500",
+    color: "bg-gradient-to-r from-blue-500 to-blue-800",
     textColor: "text-white",
     badge: "20% Descuento",
     badgeColor: "bg-yellow-400 text-yellow-900",

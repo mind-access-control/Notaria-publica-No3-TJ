@@ -31,7 +31,7 @@ export const mockUsers: User[] = [
     id: "user-1",
     email: "juan.perez@email.com",
     telefono: "+52 664 123 4567",
-    nombre: "Juan Carlos Pérez García",
+    nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
     password: "cliente123",
     role: "cliente",
     activo: true,

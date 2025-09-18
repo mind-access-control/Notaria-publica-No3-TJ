@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -502,10 +501,10 @@ export default function ConfiguracionTramites() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Bandeja de Trámites
+                Configuración de Trámites
               </h1>
               <p className="text-gray-600">
-                Vista operativa global de todos los trámites - Gestión de flujo de trabajo
+                Gestiona documentos, costos y procesos de cada trámite
               </p>
             </div>
             <Button onClick={handleCrearTramite}>
@@ -517,129 +516,6 @@ export default function ConfiguracionTramites() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Métricas de Negocio */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-600">Total Trámites</p>
-                  <p className="text-2xl font-bold text-blue-900">{tramites.length}</p>
-                </div>
-                <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Trámites Activos</p>
-                  <p className="text-2xl font-bold text-green-900">
-                    {tramites.filter(t => t.activo).length}
-                  </p>
-                </div>
-                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-yellow-600">Con Clientes</p>
-                  <p className="text-2xl font-bold text-yellow-900">
-                    {tramites.filter(t => t.cliente).length}
-                  </p>
-                </div>
-                <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <Users className="h-4 w-4 text-yellow-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-600">Ingresos Totales</p>
-                  <p className="text-2xl font-bold text-purple-900">
-                    ${tramites.reduce((sum, t) => sum + t.costos.total, 0).toLocaleString()}
-                  </p>
-                </div>
-                <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filtros Operativos */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex-1 min-w-64">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar por cliente, folio o tipo de trámite..."
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              
-              <Select>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="activo">Activo</SelectItem>
-                  <SelectItem value="inactivo">Inactivo</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas</SelectItem>
-                  <SelectItem value="testamento">Testamento</SelectItem>
-                  <SelectItem value="compraventa">Compraventa</SelectItem>
-                  <SelectItem value="poder">Poder</SelectItem>
-                  <SelectItem value="donacion">Donación</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Notario" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="roberto">Dr. Roberto Notario</SelectItem>
-                  <SelectItem value="ana">Lic. Ana García</SelectItem>
-                  <SelectItem value="carlos">Lic. Carlos Mendoza</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtros
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Lista de trámites */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tramites.map((tramite) => (
@@ -839,7 +715,7 @@ export default function ConfiguracionTramites() {
                       <Input
                         id="nombre"
                         value={tramiteSeleccionado.nombre || ""}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        onChange={(e) =>
                           setTramiteSeleccionado((prev) =>
                             prev ? { ...prev, nombre: e.target.value } : null
                           )
@@ -852,7 +728,7 @@ export default function ConfiguracionTramites() {
                       <Input
                         id="categoria"
                         value={tramiteSeleccionado.categoria || ""}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        onChange={(e) =>
                           setTramiteSeleccionado((prev) =>
                             prev ? { ...prev, categoria: e.target.value } : null
                           )
@@ -866,7 +742,7 @@ export default function ConfiguracionTramites() {
                     <Textarea
                       id="descripcion"
                       value={tramiteSeleccionado.descripcion || ""}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      onChange={(e) =>
                         setTramiteSeleccionado((prev) =>
                           prev ? { ...prev, descripcion: e.target.value } : null
                         )
@@ -884,7 +760,7 @@ export default function ConfiguracionTramites() {
                           type="number"
                           min="0"
                           value={tramiteSeleccionado.tiempoEstimado || ""}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          onChange={(e) =>
                             setTramiteSeleccionado((prev) =>
                               prev
                                 ? {
@@ -898,7 +774,7 @@ export default function ConfiguracionTramites() {
                         />
                         <select
                           value={unidadTiempo}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                          onChange={(e) => {
                             const nuevaUnidad = e.target.value as
                               | "horas"
                               | "dias";
@@ -917,7 +793,7 @@ export default function ConfiguracionTramites() {
                         type="checkbox"
                         id="activo"
                         checked={tramiteSeleccionado.activo}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        onChange={(e) =>
                           setTramiteSeleccionado((prev) =>
                             prev ? { ...prev, activo: e.target.checked } : null
                           )
@@ -1105,7 +981,7 @@ export default function ConfiguracionTramites() {
                                   <Label>Nombre del Documento</Label>
                                   <Input
                                     value={doc.nombre || ""}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                    onChange={(e) => {
                                       const nuevosDocs = [
                                         ...tramiteSeleccionado.documentosRequeridos,
                                       ];
@@ -1126,7 +1002,7 @@ export default function ConfiguracionTramites() {
                                   <Label>Descripción</Label>
                                   <Input
                                     value={doc.descripcion || ""}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                    onChange={(e) => {
                                       const nuevosDocs = [
                                         ...tramiteSeleccionado.documentosRequeridos,
                                       ];
@@ -1148,7 +1024,7 @@ export default function ConfiguracionTramites() {
                                   <input
                                     type="checkbox"
                                     checked={doc.obligatorio}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                    onChange={(e) => {
                                       const nuevosDocs = [
                                         ...tramiteSeleccionado.documentosRequeridos,
                                       ];
@@ -1170,7 +1046,7 @@ export default function ConfiguracionTramites() {
                                   <input
                                     type="checkbox"
                                     checked={doc.ocrHabilitado}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                    onChange={(e) => {
                                       const nuevosDocs = [
                                         ...tramiteSeleccionado.documentosRequeridos,
                                       ];
@@ -1244,7 +1120,7 @@ export default function ConfiguracionTramites() {
                           min="0"
                           placeholder="0"
                           value={tramiteSeleccionado.costos.costoBase || ""}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                          onChange={(e) => {
                             const nuevoCosto = Number(e.target.value) || 0;
                             setTramiteSeleccionado((prev) =>
                               prev
@@ -1272,7 +1148,7 @@ export default function ConfiguracionTramites() {
                           min="0"
                           placeholder="0"
                           value={tramiteSeleccionado.costos.aranceles || ""}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                          onChange={(e) => {
                             const nuevoArancel = Number(e.target.value) || 0;
                             setTramiteSeleccionado((prev) =>
                               prev
@@ -1300,7 +1176,7 @@ export default function ConfiguracionTramites() {
                           min="0"
                           placeholder="0"
                           value={tramiteSeleccionado.costos.notariales || ""}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                          onChange={(e) => {
                             const nuevoNotarial = Number(e.target.value) || 0;
                             setTramiteSeleccionado((prev) =>
                               prev
@@ -1328,7 +1204,7 @@ export default function ConfiguracionTramites() {
                           min="0"
                           placeholder="0"
                           value={tramiteSeleccionado.costos.gastos || ""}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                          onChange={(e) => {
                             const nuevoGasto = Number(e.target.value) || 0;
                             setTramiteSeleccionado((prev) =>
                               prev
@@ -1360,7 +1236,7 @@ export default function ConfiguracionTramites() {
                                 <Label>Nombre del Concepto</Label>
                                 <Input
                                   value={concepto.nombre}
-                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                  onChange={(e) => {
                                     const nuevosConceptos = [
                                       ...(tramiteSeleccionado.costos
                                         .conceptosPersonalizados || []),
@@ -1395,7 +1271,7 @@ export default function ConfiguracionTramites() {
                                   min="0"
                                   placeholder="0"
                                   value={concepto.cantidad || ""}
-                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                                  onChange={(e) => {
                                     const nuevosConceptos = [
                                       ...(tramiteSeleccionado.costos
                                         .conceptosPersonalizados || []),
@@ -1478,7 +1354,7 @@ export default function ConfiguracionTramites() {
                       value={tramiteSeleccionado.requisitosEspeciales.join(
                         "\n"
                       )}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      onChange={(e) =>
                         setTramiteSeleccionado((prev) =>
                           prev
                             ? {

@@ -105,43 +105,48 @@ export function Header() {
 
             {/* Botones de autenticación */}
             {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <User className="h-4 w-4" />
-                    {user?.nombre.split(" ")[0]}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{user?.nombre}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                    <p className="text-xs text-gray-500 capitalize">
-                      {user?.role}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/mi-cuenta" className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
                       <User className="h-4 w-4" />
-                      Mi Cuenta
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="flex items-center gap-2 text-red-600"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      {user?.nombre.split(" ")[0]}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{user?.nombre}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                      <p className="text-xs text-gray-500 capitalize">
+                        {user?.role}
+                      </p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/mi-cuenta" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Mi Cuenta
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {/* Botón de logout siempre visible */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+                </Button>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link href="/login">
@@ -152,14 +157,6 @@ export function Header() {
                 </Link>
               </div>
             )}
-
-            <Link
-              href="/login"
-              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-              title="Acceso Administrativo"
-            >
-              Admin
-            </Link>
           </div>
 
           <div className="md:hidden">

@@ -143,19 +143,6 @@ export function SolicitudHistory({ solicitud }: SolicitudHistoryProps) {
           </div>
         </div>
 
-        {/* Nota informativa */}
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start gap-2">
-            <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">¿Necesitas ayuda?</p>
-              <p>
-                Si tienes alguna pregunta sobre el progreso de tu trámite, 
-                puedes contactar a tu notario asignado: <strong>{solicitud.notario.nombre}</strong>
-              </p>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

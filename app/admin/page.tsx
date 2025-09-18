@@ -27,6 +27,9 @@ import {
   TrendingUp,
   Activity,
   Settings,
+  ArrowUp,
+  ArrowDown,
+  Target,
 } from "lucide-react";
 
 // Mock data
@@ -150,9 +153,14 @@ export default function AdminDashboard() {
   const usuariosActivos = usuarios.filter((u) => u.activo).length;
 
   const ingresosMes = 125000;
-  const ingresosPendientes = 45000;
+  const ingresosMesAnterior = 111000;
+  const variacionIngresos = ((ingresosMes - ingresosMesAnterior) / ingresosMesAnterior) * 100;
+  const proyeccionFinMes = ingresosMes * 1.15; // 15% más basado en tendencia
+  
   const promedioProgreso =
     expedientes.reduce((sum, e) => sum + e.progreso, 0) / expedientes.length;
+  const promedioProgresoAnterior = 68; // Mock data
+  const variacionProgreso = promedioProgreso - promedioProgresoAnterior;
 
   const handleNuevoExpediente = () => {
     window.location.href = "/admin/expedientes/nuevo";
@@ -220,7 +228,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Ingresos del Mes
@@ -228,27 +236,49 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="flex items-center space-x-2 mb-2">
+              {variacionIngresos >= 0 ? (
+                <ArrowUp className="h-5 w-5 text-green-600" />
+              ) : (
+                <ArrowDown className="h-5 w-5 text-red-600" />
+              )}
+              <div className={`text-2xl font-bold ${variacionIngresos >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                +{variacionIngresos.toFixed(1)}%
+              </div>
+            </div>
+            <div className="text-lg font-semibold text-gray-700">
               ${ingresosMes.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              +12% vs mes anterior
+              Proyección fin de mes: ${proyeccionFinMes.toLocaleString()}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Progreso Promedio
+              Productividad
             </CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="flex items-center space-x-2 mb-2">
+              {variacionProgreso >= 0 ? (
+                <ArrowUp className="h-5 w-5 text-green-600" />
+              ) : (
+                <ArrowDown className="h-5 w-5 text-red-600" />
+              )}
+              <div className={`text-2xl font-bold ${variacionProgreso >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                +{variacionProgreso.toFixed(1)}%
+              </div>
+            </div>
+            <div className="text-lg font-semibold text-gray-700">
               {Math.round(promedioProgreso)}%
             </div>
-            <p className="text-xs text-muted-foreground">Completitud general</p>
+            <p className="text-xs text-muted-foreground">
+              Cumplimiento general vs mes anterior
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -365,23 +395,69 @@ export default function AdminDashboard() {
         {/* Reportes Tab */}
         <TabsContent value="reportes" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Ingresos del Mes</CardTitle>
+                <CardTitle>Análisis de Ingresos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">
-                  ${ingresosMes.toLocaleString()}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  +12% vs mes anterior
-                </p>
-                <div className="mt-4">
+                <div className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-green-600">
-                      Tendencia positiva
-                    </span>
+                    {variacionIngresos >= 0 ? (
+                      <ArrowUp className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <ArrowDown className="h-6 w-6 text-red-600" />
+                    )}
+                    <div className={`text-3xl font-bold ${variacionIngresos >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      +{variacionIngresos.toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-700">
+                    ${ingresosMes.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Proyección fin de mes: ${proyeccionFinMes.toLocaleString()}
+                  </div>
+                  <div className="mt-4">
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <span className="text-sm text-green-600">
+                        Tendencia positiva
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle>Análisis de Productividad</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    {variacionProgreso >= 0 ? (
+                      <ArrowUp className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <ArrowDown className="h-6 w-6 text-red-600" />
+                    )}
+                    <div className={`text-3xl font-bold ${variacionProgreso >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      +{variacionProgreso.toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-700">
+                    {Math.round(promedioProgreso)}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Cumplimiento general vs mes anterior
+                  </div>
+                  <div className="mt-4">
+                    <div className="flex items-center space-x-2">
+                      <Target className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm text-blue-600">
+                        Meta: 80% de productividad
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CardContent>

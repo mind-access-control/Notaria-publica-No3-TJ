@@ -26,6 +26,7 @@ import {
 import DocumentUploadBulk from "./document-upload-bulk";
 import PaymentModal from "./payment-modal";
 import RealDocumentViewer from "./real-document-viewer";
+import DocumentosConIA from "./documentos-con-ia";
 
 interface PendingActionsProps {
   solicitud: Solicitud;
@@ -73,24 +74,6 @@ export function PendingActions({
         });
 
       onSolicitudUpdate(solicitudActualizada);
-
-      // Verificar si se activó el bloqueo después de subir documentos
-      const documentosSubidosDespues =
-        solicitudActualizada.documentosRequeridos.filter(
-          (doc) => doc.subido
-        ).length;
-
-      // Solo abrir modal si NO se ha hecho ningún pago (primera vez)
-      if (
-        solicitudActualizada.saldoPendiente > 0 &&
-        documentosSubidosDespues >= 2 &&
-        solicitudActualizada.pagosRealizados === 0
-      ) {
-        // Abrir modal de pago automáticamente
-        setTimeout(() => {
-          setShowPaymentModal(true);
-        }, 1000); // Pequeño delay para que se vea la actualización
-      }
     } catch (error) {
       console.error("Error subiendo documentos:", error);
     } finally {
@@ -180,24 +163,6 @@ export function PendingActions({
         });
 
       onSolicitudUpdate(solicitudActualizada);
-
-      // Verificar si se activó el bloqueo después de subir documento
-      const documentosSubidosDespues =
-        solicitudActualizada.documentosRequeridos.filter(
-          (doc) => doc.subido
-        ).length;
-
-      // Solo abrir modal si NO se ha hecho ningún pago (primera vez)
-      if (
-        solicitudActualizada.saldoPendiente > 0 &&
-        documentosSubidosDespues >= 2 &&
-        solicitudActualizada.pagosRealizados === 0
-      ) {
-        // Abrir modal de pago automáticamente
-        setTimeout(() => {
-          setShowPaymentModal(true);
-        }, 1000); // Pequeño delay para que se vea la actualización
-      }
     } catch (error) {
       console.error("Error subiendo documento individual:", error);
     } finally {
@@ -229,52 +194,13 @@ export function PendingActions({
 
   // Determinar si debe mostrar el bloqueo por pago
   const debeMostrarBloqueoPago = () => {
-    const documentosSubidos = solicitud.documentosRequeridos.filter(
-      (doc) => doc.subido
-    ).length;
-
-    // Si no hay saldo pendiente, no hay bloqueo
-    if (solicitud.saldoPendiente === 0) {
-      return false;
-    }
-
-    // Si el usuario ya realizó al menos un pago, NUNCA bloquear de nuevo
-    // Esto indica que ya configuró un método de pago y puede continuar
-    const yaConfiguroMetodoPago = solicitud.pagosRealizados > 0;
-    if (yaConfiguroMetodoPago) {
-      return false; // Nunca bloquear si ya hizo un pago
-    }
-
-    // Bloquear solo si:
-    // 1. Hay saldo pendiente Y
-    // 2. Se han subido al menos 2 documentos Y
-    // 3. NO se ha realizado ningún pago (no se ha configurado método de pago)
-    const debeBloquear = solicitud.saldoPendiente > 0 && documentosSubidos >= 2;
-
-    console.log("🔍 Debug bloqueo:", {
-      saldoPendiente: solicitud.saldoPendiente,
-      pagosRealizados: solicitud.pagosRealizados,
-      documentosSubidos,
-      yaConfiguroMetodoPago,
-      debeBloquear,
-    });
-
-    return debeBloquear;
+    // Ya no bloqueamos la subida de documentos por pagos
+    return false;
   };
 
   // Verificar si se pueden subir más documentos
   const puedeSubirDocumentos = () => {
-    const documentosSubidos = solicitud.documentosRequeridos.filter(
-      (doc) => doc.subido
-    ).length;
-    const documentosRequeridos = solicitud.documentosRequeridos.length;
-
-    // Si hay bloqueo de pago, no permitir subir más documentos
-    if (debeMostrarBloqueoPago()) {
-      return false;
-    }
-
-    // Si no hay bloqueo, permitir subir documentos
+    // Siempre permitir subir documentos
     return true;
   };
 
@@ -285,10 +211,10 @@ export function PendingActions({
     ).length;
     const documentosRequeridos = solicitud.documentosRequeridos.length;
 
-    // Solo se puede avanzar si todos los documentos están subidos Y no hay saldo pendiente
+    // Solo se puede avanzar si todos los documentos están subidos Y se ha realizado al menos un pago
     return (
       documentosSubidos === documentosRequeridos &&
-      solicitud.saldoPendiente === 0
+      solicitud.pagosRealizados > 0
     );
   };
 
@@ -407,35 +333,76 @@ export function PendingActions({
   const getActionsForStatus = (estatus: EstatusSolicitud) => {
     switch (estatus) {
       case "ARMANDO_EXPEDIENTE":
+        const todosDocumentosSubidos = solicitud.documentosRequeridos.filter(
+          (doc) => doc.subido
+        ).length === solicitud.documentosRequeridos.length;
+        
         return (
           <div className="space-y-4">
-            {!puedeSubirDocumentos() && !showPaymentModal && (
-              <Alert className="border-red-200 bg-red-50">
-                <Lock className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
-                  <strong>Subida de documentos bloqueada:</strong> Para
-                  continuar subiendo documentos, es necesario completar el pago
-                  pendiente.
-                  <Button
-                    variant="link"
-                    className="p-0 h-auto text-red-800 underline"
-                    onClick={() => setShowPaymentModal(true)}
-                  >
-                    Realizar pago ahora
-                  </Button>
-                </AlertDescription>
-              </Alert>
+            {!todosDocumentosSubidos ? (
+              <DocumentUploadBulk
+                documentosRequeridos={solicitud.documentosRequeridos}
+                onDocumentosSubidos={handleDocumentosSubidos}
+                onDocumentoReemplazado={handleDocumentoReemplazado}
+                onDocumentoEliminado={handleDocumentoEliminado}
+                onVerDocumento={handleVerDocumento}
+                onDocumentoIndividual={handleDocumentoIndividual}
+                bloqueado={false}
+              />
+            ) : (
+              <DocumentosConIA
+                documentos={solicitud.documentosRequeridos}
+                onVerDocumento={handleVerDocumento}
+              />
             )}
 
-            <DocumentUploadBulk
-              documentosRequeridos={solicitud.documentosRequeridos}
-              onDocumentosSubidos={handleDocumentosSubidos}
-              onDocumentoReemplazado={handleDocumentoReemplazado}
-              onDocumentoEliminado={handleDocumentoEliminado}
-              onVerDocumento={handleVerDocumento}
-              onDocumentoIndividual={handleDocumentoIndividual}
-              bloqueado={!puedeSubirDocumentos()}
-            />
+            {/* Mostrar sección de pago cuando todos los documentos estén subidos */}
+            {todosDocumentosSubidos && solicitud.pagosRealizados === 0 && (
+              <div className="mt-6 p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <CreditCard className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold text-blue-900">
+                    Paso Siguiente: Realizar Pago
+                  </h3>
+                </div>
+                <p className="text-sm text-blue-700 mb-4">
+                  Todos los documentos han sido subidos correctamente. Para continuar con el trámite, 
+                  es necesario realizar el pago correspondiente.
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-blue-800">
+                    <strong>Costo total:</strong> ${solicitud.costoTotal.toLocaleString("es-MX")}
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (solicitud) {
+                        window.location.href = `/solicitud/${solicitud.numeroSolicitud}/pago`;
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Realizar Pago
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Mostrar mensaje de pago completado */}
+            {todosDocumentosSubidos && solicitud.pagosRealizados > 0 && (
+              <div className="mt-6 p-4 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <h3 className="font-semibold text-green-900">
+                    Pago Realizado
+                  </h3>
+                </div>
+                <p className="text-sm text-green-700">
+                  Pago de ${solicitud.pagosRealizados.toLocaleString("es-MX")} realizado exitosamente. 
+                  Tu trámite está listo para ser enviado a revisión.
+                </p>
+              </div>
+            )}
           </div>
         );
       case "EN_REVISION_INTERNA":
@@ -468,37 +435,12 @@ export function PendingActions({
 
   return (
     <div className="space-y-6">
-      {/* Bloqueo por pago - Solo mostrar si el modal NO está abierto */}
-      {debeMostrarBloqueoPago() && !showPaymentModal && (
-        <Alert className="border-red-200 bg-red-50">
-          <Lock className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">
-            <strong>Proceso Bloqueado:</strong> Para continuar con el trámite,
-            es necesario completar el pago pendiente de $
-            {solicitud.saldoPendiente.toLocaleString("es-MX")}.
-            <Button
-              variant="link"
-              className="p-0 h-auto text-red-800 underline ml-2"
-              onClick={() => setShowPaymentModal(true)}
-            >
-              Realizar pago ahora
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Acciones según el estatus */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
-            {debeMostrarBloqueoPago() ? (
-              <Lock className="h-6 w-6 text-red-600" />
-            ) : (
-              <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-            )}
-            {debeMostrarBloqueoPago()
-              ? "Proceso Bloqueado"
-              : "Acciones Pendientes"}
+            <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+            Acciones Pendientes
           </CardTitle>
         </CardHeader>
         <CardContent>

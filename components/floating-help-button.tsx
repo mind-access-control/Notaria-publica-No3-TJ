@@ -59,7 +59,7 @@ export function FloatingHelpButton({
 
               <Button
                 onClick={onOpenTramiteModal}
-                className="w-full justify-start bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <HelpCircle className="mr-3 h-4 w-4" />
                 ¿Qué trámite necesitas?
@@ -99,7 +99,7 @@ export function FloatingHelpButton({
       <Button
         onClick={() => setIsExpanded(!isExpanded)}
         size="lg"
-        className="rounded-full w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
       >
         <HelpCircle className="h-6 w-6" />
       </Button>

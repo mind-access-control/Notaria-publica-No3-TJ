@@ -1,14 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { EstatusSolicitud } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, Clock, ArrowRight } from "lucide-react";
+import { CheckCircle2, Circle, Clock, ArrowRight, CreditCard, FileText } from "lucide-react";
 
 interface StatusTrackerProps {
   estatusActual: EstatusSolicitud;
   onStatusUpdate?: (nuevoEstatus: string) => void;
+  solicitud?: {
+    documentosRequeridos: Array<{ subido: boolean }>;
+    costoTotal: number;
+    pagosRealizados: number;
+  };
+  onPagoClick?: () => void;
 }
 
 const estatusSteps = [
@@ -17,6 +24,12 @@ const estatusSteps = [
     title: "Armado de Expediente",
     description: "Sube los documentos requeridos",
     icon: Circle,
+  },
+  {
+    key: "PAGO_PENDIENTE" as EstatusSolicitud,
+    title: "Pago Pendiente",
+    description: "Realiza el pago para continuar",
+    icon: CreditCard,
   },
   {
     key: "EN_REVISION_INTERNA" as EstatusSolicitud,
@@ -53,10 +66,16 @@ const estatusSteps = [
 export function StatusTracker({
   estatusActual,
   onStatusUpdate,
+  solicitud,
+  onPagoClick,
 }: StatusTrackerProps) {
   const currentStepIndex = estatusSteps.findIndex(
     (step) => step.key === estatusActual
   );
+
+  // Verificar si todos los documentos están subidos
+  const todosDocumentosSubidos = solicitud ? 
+    solicitud.documentosRequeridos.every(doc => doc.subido) : false;
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStepIndex) {
@@ -227,23 +246,74 @@ export function StatusTracker({
             </div>
           </div>
 
-          {/* Botón para avanzar de estatus */}
-          {onStatusUpdate && currentStepIndex < estatusSteps.length - 1 && (
+          {/* CTA de pago - siempre visible pero habilitado solo cuando todos los documentos estén subidos */}
+          {solicitud && solicitud.pagosRealizados === 0 && (
             <div className="pt-4 border-t">
-              <Button
-                onClick={() => {
-                  const nextStep = estatusSteps[currentStepIndex + 1];
-                  if (nextStep) {
-                    onStatusUpdate(nextStep.key);
+              <div className={`border rounded-lg p-4 mb-4 ${
+                todosDocumentosSubidos 
+                  ? 'bg-blue-50 border-blue-200' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <CreditCard className={`h-5 w-5 ${
+                    todosDocumentosSubidos ? 'text-blue-600' : 'text-gray-400'
+                  }`} />
+                  <h3 className={`font-semibold ${
+                    todosDocumentosSubidos ? 'text-blue-900' : 'text-gray-600'
+                  }`}>
+                    Paso Siguiente: Realizar Pago
+                  </h3>
+                </div>
+                <p className={`text-sm mb-4 ${
+                  todosDocumentosSubidos ? 'text-blue-700' : 'text-gray-500'
+                }`}>
+                  {todosDocumentosSubidos 
+                    ? 'Ahora que se han validado todos sus documentos, pueden proceder a pagar para continuar con la revisión.'
+                    : 'Complete la subida de todos los documentos para habilitar el pago.'
                   }
-                }}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-              >
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Avanzar a {estatusSteps[currentStepIndex + 1]?.title}
-              </Button>
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className={`text-sm ${
+                    todosDocumentosSubidos ? 'text-blue-800' : 'text-gray-500'
+                  }`}>
+                    <strong>Costo total:</strong> ${solicitud.costoTotal.toLocaleString("es-MX")}
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (solicitud) {
+                        window.location.href = `/solicitud/${solicitud.numeroSolicitud}/pago`;
+                      }
+                    }}
+                    disabled={!todosDocumentosSubidos}
+                    className={`${
+                      todosDocumentosSubidos 
+                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        : 'bg-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Realizar Pago
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
+
+        {/* Botón para ir a recibo - solo cuando NO esté en ARMANDO_EXPEDIENTE */}
+        {solicitud && estatusActual !== "ARMANDO_EXPEDIENTE" && (
+          <div className="pt-4 border-t">
+            <Button
+              onClick={() => {
+                console.log("Navegando a recibo para solicitud:", solicitud.numeroSolicitud);
+                window.location.href = `/solicitud/${solicitud.numeroSolicitud}/recibo`;
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Ver Recibo
+            </Button>
+          </div>
+        )}
         </div>
       </CardContent>
     </Card>

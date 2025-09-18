@@ -51,6 +51,7 @@ import {
   Gift,
   CreditCard,
 } from "lucide-react";
+import { tramites as tramitesData, getTramiteById } from "@/lib/tramites-data";
 
 interface TramiteModalProps {
   isOpen: boolean;
@@ -59,480 +60,8 @@ interface TramiteModalProps {
   onTramiteSelect?: (tramiteId: string) => void;
 }
 
-const tramites = [
-  {
-    id: "testamento",
-    name: "Testamento",
-    icon: Heart,
-    description: "Protege el futuro de tu familia",
-    color: "bg-red-50 border-red-200 text-red-700",
-    iconColor: "text-red-600",
-    estimatedCost: "$2,500 - $3,500",
-    timeRequired: "1-2 horas",
-    keywords: [
-      "testamento",
-      "herencia",
-      "bienes",
-      "familia",
-      "muerte",
-      "sucesión",
-    ],
-    requirements: [
-      "Identificación oficial vigente",
-      "Comprobante de domicilio",
-      "Datos de beneficiarios",
-      "Lista de bienes y propiedades",
-    ],
-  },
-  {
-    id: "compraventa",
-    name: "Compraventa de Inmuebles",
-    icon: Home,
-    description: "Escrituración segura de propiedades",
-    color: "bg-blue-50 border-blue-200 text-blue-700",
-    iconColor: "text-blue-600",
-    estimatedCost: "$20,000 - $30,000",
-    timeRequired: "2-4 horas",
-    keywords: [
-      "compraventa",
-      "casa",
-      "terreno",
-      "propiedad",
-      "inmueble",
-      "venta",
-      "compra",
-    ],
-    requirements: [
-      "Identificación oficial de comprador y vendedor",
-      "Comprobante de domicilio",
-      "Escritura anterior o título de propiedad",
-      "Avalúo de la propiedad",
-      "Comprobante de pago",
-    ],
-  },
-  {
-    id: "donacion",
-    name: "Donación",
-    icon: Gift,
-    description: "Transferencia gratuita de bienes",
-    color: "bg-pink-50 border-pink-200 text-pink-700",
-    iconColor: "text-pink-600",
-    estimatedCost: "$3,500 - $5,500",
-    timeRequired: "1-2 horas",
-    keywords: ["donación", "regalo", "donar", "transferir", "ceder"],
-    requirements: [
-      "Identificación oficial del donante y donatario",
-      "Comprobante de domicilio",
-      "Escritura anterior o título de propiedad",
-      "Avalúo de la propiedad",
-    ],
-  },
-  {
-    id: "permuta",
-    name: "Permuta",
-    icon: Home,
-    description: "Intercambio de propiedades",
-    color: "bg-orange-50 border-orange-200 text-orange-700",
-    iconColor: "text-orange-600",
-    estimatedCost: "$10,000 - $15,000",
-    timeRequired: "2-3 horas",
-    keywords: ["permuta", "intercambio", "cambio", "trueque", "canje"],
-    requirements: [
-      "Identificación oficial de las partes",
-      "Comprobante de domicilio",
-      "Escrituras de ambas propiedades",
-      "Avalúos de las propiedades",
-    ],
-  },
-  {
-    id: "credito-hipotecario",
-    name: "Crédito Hipotecario / Infonavit / Fovissste",
-    icon: CreditCard,
-    description: "Financiamiento para vivienda",
-    color: "bg-indigo-50 border-indigo-200 text-indigo-700",
-    iconColor: "text-indigo-600",
-    estimatedCost: "$10,000 - $15,000",
-    timeRequired: "2-3 horas",
-    keywords: [
-      "crédito",
-      "hipoteca",
-      "infonavit",
-      "fovissste",
-      "préstamo",
-      "casa",
-      "vivienda",
-    ],
-    requirements: [
-      "Identificación oficial",
-      "Comprobante de ingresos",
-      "Comprobante de domicilio",
-      "Avalúo de la propiedad",
-      "Documentos del banco",
-    ],
-  },
-  {
-    id: "contrato-mutuo",
-    name: "Contrato de Mutuo",
-    icon: CreditCard,
-    description: "Préstamo de dinero con garantía",
-    color: "bg-cyan-50 border-cyan-200 text-cyan-700",
-    iconColor: "text-cyan-600",
-    estimatedCost: "$2,500 - $4,000",
-    timeRequired: "1-2 horas",
-    keywords: ["mutuo", "préstamo", "dinero", "garantía", "intereses"],
-    requirements: [
-      "Identificación oficial de mutuante y mutuario",
-      "Comprobante de domicilio",
-      "Garantía del préstamo",
-      "Comprobante de ingresos",
-    ],
-  },
-  {
-    id: "reconocimiento-adeudo",
-    name: "Reconocimiento de Adeudo",
-    icon: FileText,
-    description: "Reconocimiento formal de deuda",
-    color: "bg-yellow-50 border-yellow-200 text-yellow-700",
-    iconColor: "text-yellow-600",
-    estimatedCost: "$1,500 - $2,500",
-    timeRequired: "30-60 minutos",
-    keywords: ["adeudo", "deuda", "reconocimiento", "obligación", "pagar"],
-    requirements: [
-      "Identificación oficial del deudor",
-      "Comprobante de domicilio",
-      "Documentos que acrediten la deuda",
-    ],
-  },
-  {
-    id: "adjudicacion-hereditaria",
-    name: "Adjudicaciones Hereditarias",
-    icon: Scale,
-    description: "Herencia testamentaria e intestamentaria",
-    color: "bg-amber-50 border-amber-200 text-amber-700",
-    iconColor: "text-amber-600",
-    estimatedCost: "$7,000 - $10,000",
-    timeRequired: "2-4 horas",
-    keywords: [
-      "adjudicación",
-      "herencia",
-      "sucesión",
-      "testamentaria",
-      "intestamentaria",
-    ],
-    requirements: [
-      "Acta de defunción",
-      "Identificación oficial de herederos",
-      "Comprobante de domicilio",
-      "Documentos de la herencia",
-    ],
-  },
-  {
-    id: "sociedad",
-    name: "Constitución de Sociedades",
-    icon: Building,
-    description: "Formaliza tu empresa",
-    color: "bg-purple-50 border-purple-200 text-purple-700",
-    iconColor: "text-purple-600",
-    estimatedCost: "$12,000 - $18,000",
-    timeRequired: "2-3 horas",
-    keywords: [
-      "sociedad",
-      "empresa",
-      "negocio",
-      "constituir",
-      "compañía",
-      "socios",
-    ],
-    requirements: [
-      "Identificación oficial de socios",
-      "Comprobante de domicilio",
-      "Denominación social propuesta",
-      "Capital social inicial",
-      "Objeto social de la empresa",
-    ],
-  },
-  {
-    id: "liquidacion-copropiedad",
-    name: "Liquidación de Copropiedad",
-    icon: Home,
-    description: "División de propiedad en común",
-    color: "bg-slate-50 border-slate-200 text-slate-700",
-    iconColor: "text-slate-600",
-    estimatedCost: "$7,000 - $10,000",
-    timeRequired: "2-3 horas",
-    keywords: ["copropiedad", "liquidación", "división", "común", "partir"],
-    requirements: [
-      "Identificación oficial de copropietarios",
-      "Comprobante de domicilio",
-      "Escritura de la propiedad",
-      "Avalúo de la propiedad",
-    ],
-  },
-  {
-    id: "cesion-derechos",
-    name: "Cesión de Derechos",
-    icon: FileText,
-    description: "Transferencia de derechos patrimoniales",
-    color: "bg-violet-50 border-violet-200 text-violet-700",
-    iconColor: "text-violet-600",
-    estimatedCost: "$2,500 - $4,500",
-    timeRequired: "1-2 horas",
-    keywords: ["cesión", "derechos", "transferir", "ceder", "patrimoniales"],
-    requirements: [
-      "Identificación oficial de cedente y cesionario",
-      "Comprobante de domicilio",
-      "Documentos que acrediten los derechos",
-    ],
-  },
-  {
-    id: "servidumbre",
-    name: "Constitución de Servidumbre",
-    icon: Home,
-    description: "Derecho de uso sobre propiedad ajena",
-    color: "bg-lime-50 border-lime-200 text-lime-700",
-    iconColor: "text-lime-600",
-    estimatedCost: "$3,500 - $5,500",
-    timeRequired: "1-2 horas",
-    keywords: ["servidumbre", "derecho", "uso", "paso", "servicio"],
-    requirements: [
-      "Identificación oficial de las partes",
-      "Comprobante de domicilio",
-      "Escrituras de las propiedades",
-      "Plano de la servidumbre",
-    ],
-  },
-  {
-    id: "convenios-modificatorios",
-    name: "Convenios Modificatorios",
-    icon: FileText,
-    description: "Modificación de contratos existentes",
-    color: "bg-rose-50 border-rose-200 text-rose-700",
-    iconColor: "text-rose-600",
-    estimatedCost: "$2,500 - $4,000",
-    timeRequired: "1-2 horas",
-    keywords: ["convenio", "modificación", "contrato", "cambiar", "alterar"],
-    requirements: [
-      "Identificación oficial de las partes",
-      "Comprobante de domicilio",
-      "Contrato original",
-      "Documentos de la modificación",
-    ],
-  },
-  {
-    id: "elevacion-judicial",
-    name: "Elevación Judicial a Escritura Pública",
-    icon: Scale,
-    description: "Elevación de sentencia a escritura",
-    color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    iconColor: "text-emerald-600",
-    estimatedCost: "$7,000 - $10,000",
-    timeRequired: "2-3 horas",
-    keywords: ["elevación", "judicial", "sentencia", "escritura", "juez"],
-    requirements: [
-      "Identificación oficial",
-      "Comprobante de domicilio",
-      "Sentencia judicial",
-      "Documentos de la propiedad",
-    ],
-  },
-  {
-    id: "dacion-pago",
-    name: "Dación en Pago",
-    icon: CreditCard,
-    description: "Pago de deuda con bienes",
-    color: "bg-teal-50 border-teal-200 text-teal-700",
-    iconColor: "text-teal-600",
-    estimatedCost: "$3,500 - $5,500",
-    timeRequired: "1-2 horas",
-    keywords: ["dación", "pago", "deuda", "bienes", "satisfacer"],
-    requirements: [
-      "Identificación oficial de las partes",
-      "Comprobante de domicilio",
-      "Documentos de la deuda",
-      "Avalúo de los bienes",
-    ],
-  },
-  {
-    id: "formalizacion-contrato",
-    name: "Formalización de Contrato Privado",
-    icon: FileText,
-    description: "Elevación de contrato privado a escritura",
-    color: "bg-indigo-50 border-indigo-200 text-indigo-700",
-    iconColor: "text-indigo-600",
-    estimatedCost: "$4,500 - $7,000",
-    timeRequired: "1-2 horas",
-    keywords: ["formalización", "contrato", "privado", "escritura", "elevar"],
-    requirements: [
-      "Identificación oficial de las partes",
-      "Comprobante de domicilio",
-      "Contrato privado original",
-      "Documentos de la propiedad",
-    ],
-  },
-  {
-    id: "fideicomiso",
-    name: "Fideicomisos",
-    icon: Shield,
-    description: "Constitución y transmisión de fideicomisos",
-    color: "bg-teal-50 border-teal-200 text-teal-700",
-    iconColor: "text-teal-600",
-    estimatedCost: "$15,000 - $22,000",
-    timeRequired: "3-4 horas",
-    keywords: ["fideicomiso", "fiduciario", "fideicomitente", "fideicomisario"],
-    requirements: [
-      "Identificación oficial de las partes",
-      "Comprobante de domicilio",
-      "Documentos de la propiedad",
-      "Contrato de fideicomiso",
-    ],
-  },
-  {
-    id: "inicio-sucesion",
-    name: "Inicio de Sucesión",
-    icon: Scale,
-    description: "Inicio de proceso sucesorio",
-    color: "bg-amber-50 border-amber-200 text-amber-700",
-    iconColor: "text-amber-600",
-    estimatedCost: "$7,000 - $10,000",
-    timeRequired: "2-4 horas",
-    keywords: [
-      "sucesión",
-      "inicio",
-      "herencia",
-      "testamentaria",
-      "intestamentaria",
-    ],
-    requirements: [
-      "Acta de defunción",
-      "Identificación oficial de herederos",
-      "Comprobante de domicilio",
-      "Documentos de la herencia",
-    ],
-  },
-  {
-    id: "cancelacion-hipoteca",
-    name: "Cancelación de Hipoteca",
-    icon: CheckCircle,
-    description: "Liberación de gravamen hipotecario",
-    color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    iconColor: "text-emerald-600",
-    estimatedCost: "$3,500 - $5,500",
-    timeRequired: "1-2 horas",
-    keywords: ["cancelación", "hipoteca", "liberar", "pagar", "crédito"],
-    requirements: [
-      "Identificación oficial",
-      "Comprobante de pago total",
-      "Escritura con hipoteca",
-      "Comprobante de domicilio",
-    ],
-  },
-  {
-    id: "protocolizacion-acta",
-    name: "Protocolización de Acta de Asamblea",
-    icon: FileText,
-    description: "Protocolización de actas de asamblea",
-    color: "bg-blue-50 border-blue-200 text-blue-700",
-    iconColor: "text-blue-600",
-    estimatedCost: "$2,500 - $4,000",
-    timeRequired: "1-2 horas",
-    keywords: ["protocolización", "acta", "asamblea", "sociedad", "reunión"],
-    requirements: [
-      "Identificación oficial de asistentes",
-      "Comprobante de domicilio",
-      "Acta de asamblea",
-      "Documentos de la sociedad",
-    ],
-  },
-  {
-    id: "cambio-regimen-matrimonial",
-    name: "Cambio de Régimen Matrimonial",
-    icon: Heart,
-    description: "Modificación del régimen matrimonial",
-    color: "bg-pink-50 border-pink-200 text-pink-700",
-    iconColor: "text-pink-600",
-    estimatedCost: "$3,500 - $5,500",
-    timeRequired: "1-2 horas",
-    keywords: ["régimen", "matrimonial", "cambio", "bienes", "mancomunado"],
-    requirements: [
-      "Identificación oficial de ambos cónyuges",
-      "Comprobante de domicilio",
-      "Acta de matrimonio",
-      "Documentos de bienes",
-    ],
-  },
-  {
-    id: "cotejos",
-    name: "Cotejos",
-    icon: FileText,
-    description: "Comparación de documentos",
-    color: "bg-gray-50 border-gray-200 text-gray-700",
-    iconColor: "text-gray-600",
-    estimatedCost: "$600 - $1,200",
-    timeRequired: "15-30 minutos",
-    keywords: ["cotejo", "comparar", "documento", "verificar", "igual"],
-    requirements: [
-      "Identificación oficial",
-      "Documentos a cotejar",
-      "Comprobante de domicilio",
-    ],
-  },
-  {
-    id: "fe-hechos",
-    name: "Fe de Hechos",
-    icon: FileText,
-    description: "Constancia notarial de hechos",
-    color: "bg-slate-50 border-slate-200 text-slate-700",
-    iconColor: "text-slate-600",
-    estimatedCost: "$1,500 - $2,500",
-    timeRequired: "30-60 minutos",
-    keywords: ["fe", "hechos", "constancia", "notarial", "testimonio"],
-    requirements: [
-      "Identificación oficial",
-      "Comprobante de domicilio",
-      "Testigos del hecho",
-    ],
-  },
-  {
-    id: "poderes",
-    name: "Poderes",
-    icon: Shield,
-    description: "Representación legal confiable",
-    color: "bg-green-50 border-green-200 text-green-700",
-    iconColor: "text-green-600",
-    estimatedCost: "$1,800 - $3,000",
-    timeRequired: "30-60 minutos",
-    keywords: ["poder", "representar", "apoderado", "facultades", "delegar"],
-    requirements: [
-      "Identificación oficial del poderdante",
-      "Identificación oficial del apoderado",
-      "Comprobante de domicilio",
-      "Especificar facultades del poder",
-    ],
-  },
-  {
-    id: "rectificacion-escrituras",
-    name: "Rectificación de Escrituras",
-    icon: FileText,
-    description: "Corrección de errores en escrituras",
-    color: "bg-orange-50 border-orange-200 text-orange-700",
-    iconColor: "text-orange-600",
-    estimatedCost: "$2,500 - $4,000",
-    timeRequired: "1-2 horas",
-    keywords: [
-      "rectificación",
-      "escritura",
-      "corrección",
-      "error",
-      "modificar",
-    ],
-    requirements: [
-      "Identificación oficial",
-      "Comprobante de domicilio",
-      "Escritura original",
-      "Documentos que acrediten el error",
-    ],
-  },
-];
+// Usar los datos importados
+const tramites = tramitesData;
 
 export function TramiteModal({
   isOpen,
@@ -562,6 +91,10 @@ export function TramiteModal({
   }, [isOpen]);
   const [valorInmueble, setValorInmueble] = useState("");
   const [zonaInmueble, setZonaInmueble] = useState("");
+  
+  // Estados para preguntas dinámicas
+  const [estadoCivil, setEstadoCivil] = useState<string>("");
+  const [usarCredito, setUsarCredito] = useState<boolean>(false);
 
   // Actualizar cuando cambie el trámite preseleccionado
   useEffect(() => {
@@ -671,6 +204,34 @@ export function TramiteModal({
   };
 
   const handleIniciarTramite = () => {
+    // Guardar datos calculados si existen
+    if (selectedTramite && valorInmueble && !isNaN(parseFloat(valorInmueble.replace(/[,$]/g, '')))) {
+      const valor = parseFloat(valorInmueble.replace(/[,$]/g, ''));
+      const costosCalculados = calcularCostoVariable(selectedTramite, valorInmueble, zonaInmueble);
+      
+      if (costosCalculados) {
+        const datosCalculados = {
+          tramite: selectedTramite,
+          valorInmueble: valorInmueble,
+          zonaInmueble: zonaInmueble,
+          estadoCivil: estadoCivil,
+          usarCredito: usarCredito,
+          costosCalculados: costosCalculados,
+          fechaCalculo: new Date().toISOString(),
+          id: `calc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        };
+        
+        console.log("Guardando datos desde modal:", datosCalculados);
+        
+        // Obtener datos existentes y agregar el nuevo
+        const datosExistentes = JSON.parse(localStorage.getItem("arancelesCalculados") || "[]");
+        datosExistentes.push(datosCalculados);
+        localStorage.setItem("arancelesCalculados", JSON.stringify(datosExistentes));
+        
+        console.log("Datos guardados desde modal:", localStorage.getItem("arancelesCalculados"));
+      }
+    }
+    
     if (onTramiteSelect) {
       // Si hay callback, usarlo para notificar la selección
       onTramiteSelect(selectedTramite!);
@@ -682,6 +243,92 @@ export function TramiteModal({
       )}`;
       window.open(loginUrl, "_blank");
     }
+  };
+
+  // Función para calcular ISAI (Impuesto Sobre Adquisición de Inmuebles) - Tijuana
+  const calcularISAI = (valorInmueble: number) => {
+    const tramos = [
+      { limite: 0, porcentaje: 0 },
+      { limite: 100000, porcentaje: 0.015 }, // 1.5%
+      { limite: 200000, porcentaje: 0.02 },  // 2.0%
+      { limite: 300000, porcentaje: 0.025 }, // 2.5%
+      { limite: 400000, porcentaje: 0.03 },  // 3.0%
+      { limite: 500000, porcentaje: 0.035 }, // 3.5%
+      { limite: 600000, porcentaje: 0.04 },  // 4.0%
+      { limite: 700000, porcentaje: 0.045 }, // 4.5%
+    ];
+
+    let isai = 0;
+    let valorRestante = valorInmueble;
+
+    for (let i = 1; i < tramos.length; i++) {
+      const tramoAnterior = tramos[i - 1];
+      const tramoActual = tramos[i];
+      
+      if (valorRestante <= 0) break;
+      
+      const baseTramo = Math.min(valorRestante, tramoActual.limite - tramoAnterior.limite);
+      isai += baseTramo * tramoActual.porcentaje;
+      valorRestante -= baseTramo;
+    }
+
+    // Adicional sobretasa 0.4%
+    const sobretasa = valorInmueble * 0.004;
+    
+    return {
+      isai: isai,
+      sobretasa: sobretasa,
+      total: isai + sobretasa
+    };
+  };
+
+  // Función para calcular honorarios notariales
+  const calcularHonorariosNotariales = (valorInmueble: number, usarCredito: boolean) => {
+    // Honorarios compraventa: 1.0% del valor (POC)
+    const honorariosCompraventa = valorInmueble * 0.01;
+    
+    // Honorarios hipoteca: 0.5% del valor del inmueble (POC)
+    const honorariosHipoteca = usarCredito ? valorInmueble * 0.005 : 0;
+    
+    const subtotal = honorariosCompraventa + honorariosHipoteca;
+    const iva = subtotal * 0.16; // IVA 16%
+    
+    return {
+      compraventa: honorariosCompraventa,
+      hipoteca: honorariosHipoteca,
+      subtotal: subtotal,
+      iva: iva,
+      total: subtotal + iva
+    };
+  };
+
+  // Función para calcular costos RPPC (Registro Público de la Propiedad y del Comercio)
+  const calcularCostosRPPC = () => {
+    return {
+      analisis: 379.10,
+      inscripcionCompraventa: 11398.60,
+      inscripcionHipoteca: 11398.60,
+      certificadoInscripcion: 483.12,
+      certificacionPartida: 520.33,
+      certificadoNoInscripcion: 1223.46,
+      certificadoNoPropiedad: 83.62
+    };
+  };
+
+  // Función para calcular el costo total de aranceles
+  const calcularArancelesTotales = (valorInmueble: number, usarCredito: boolean) => {
+    const isai = calcularISAI(valorInmueble);
+    const honorarios = calcularHonorariosNotariales(valorInmueble, usarCredito);
+    const rppc = calcularCostosRPPC();
+    
+    const totalAranceles = isai.total + honorarios.total + rppc.inscripcionCompraventa + (usarCredito ? rppc.inscripcionHipoteca : 0);
+    
+    return {
+      isai,
+      honorarios,
+      rppc,
+      total: totalAranceles
+    };
   };
 
   const calcularCostoVariable = (
@@ -696,13 +343,12 @@ export function TramiteModal({
     let costoMinimo = 0;
     let costoMaximo = 0;
 
+    // Solo para compraventa, usar el cálculo detallado
+    if (tramiteId === "compraventa") {
+      return calcularArancelesTotales(valorNum, usarCredito);
+    }
+
     switch (tramiteId) {
-      case "compraventa":
-        porcentaje =
-          zona === "centro" ? 0.025 : zona === "zona-rio" ? 0.03 : 0.035;
-        costoMinimo = 15000;
-        costoMaximo = 50000;
-        break;
       case "donacion":
         porcentaje =
           zona === "centro" ? 0.02 : zona === "zona-rio" ? 0.025 : 0.03;
@@ -816,6 +462,47 @@ export function TramiteModal({
     return desgloses[tramiteId as keyof typeof desgloses] || null;
   };
 
+  // Función para generar documentos dinámicos basados en las respuestas del usuario
+  const obtenerDocumentosDinamicos = (tramiteId: string) => {
+    if (tramiteId !== "compraventa") {
+      return [];
+    }
+
+    const documentosBase = [
+      "Identificación oficial: INE o pasaporte vigente",
+      "CURP",
+      "RFC y Constancia de Situación Fiscal (CSF)",
+      "Acta de nacimiento (reciente o legible)",
+      "Comprobante de domicilio (agua/luz/estado de cuenta, no mayor a 3 meses)",
+      "Datos bancarios (CLABE y banco) para dispersión y comprobación de fondos"
+    ];
+
+    const documentosAdicionales = [];
+
+    // Agregar comprobante de estado civil si no es soltero
+    if (estadoCivil && estadoCivil !== "soltero") {
+      if (estadoCivil === "casado") {
+        documentosAdicionales.push("Acta de matrimonio");
+      } else if (estadoCivil === "divorciado") {
+        documentosAdicionales.push("Acta de divorcio");
+      } else if (estadoCivil === "viudo") {
+        documentosAdicionales.push("Acta de defunción del cónyuge");
+      }
+    }
+
+    // Agregar documentos de crédito bancario si aplica
+    if (usarCredito) {
+      documentosAdicionales.push(
+        "Carta oferta / condiciones del banco",
+        "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
+        "Pólizas requeridas por el crédito (vida/daños), si aplican",
+        "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca"
+      );
+    }
+
+    return [...documentosBase, ...documentosAdicionales];
+  };
+
   const resetModal = () => {
     setSelectedTramite(preselectedTramite || null);
     setUserInfo({ nombre: "", telefono: "", email: "", tramiteEspecifico: "" });
@@ -824,6 +511,8 @@ export function TramiteModal({
     setIsRecording(false);
     setValorInmueble("");
     setZonaInmueble("");
+    setEstadoCivil("");
+    setUsarCredito(false);
   };
 
   const handleClose = () => {
@@ -924,30 +613,36 @@ export function TramiteModal({
               </div>
 
               {/* Resultados */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
                 {filteredTramites.length > 0 ? (
                   filteredTramites.map((tramite) => {
                     const IconComponent = tramite.icon;
                     return (
-                      <Card
+                      <button
                         key={tramite.id}
-                        className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${tramite.color} border-2`}
+                        className={`group relative p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] text-left ${tramite.color} hover:shadow-lg ${
+                          tramite.isMain ? 'ring-2 ring-blue-200 ring-opacity-50' : ''
+                        }`}
                         onClick={() => handleTramiteSelect(tramite.id)}
                       >
-                        <CardHeader className="text-center">
-                          <div className="mx-auto mb-4">
-                            <IconComponent
-                              className={`h-12 w-12 ${tramite.iconColor}`}
-                            />
-                          </div>
-                          <CardTitle className="text-lg">
+                        <div className="space-y-2">
+                          <h3 className={`font-semibold text-base leading-tight group-hover:text-opacity-90 ${
+                            tramite.isMain ? 'text-white' : 'text-blue-800'
+                          }`}>
                             {tramite.name}
-                          </CardTitle>
-                          <CardDescription>
+                          </h3>
+                          <p className={`text-sm leading-relaxed ${
+                            tramite.isMain ? 'opacity-90' : 'opacity-80'
+                          }`}>
                             {tramite.description}
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
+                          </p>
+                        </div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className={`w-2 h-2 rounded-full ${
+                            tramite.isMain ? 'bg-blue-500' : 'bg-current'
+                          }`}></div>
+                        </div>
+                      </button>
                     );
                   })
                 ) : (
@@ -975,24 +670,19 @@ export function TramiteModal({
           {step === 2 && tramite && (
             <div className="space-y-6 mt-4 mb-8">
               {/* Información del trámite */}
-              <Card className="border-2 border-emerald-200 bg-emerald-50">
+              <Card className="border-2 border-blue-200 bg-blue-50">
                 <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <tramite.icon
-                      className={`h-16 w-16 ${tramite.iconColor}`}
-                    />
-                    <div>
-                      <CardTitle className="text-xl">{tramite.name}</CardTitle>
-                      <CardDescription className="text-base">
-                        {tramite.description}
-                      </CardDescription>
-                    </div>
+                  <div>
+                    <CardTitle className="text-xl">{tramite.name}</CardTitle>
+                    <CardDescription className="text-base">
+                      {tramite.description}
+                    </CardDescription>
                   </div>
                 </CardHeader>
               </Card>
 
               {/* Párrafo de introducción */}
-              <div className="text-center px-4 py-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-100">
+              <div className="text-center px-4 py-3 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg border border-blue-100">
                 <p className="text-gray-700 text-base leading-relaxed">
                   {tramite.id === "testamento" &&
                     "Proteger el futuro de tu familia es uno de los actos más importantes que puedes realizar. Un testamento bien estructurado garantiza que tus seres queridos estén protegidos y tus bienes se distribuyan según tus deseos."}
@@ -1076,34 +766,19 @@ export function TramiteModal({
               </div>
 
               {/* Información del servicio */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-blue-600" />
-                      Tiempo Requerido
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {tramite.timeRequired}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      * Tiempo aproximado en notaría
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-purple-600" />
+                      <FileText className="h-5 w-5 text-blue-600" />
                       Documentos Necesarios
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-purple-600">
-                      {tramite.requirements.length} documentos
+                    <p className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-800 bg-clip-text text-transparent">
+                      {tramite.id === "compraventa" 
+                        ? obtenerDocumentosDinamicos(tramite.id).length 
+                        : tramite.requirements.length} documentos
                     </p>
                     <p className="text-sm text-gray-600">
                       * Lista detallada abajo
@@ -1112,19 +787,89 @@ export function TramiteModal({
                 </Card>
               </div>
 
+              {/* Preguntas dinámicas para compraventa */}
+              {tramite.id === "compraventa" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5 text-blue-600" />
+                      Información Adicional
+                    </CardTitle>
+                    <CardDescription>
+                      Para personalizar la lista de documentos necesarios
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Pregunta de estado civil */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        ¿Cuál es tu estado civil?
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["soltero", "casado", "divorciado", "viudo"].map((estado) => (
+                          <button
+                            key={estado}
+                            onClick={() => setEstadoCivil(estado)}
+                            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                              estadoCivil === estado
+                                ? "bg-blue-100 border-blue-300 text-blue-700"
+                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {estado.charAt(0).toUpperCase() + estado.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pregunta de crédito bancario */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        ¿Utilizarás crédito bancario para la compra?
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setUsarCredito(true)}
+                          className={`flex-1 px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                            usarCredito
+                              ? "bg-blue-100 border-blue-300 text-blue-700"
+                              : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          Sí
+                        </button>
+                        <button
+                          onClick={() => setUsarCredito(false)}
+                          className={`flex-1 px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                            !usarCredito
+                              ? "bg-blue-100 border-blue-300 text-blue-700"
+                              : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          No
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Requisitos */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-purple-600" />
+                    <FileText className="h-5 w-5 text-blue-600" />
                     Documentos Requeridos
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {tramite.requirements.map((req, index) => (
+                    {(tramite.id === "compraventa" 
+                      ? obtenerDocumentosDinamicos(tramite.id) 
+                      : tramite.requirements
+                    ).map((req, index) => (
                       <li key={index} className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
                         <span className="text-sm">{req}</span>
                       </li>
                     ))}
@@ -1132,196 +877,151 @@ export function TramiteModal({
                 </CardContent>
               </Card>
 
-              {/* Inversión Aproximada */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    Inversión Aproximada
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {costoCalculado ? (
+              {/* Calculadora de Aranceles - Solo para compraventa */}
+              {tramite.id === "compraventa" ? (
+                <Card className="bg-gray-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-gray-700">
+                      <Calculator className="h-4 w-4 text-gray-500" />
+                      Calculadora de Aranceles
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Calculator className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium text-blue-600">
-                          Calculadora de Costos
-                        </span>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">
+                          Valor del inmueble
+                        </label>
+                        <Input
+                          value={valorInmueble}
+                          onChange={(e) => setValorInmueble(e.target.value)}
+                          placeholder="Ej: $500,000"
+                          className="mt-1 h-8 text-sm"
+                        />
                       </div>
 
-                      <div className="space-y-2">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Valor del inmueble
-                          </label>
-                          <Input
-                            value={valorInmueble}
-                            onChange={(e) => setValorInmueble(e.target.value)}
-                            placeholder="Ej: $500,000"
-                            className="mt-1"
-                          />
-                        </div>
+                      {valorInmueble && !isNaN(parseFloat(valorInmueble.replace(/[$,]/g, ''))) && (
+                        <div className="bg-white p-3 rounded border border-gray-200 space-y-2">
+                          {(() => {
+                            const valor = parseFloat(valorInmueble.replace(/[$,]/g, ''));
+                            const isai = calcularISAI(valor);
+                            const honorarios = calcularHonorariosNotariales(valor, usarCredito);
+                            const rppc = calcularCostosRPPC();
+                            
+                            const totalAranceles = isai.total + honorarios.total + rppc.inscripcionCompraventa + (usarCredito ? rppc.inscripcionHipoteca : 0);
+                            
+                            return (
+                              <>
+                                <div className="text-xs font-semibold text-gray-700 mb-2">Desglose de Aranceles</div>
+                                
+                                {/* ISAI */}
+                                <div className="space-y-1">
+                                  <div className="text-xs font-medium text-gray-600">ISAI (Impuesto Sobre Adquisición de Inmuebles)</div>
+                                  <div className="text-xs space-y-0.5 ml-2">
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">ISAI por tramos:</span>
+                                      <span className="font-medium">${isai.isai.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">Sobretasa 0.4%:</span>
+                                      <span className="font-medium">${isai.sobretasa.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between border-t pt-1 font-semibold">
+                                      <span className="text-gray-700">Subtotal ISAI:</span>
+                                      <span className="text-gray-900">${isai.total.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
 
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Zona del inmueble
-                          </label>
-                          <select
-                            value={zonaInmueble}
-                            onChange={(e) => setZonaInmueble(e.target.value)}
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          >
-                            <option value="">Selecciona una zona</option>
-                            <option value="centro">Centro (2.5%)</option>
-                            <option value="zona-rio">Zona Río (3%)</option>
-                            <option value="otras">Otras zonas (3.5%)</option>
-                          </select>
-                        </div>
-                      </div>
+                                {/* Honorarios Notariales */}
+                                <div className="space-y-1">
+                                  <div className="text-xs font-medium text-gray-600">Honorarios Notariales</div>
+                                  <div className="text-xs space-y-0.5 ml-2">
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">Compraventa (1.0%):</span>
+                                      <span className="font-medium">${honorarios.compraventa.toLocaleString()}</span>
+                                    </div>
+                                    {usarCredito && (
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Hipoteca (0.5%):</span>
+                                        <span className="font-medium">${honorarios.hipoteca.toLocaleString()}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">Subtotal:</span>
+                                      <span className="font-medium">${honorarios.subtotal.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">IVA (16%):</span>
+                                      <span className="font-medium">${honorarios.iva.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between border-t pt-1 font-semibold">
+                                      <span className="text-gray-700">Total Honorarios:</span>
+                                      <span className="text-gray-900">${honorarios.total.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
 
-                      {costoCalculado && (
-                        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                          <p className="text-lg font-bold text-green-600">
-                            ${costoCalculado.costo.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-green-600">
-                            Basado en {costoCalculado.porcentaje}% del valor del
-                            inmueble
-                          </p>
+                                {/* RPPC */}
+                                <div className="space-y-1">
+                                  <div className="text-xs font-medium text-gray-600">RPPC (Registro Público)</div>
+                                  <div className="text-xs space-y-0.5 ml-2">
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">Análisis documento:</span>
+                                      <span className="font-medium">${rppc.analisis.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">Inscripción compraventa:</span>
+                                      <span className="font-medium">${rppc.inscripcionCompraventa.toLocaleString()}</span>
+                                    </div>
+                                    {usarCredito && (
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Inscripción hipoteca:</span>
+                                        <span className="font-medium">${rppc.inscripcionHipoteca.toLocaleString()}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-500">Certificados varios:</span>
+                                      <span className="font-medium">${(rppc.certificadoInscripcion + rppc.certificacionPartida + rppc.certificadoNoInscripcion + rppc.certificadoNoPropiedad).toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Total */}
+                                <div className="border-t pt-2 mt-2">
+                                  <div className="flex justify-between text-sm font-bold">
+                                    <span className="text-gray-800">TOTAL ARANCELES:</span>
+                                    <span className="text-blue-600">${totalAranceles.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="text-center">
-                        <p className="text-3xl font-bold text-green-600 mb-2">
-                          {tramite.estimatedCost}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          * Rango aproximado, puede variar según el caso
-                          específico
-                        </p>
-                      </div>
-
-                      {obtenerDesgloseCosto(tramite.id) && (
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Calculator className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm font-medium text-gray-600">
-                              Desglose de Costos
-                            </span>
-                          </div>
-                          <div className="space-y-1 text-sm">
-                            {obtenerDesgloseCosto(tramite.id)
-                              ?.honorariosNotario && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                  Honorarios Notario:
-                                </span>
-                                <span className="font-medium">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.honorariosNotario.min.toLocaleString()}{" "}
-                                  - $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.honorariosNotario.max.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {obtenerDesgloseCosto(tramite.id)?.impuestos && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                  Impuestos:
-                                </span>
-                                <span className="font-medium">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.impuestos.min.toLocaleString()}{" "}
-                                  - $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.impuestos.max.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {obtenerDesgloseCosto(tramite.id)
-                              ?.gastosRegistro && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                  Gastos de Registro:
-                                </span>
-                                <span className="font-medium">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.gastosRegistro.min.toLocaleString()}{" "}
-                                  - $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.gastosRegistro.max.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {(obtenerDesgloseCosto(tramite.id) as any)
-                              ?.avaluo && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Avalúo:</span>
-                                <span className="font-medium">
-                                  $
-                                  {(
-                                    obtenerDesgloseCosto(tramite.id) as any
-                                  )?.avaluo.min.toLocaleString()}{" "}
-                                  - $
-                                  {(
-                                    obtenerDesgloseCosto(tramite.id) as any
-                                  )?.avaluo.max.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {(obtenerDesgloseCosto(tramite.id) as any)
-                              ?.gastosPublicacion && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                  Gastos de Publicación:
-                                </span>
-                                <span className="font-medium">
-                                  $
-                                  {(
-                                    obtenerDesgloseCosto(tramite.id) as any
-                                  )?.gastosPublicacion.min.toLocaleString()}{" "}
-                                  - $
-                                  {(
-                                    obtenerDesgloseCosto(tramite.id) as any
-                                  )?.gastosPublicacion.max.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            <div className="border-t border-gray-300 pt-1 mt-2">
-                              <div className="flex justify-between font-bold">
-                                <span>Total:</span>
-                                <span className="text-green-600">
-                                  $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.total.min.toLocaleString()}{" "}
-                                  - $
-                                  {obtenerDesgloseCosto(
-                                    tramite.id
-                                  )?.total.max.toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="bg-gray-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-gray-700">
+                      <DollarSign className="h-4 w-4 text-gray-500" />
+                      Costo Aproximado
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-gray-700 mb-1">
+                        {tramite.estimatedCost}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        * Rango aproximado, puede variar según el caso específico
+                      </p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Acciones */}
               <div className="space-y-6">
@@ -1332,7 +1032,7 @@ export function TramiteModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button
                     onClick={handleIniciarTramite}
-                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white"
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
                     size="lg"
                   >
                     <FileText className="h-6 w-6 flex-shrink-0" />
@@ -1351,7 +1051,7 @@ export function TramiteModal({
                   <Button
                     onClick={() => window.open("/citas", "_blank")}
                     variant="outline"
-                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 border-2 border-slate-300 hover:border-emerald-500 hover:bg-emerald-50"
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50"
                     size="lg"
                   >
                     <Calendar className="h-6 w-6 text-slate-600 flex-shrink-0" />
@@ -1372,14 +1072,14 @@ export function TramiteModal({
                   <Button
                     onClick={handleWhatsApp}
                     variant="outline"
-                    className="h-20 p-3 flex items-center gap-3 border-2 border-green-200 hover:border-green-500 hover:bg-green-50"
+                    className="h-20 p-3 flex items-center gap-3 border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
                   >
-                    <MessageCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <MessageCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
                     <div className="text-left min-w-0 flex-1">
-                      <div className="font-semibold text-green-700 text-sm leading-tight">
+                      <div className="font-semibold text-blue-700 text-sm leading-tight">
                         Enviar por WhatsApp
                       </div>
-                      <div className="text-xs text-green-600 leading-tight">
+                      <div className="text-xs text-blue-600 leading-tight">
                         Recibe información
                         <br />
                         instantánea
@@ -1413,7 +1113,7 @@ export function TramiteModal({
                 </div>
                 <Button
                   onClick={handleClose}
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Cerrar
                 </Button>

@@ -2,6 +2,7 @@ import { mockUsers } from "./auth";
 
 export type EstatusSolicitud =
   | "ARMANDO_EXPEDIENTE"
+  | "PAGO_PENDIENTE"
   | "EN_REVISION_INTERNA"
   | "BORRADOR_PARA_REVISION_CLIENTE"
   | "APROBADO_PARA_FIRMA"
@@ -53,7 +54,7 @@ export const solicitudes: Solicitud[] = [
   {
     numeroSolicitud: "NT3-2025-00123",
     tipoTramite: "Testamento Público Abierto",
-    estatusActual: "ARMANDO_EXPEDIENTE",
+    estatusActual: "EN_REVISION_INTERNA",
     documentosRequeridos: [
       {
         id: 1,
@@ -115,12 +116,18 @@ export const solicitudes: Solicitud[] = [
         fecha: "2025-01-15",
         descripcion: "Se recibió la identificación oficial del cliente",
       },
+      {
+        estatus: "EN_REVISION_INTERNA",
+        fecha: "2025-01-20",
+        descripcion: "Pago realizado exitosamente. Trámite enviado a revisión interna.",
+        usuario: "Sistema"
+      },
     ],
     fechaCreacion: "2025-01-10",
-    fechaUltimaActualizacion: "2025-01-15",
+    fechaUltimaActualizacion: "2025-01-20",
     cliente: {
       id: "user-1",
-      nombre: "Juan Carlos Pérez García",
+      nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
       email: "juan.perez@email.com",
       telefono: "+52 664 123 4567",
     },
@@ -1164,23 +1171,70 @@ export const createSolicitud = async (
         ];
       case "compraventa":
         return [
-          ...documentosBase,
+          {
+            id: 1,
+            nombre: "Identificación Oficial",
+            descripcion: "INE o pasaporte vigente",
+            subido: false,
+          },
+          {
+            id: 2,
+            nombre: "CURP",
+            descripcion: "Clave Única de Registro de Población",
+            subido: false,
+          },
           {
             id: 3,
-            nombre: "Escritura de Propiedad",
-            descripcion: "Documento que acredite la propiedad del inmueble",
+            nombre: "RFC y Constancia de Situación Fiscal (CSF)",
+            descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal",
             subido: false,
           },
           {
             id: 4,
-            nombre: "Avalúo del Inmueble",
-            descripcion: "Avalúo vigente del inmueble a vender",
+            nombre: "Acta de Nacimiento",
+            descripcion: "Acta de nacimiento reciente o legible",
             subido: false,
           },
           {
             id: 5,
-            nombre: "Comprobante de Ingresos",
-            descripcion: "Comprobantes de ingresos de los últimos 3 meses",
+            nombre: "Comprobante de Domicilio",
+            descripcion: "Agua/luz/estado de cuenta, no mayor a 3 meses",
+            subido: false,
+          },
+          {
+            id: 6,
+            nombre: "Datos Bancarios",
+            descripcion: "CLABE y banco para dispersión y comprobación de fondos",
+            subido: false,
+          },
+          {
+            id: 7,
+            nombre: "Acta de Matrimonio",
+            descripcion: "Acta de matrimonio (si aplica)",
+            subido: false,
+          },
+          {
+            id: 8,
+            nombre: "Carta oferta",
+            descripcion: "Carta oferta o condiciones del banco",
+            subido: false,
+          },
+          {
+            id: 9,
+            nombre: "Avalúo Bancario",
+            descripcion: "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
+            subido: false,
+          },
+          {
+            id: 10,
+            nombre: "Pólizas Requeridas por el Crédito",
+            descripcion: "Pólizas de vida/daños, si aplican",
+            subido: false,
+          },
+          {
+            id: 11,
+            nombre: "Instrucciones de Dispersión del Banco",
+            descripcion: "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca",
             subido: false,
           },
         ];

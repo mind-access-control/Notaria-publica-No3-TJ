@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { createSolicitud } from "@/lib/mock-data";
+import { getTramiteById, getAllTramites } from "@/lib/tramites-data";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,73 +22,18 @@ import {
   User,
   AlertCircle,
   Plus,
+  Users,
 } from "lucide-react";
 
-// Configuración de trámites disponibles
-const TRAMITES_DISPONIBLES = [
-  {
-    id: "testamento",
-    nombre: "Testamento Público Abierto",
-    descripcion:
-      "Documento notarial que permite disponer de bienes y derechos para después de la muerte",
-    costo: { min: 12000, max: 18000 },
-    tiempo: "5-7 días hábiles",
-    documentos: [
-      "Identificación oficial vigente",
-      "Comprobante de domicilio",
-      "Acta de nacimiento",
-      "Lista de bienes y propiedades",
-      "Comprobante de estado civil",
-    ],
-    requisitos: [
-      "Ser mayor de edad",
-      "Tener capacidad legal",
-      "Presentar identificación oficial",
-      "Comprobante de domicilio no mayor a 3 meses",
-    ],
-  },
-  {
-    id: "compraventa",
-    nombre: "Compraventa de Inmueble",
-    descripcion:
-      "Contrato notarial para la transferencia de propiedad de bienes inmuebles",
-    costo: { min: 20000, max: 30000 },
-    tiempo: "7-10 días hábiles",
-    documentos: [
-      "Identificación oficial vigente",
-      "Comprobante de domicilio",
-      "Escritura de propiedad",
-      "Avalúo del inmueble",
-      "Comprobante de ingresos",
-    ],
-    requisitos: [
-      "Ser mayor de edad",
-      "Tener capacidad legal",
-      "Documentos de propiedad",
-      "Avalúo vigente del inmueble",
-    ],
-  },
-  {
-    id: "poder",
-    nombre: "Poder Notarial",
-    descripcion:
-      "Documento que autoriza a otra persona para actuar en representación",
-    costo: { min: 6000, max: 10000 },
-    tiempo: "3-5 días hábiles",
-    documentos: [
-      "Identificación oficial vigente",
-      "Comprobante de domicilio",
-      "Identificación del apoderado",
-      "Acta de nacimiento",
-    ],
-    requisitos: [
-      "Ser mayor de edad",
-      "Tener capacidad legal",
-      "Identificación del apoderado",
-      "Especificar facultades del poder",
-    ],
-  },
-];
+// Usar los datos compartidos de trámites
+const TRAMITES_DISPONIBLES = getAllTramites().map(tramite => ({
+  id: tramite.id,
+  nombre: tramite.name,
+  descripcion: tramite.description,
+  costo: tramite.costo || { min: 20000, max: 30000 }, // Usar costo del tramite o valores por defecto
+  documentos: tramite.requirements,
+  requisitos: tramite.requirements, // Usar los mismos requisitos como documentos
+}));
 
 export default function IniciarTramitePage() {
   const router = useRouter();
@@ -99,6 +45,7 @@ export default function IniciarTramitePage() {
   );
   const [isCreandoSolicitud, setIsCreandoSolicitud] = useState(false);
   const [showTramiteModal, setShowTramiteModal] = useState(false);
+  const [arancelesCalculados, setArancelesCalculados] = useState<any[]>([]);
 
   const tramitePreseleccionado = searchParams.get("tramite");
 
@@ -116,6 +63,20 @@ export default function IniciarTramitePage() {
       setTramiteSeleccionado(tramitePreseleccionado);
     }
   }, [tramitePreseleccionado]);
+
+  // Cargar aranceles calculados
+  useEffect(() => {
+    const cargarAranceles = () => {
+      try {
+        const datos = JSON.parse(localStorage.getItem("arancelesCalculados") || "[]");
+        console.log("Cargando aranceles desde localStorage:", datos);
+        setArancelesCalculados(datos);
+      } catch (error) {
+        console.error("Error cargando aranceles:", error);
+      }
+    };
+    cargarAranceles();
+  }, []);
 
   const handleSeleccionarTramite = (tramiteId: string) => {
     setTramiteSeleccionado(tramiteId);
@@ -240,31 +201,18 @@ export default function IniciarTramitePage() {
                 <CardContent className="space-y-3">
                   {tramiteSeleccionado ? (
                     (() => {
-                      const tramite = TRAMITES_DISPONIBLES.find(
-                        (t) => t.id === tramiteSeleccionado
-                      );
+                      const tramite = getTramiteById(tramiteSeleccionado);
                       return tramite ? (
-                        <div className="p-4 border border-emerald-500 bg-emerald-50 rounded-lg">
+                        <div className="p-4 border border-blue-500 bg-blue-50 rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-medium text-gray-900">
-                              {tramite.nombre}
+                              {tramite.name}
                             </h3>
-                            <CheckCircle className="h-5 w-5 text-emerald-600" />
+                            <CheckCircle className="h-5 w-5 text-blue-600" />
                           </div>
                           <p className="text-sm text-gray-600 mb-2">
-                            {tramite.descripcion}
+                            {tramite.description}
                           </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />$
-                              {tramite.costo.min.toLocaleString("es-MX")} - $
-                              {tramite.costo.max.toLocaleString("es-MX")}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {tramite.tiempo}
-                            </div>
-                          </div>
                         </div>
                       ) : null;
                     })()
@@ -300,118 +248,82 @@ export default function IniciarTramitePage() {
                     <p className="text-gray-600">{tramiteInfo.descripcion}</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Tiempo estimado */}
-                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                      <Clock className="h-6 w-6 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Tiempo Estimado</p>
-                        <p className="text-lg font-semibold text-blue-900">
-                          {tramiteInfo.tiempo}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Documentos requeridos */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Documentos Requeridos
-                      </h3>
-                      <ul className="space-y-2">
-                        {tramiteInfo.documentos.map((doc, index) => (
-                          <li
-                            key={index}
-                            className="flex items-center gap-2 text-sm text-gray-700"
-                          >
-                            <CheckCircle className="h-4 w-4 text-emerald-600" />
-                            {doc}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Requisitos */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Requisitos
-                      </h3>
-                      <ul className="space-y-2">
-                        {tramiteInfo.requisitos.map((req, index) => (
-                          <li
-                            key={index}
-                            className="flex items-center gap-2 text-sm text-gray-700"
-                          >
-                            <CheckCircle className="h-4 w-4 text-emerald-600" />
-                            {req}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Costo desglosado */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Inversión en tu Trámite
-                      </h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
-                            Costo base del trámite:
-                          </span>
-                          <span className="font-medium">
-                            $
-                            {Math.round(
-                              tramiteInfo.costo.min * 0.6
-                            ).toLocaleString("es-MX")}{" "}
-                            - $
-                            {Math.round(
-                              tramiteInfo.costo.max * 0.6
-                            ).toLocaleString("es-MX")}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
-                            Aranceles notariales:
-                          </span>
-                          <span className="font-medium">
-                            $
-                            {Math.round(
-                              tramiteInfo.costo.min * 0.25
-                            ).toLocaleString("es-MX")}{" "}
-                            - $
-                            {Math.round(
-                              tramiteInfo.costo.max * 0.25
-                            ).toLocaleString("es-MX")}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">
-                            Gastos de gestión:
-                          </span>
-                          <span className="font-medium">
-                            $
-                            {Math.round(
-                              tramiteInfo.costo.min * 0.15
-                            ).toLocaleString("es-MX")}{" "}
-                            - $
-                            {Math.round(
-                              tramiteInfo.costo.max * 0.15
-                            ).toLocaleString("es-MX")}
-                          </span>
-                        </div>
-                        <div className="border-t border-gray-300 pt-2 mt-2">
-                          <div className="flex justify-between font-semibold text-lg">
-                            <span>Total:</span>
-                            <span className="text-emerald-600">
-                              ${tramiteInfo.costo.min.toLocaleString("es-MX")} -
-                              ${tramiteInfo.costo.max.toLocaleString("es-MX")}
-                            </span>
+                    {/* Mostrar datos calculados si existen */}
+                    {(() => {
+                      const arancelCalculado = arancelesCalculados.find(
+                        arancel => arancel.tramite === tramiteSeleccionado
+                      );
+                      
+                      if (arancelCalculado && arancelCalculado.costosCalculados) {
+                        return (
+                          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                            <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                              <DollarSign className="h-5 w-5" />
+                              Aranceles Calculados
+                            </h3>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="bg-white p-3 rounded border border-blue-100">
+                                <h4 className="font-medium text-blue-900 mb-2">Información del Inmueble</h4>
+                                <div className="text-sm space-y-1 text-gray-700">
+                                  <div><span className="font-medium">Valor:</span> ${arancelCalculado.valorInmueble}</div>
+                                  <div><span className="font-medium">Zona:</span> {arancelCalculado.zonaInmueble}</div>
+                                  <div><span className="font-medium">Estado civil:</span> {arancelCalculado.estadoCivil}</div>
+                                  <div><span className="font-medium">Crédito bancario:</span> {arancelCalculado.usarCredito ? 'Sí' : 'No'}</div>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-white p-3 rounded border border-blue-100">
+                                <h4 className="font-medium text-blue-900 mb-2">Desglose de Aranceles</h4>
+                                <div className="text-sm space-y-1 text-gray-700">
+                                  <div className="flex justify-between">
+                                    <span>ISAI:</span>
+                                    <span className="font-medium">${arancelCalculado.costosCalculados.isai.total.toLocaleString("es-MX")}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Honorarios:</span>
+                                    <span className="font-medium">${arancelCalculado.costosCalculados.honorarios.total.toLocaleString("es-MX")}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>RPPC:</span>
+                                    <span className="font-medium">${(arancelCalculado.costosCalculados.rppc.inscripcionCompraventa + (arancelCalculado.usarCredito ? arancelCalculado.costosCalculados.rppc.inscripcionHipoteca : 0)).toLocaleString("es-MX")}</span>
+                                  </div>
+                                  <div className="flex justify-between border-t pt-1 font-bold text-lg">
+                                    <span className="text-blue-900">Total:</span>
+                                    <span className="text-blue-600">${arancelCalculado.costosCalculados.total.toLocaleString("es-MX")}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Información del proceso multi-partes */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <Users className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-amber-900 mb-2">
+                            Proceso Multi-Partes
+                          </h4>
+                          <p className="text-sm text-amber-800 mb-2">
+                            Este trámite de compraventa involucra tres partes principales:
+                          </p>
+                          <ul className="text-sm text-amber-800 space-y-1 ml-4">
+                            <li>• <strong>Comprador:</strong> Usted (proceso actual)</li>
+                            <li>• <strong>Vendedor:</strong> Deberá validar y subir sus documentos</li>
+                            <li>• <strong>Notaría:</strong> Revisará y validará toda la información</li>
+                          </ul>
+                          <p className="text-sm text-amber-800 mt-2 font-medium">
+                            ⚠️ Recuerda que será necesario que el vendedor suba sus documentos y valide esta información antes de completar el pago.
+                          </p>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        * Incluye asesoría personalizada, revisión de documentos
-                        y seguimiento completo
-                      </p>
                     </div>
 
                     {/* Botón de crear solicitud */}
@@ -419,9 +331,9 @@ export default function IniciarTramitePage() {
                       <Alert className="mb-4">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Al crear la solicitud, se generará un número único y
-                          un enlace personalizado que solo tú podrás acceder con
-                          tus credenciales.
+                          Al crear la solicitud, se generará un trámite único que
+                          solo podrán acceder las partes involucradas: comprador,
+                          vendedor y notaría con sus respectivas credenciales.
                         </AlertDescription>
                       </Alert>
 

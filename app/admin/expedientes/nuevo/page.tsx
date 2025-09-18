@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -47,8 +47,24 @@ import {
   Send,
 } from "lucide-react";
 
+// Tipos para formatos
+interface FormatoDisponible {
+  id: string;
+  nombre: string;
+  archivo: string;
+  descripcion: string;
+  esRecomendado: boolean;
+}
+
 // Configuración de trámites con sus requisitos
-const tramitesConfig = {
+const tramitesConfig: Record<string, {
+  nombre: string;
+  descripcion: string;
+  documentosRequeridos: string[];
+  costos: { aranceles: number; impuestos: number; derechos: number; total: number };
+  tiempoEstimado: string;
+  formatosDisponibles?: FormatoDisponible[];
+}> = {
   compraventas: {
     nombre: "Compraventas",
     descripcion:
@@ -63,8 +79,24 @@ const tramitesConfig = {
       "Certificado de libertad de gravamen",
       "Contrato de compraventa privado (si aplica)",
     ],
-    costos: { aranceles: 15000, impuestos: 5000, derechos: 2000, total: 22000 },
-    tiempoEstimado: "15-20 días hábiles",
+    costos: { aranceles: 15000, impuestos: 5000, derechos: 2000, total: 25000 },
+    tiempoEstimado: "2-4 horas",
+    formatosDisponibles: [
+      {
+        id: "compraventa-estandar",
+        nombre: "Compraventa Estándar",
+        archivo: "compraventa.pdf",
+        descripcion: "Formato estándar para compraventa de inmuebles",
+        esRecomendado: true
+      },
+      {
+        id: "compraventa-testamento",
+        nombre: "Formato Testamento (Personalizado)",
+        archivo: "FORMATO-TESTAMENTO-2019.pdf",
+        descripcion: "Formato personalizado basado en testamento",
+        esRecomendado: false
+      }
+    ]
   },
   donaciones: {
     nombre: "Donaciones",
@@ -80,8 +112,8 @@ const tramitesConfig = {
       "Certificado de libertad de gravamen",
       "Carta de aceptación de donación",
     ],
-    costos: { aranceles: 12000, impuestos: 3000, derechos: 1500, total: 16500 },
-    tiempoEstimado: "12-15 días hábiles",
+    costos: { aranceles: 2000, impuestos: 1000, derechos: 500, total: 3500 },
+    tiempoEstimado: "1-2 horas",
   },
   permutas: {
     nombre: "Permutas",
@@ -94,8 +126,8 @@ const tramitesConfig = {
       "Constancia de no adeudo de predial de ambos bienes",
       "Certificado de libertad de gravamen de ambos bienes",
     ],
-    costos: { aranceles: 18000, impuestos: 6000, derechos: 2500, total: 26500 },
-    tiempoEstimado: "20-25 días hábiles",
+    costos: { aranceles: 8000, impuestos: 2000, derechos: 1000, total: 11000 },
+    tiempoEstimado: "2-3 horas",
   },
   creditos_hipotecarios: {
     nombre: "Créditos Hipotecarios / Infonavit / Fovissste",
@@ -110,8 +142,8 @@ const tramitesConfig = {
       "Contrato de crédito",
       "Póliza de seguro",
     ],
-    costos: { aranceles: 20000, impuestos: 8000, derechos: 3000, total: 31000 },
-    tiempoEstimado: "25-30 días hábiles",
+    costos: { aranceles: 8000, impuestos: 2000, derechos: 1000, total: 11000 },
+    tiempoEstimado: "2-3 horas",
   },
   contrato_mutuo: {
     nombre: "Contrato de Mutuo",
@@ -124,8 +156,8 @@ const tramitesConfig = {
       "Referencias comerciales",
       "Garantías (si aplica)",
     ],
-    costos: { aranceles: 8000, impuestos: 2000, derechos: 1000, total: 11000 },
-    tiempoEstimado: "5-7 días hábiles",
+    costos: { aranceles: 2000, impuestos: 500, derechos: 500, total: 3000 },
+    tiempoEstimado: "1-2 horas",
   },
   reconocimiento_adeudo: {
     nombre: "Reconocimiento de Adeudo",
@@ -190,12 +222,12 @@ const tramitesConfig = {
       "Capital social",
     ],
     costos: {
-      aranceles: 30000,
-      impuestos: 12000,
-      derechos: 5000,
-      total: 47000,
+      aranceles: 8000,
+      impuestos: 4000,
+      derechos: 3000,
+      total: 15000,
     },
-    tiempoEstimado: "15-20 días hábiles",
+    tiempoEstimado: "2-3 horas",
   },
   liquidacion_copropiedad: {
     nombre: "Liquidación de Copropiedad",
@@ -438,6 +470,22 @@ const tramitesConfig = {
     ],
     costos: { aranceles: 8000, impuestos: 2000, derechos: 1000, total: 11000 },
     tiempoEstimado: "5-7 días hábiles",
+    formatosDisponibles: [
+      {
+        id: "testamento-estandar",
+        nombre: "Testamento Estándar",
+        archivo: "testamento.pdf",
+        descripcion: "Formato estándar para testamentos públicos",
+        esRecomendado: true
+      },
+      {
+        id: "testamento-personalizado",
+        nombre: "Formato Testamento 2019",
+        archivo: "FORMATO-TESTAMENTO-2019.pdf",
+        descripcion: "Formato personalizado actualizado 2019",
+        esRecomendado: false
+      }
+    ]
   },
 };
 
@@ -445,6 +493,7 @@ export default function NuevoExpedientePage() {
   const router = useRouter();
   const [pasoActual, setPasoActual] = useState(1);
   const [tramiteSeleccionado, setTramiteSeleccionado] = useState<string>("");
+  const [formatoSeleccionado, setFormatoSeleccionado] = useState<string>("");
   const [tabActual, setTabActual] = useState("documentos");
   const [datosCliente, setDatosCliente] = useState({
     nombre: "",
@@ -485,14 +534,146 @@ export default function NuevoExpedientePage() {
   const [generatedDocument, setGeneratedDocument] = useState<string | null>(
     null
   );
+  
+  // Estado para la calculadora de aranceles
+  const [calculadoraAranceles, setCalculadoraAranceles] = useState({
+    valorInmueble: "",
+    zonaInmueble: "",
+    estadoCivil: "",
+    usarCredito: false,
+    costosCalculados: null as any,
+  });
 
   const tramiteInfo = tramiteSeleccionado
-    ? tramitesConfig[tramiteSeleccionado as keyof typeof tramitesConfig]
+    ? tramitesConfig[tramiteSeleccionado as keyof typeof tramitesConfig] as any
     : null;
+
+  // Función para calcular ISAI (Impuesto Sobre Adquisición de Inmuebles) - Tijuana
+  const calcularISAI = (valorInmueble: number) => {
+    const tramos = [
+      { limite: 0, porcentaje: 0 },
+      { limite: 100000, porcentaje: 0.015 }, // 1.5%
+      { limite: 200000, porcentaje: 0.02 },  // 2.0%
+      { limite: 300000, porcentaje: 0.025 }, // 2.5%
+      { limite: 400000, porcentaje: 0.03 },  // 3.0%
+      { limite: 500000, porcentaje: 0.035 }, // 3.5%
+      { limite: 600000, porcentaje: 0.04 },  // 4.0%
+      { limite: 700000, porcentaje: 0.045 }, // 4.5%
+    ];
+
+    let isai = 0;
+    let valorRestante = valorInmueble;
+
+    for (let i = 1; i < tramos.length; i++) {
+      const tramoAnterior = tramos[i - 1];
+      const tramoActual = tramos[i];
+      
+      if (valorRestante <= 0) break;
+      
+      const baseTramo = Math.min(valorRestante, tramoActual.limite - tramoAnterior.limite);
+      isai += baseTramo * tramoActual.porcentaje;
+      valorRestante -= baseTramo;
+    }
+
+    // Adicional sobretasa 0.4%
+    const sobretasa = valorInmueble * 0.004;
+    
+    return {
+      isai: isai,
+      sobretasa: sobretasa,
+      total: isai + sobretasa
+    };
+  };
+
+  // Función para calcular honorarios notariales
+  const calcularHonorariosNotariales = (valorInmueble: number, usarCredito: boolean) => {
+    // Honorarios compraventa: 1.0% del valor (POC)
+    const honorariosCompraventa = valorInmueble * 0.01;
+    
+    // Honorarios hipoteca: 0.5% del valor del inmueble (POC)
+    const honorariosHipoteca = usarCredito ? valorInmueble * 0.005 : 0;
+    
+    const subtotal = honorariosCompraventa + honorariosHipoteca;
+    const iva = subtotal * 0.16; // IVA 16%
+    
+    return {
+      compraventa: honorariosCompraventa,
+      hipoteca: honorariosHipoteca,
+      subtotal: subtotal,
+      iva: iva,
+      total: subtotal + iva
+    };
+  };
+
+  // Función para calcular costos RPPC (Registro Público de la Propiedad y del Comercio)
+  const calcularCostosRPPC = () => {
+    return {
+      analisis: 379.10,
+      inscripcionCompraventa: 11398.60,
+      inscripcionHipoteca: 11398.60,
+      certificadoInscripcion: 483.12,
+      certificacionPartida: 520.33,
+      certificadoNoInscripcion: 1223.46,
+      certificadoNoPropiedad: 83.62
+    };
+  };
+
+  // Función para calcular el costo total de aranceles
+  const calcularArancelesTotales = (valorInmueble: number, usarCredito: boolean) => {
+    const isai = calcularISAI(valorInmueble);
+    const honorarios = calcularHonorariosNotariales(valorInmueble, usarCredito);
+    const rppc = calcularCostosRPPC();
+    
+    const totalAranceles = isai.total + honorarios.total + rppc.inscripcionCompraventa + (usarCredito ? rppc.inscripcionHipoteca : 0);
+    
+    return {
+      isai,
+      honorarios,
+      rppc,
+      total: totalAranceles
+    };
+  };
+
+  // Resetear formato cuando cambie el trámite
+  React.useEffect(() => {
+    setFormatoSeleccionado("");
+  }, [tramiteSeleccionado]);
 
   const handleSiguiente = () => {
     if (pasoActual === 1) {
       if (tramiteSeleccionado) {
+        // Si es compraventa y hay valores en la calculadora, calcular aranceles
+        if (tramiteSeleccionado === "compraventas" && calculadoraAranceles.valorInmueble) {
+          const valor = parseFloat(calculadoraAranceles.valorInmueble.replace(/[,$]/g, ""));
+          if (!isNaN(valor) && valor > 0) {
+            const costosCalculados = calcularArancelesTotales(valor, calculadoraAranceles.usarCredito);
+            setCalculadoraAranceles(prev => ({
+              ...prev,
+              costosCalculados
+            }));
+            
+            // Guardar los datos calculados en localStorage para el perfil de usuario
+            const datosCalculados = {
+              tramite: tramiteSeleccionado,
+              valorInmueble: calculadoraAranceles.valorInmueble,
+              zonaInmueble: calculadoraAranceles.zonaInmueble,
+              estadoCivil: calculadoraAranceles.estadoCivil,
+              usarCredito: calculadoraAranceles.usarCredito,
+              costosCalculados,
+              fechaCalculo: new Date().toISOString(),
+              id: `calc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+            
+            console.log("Guardando datos calculados:", datosCalculados);
+            
+            // Obtener datos existentes y agregar el nuevo
+            const datosExistentes = JSON.parse(localStorage.getItem("arancelesCalculados") || "[]");
+            datosExistentes.push(datosCalculados);
+            localStorage.setItem("arancelesCalculados", JSON.stringify(datosExistentes));
+            
+            console.log("Datos guardados en localStorage:", localStorage.getItem("arancelesCalculados"));
+          }
+        }
         setPasoActual(2);
       }
     }
@@ -1037,8 +1218,13 @@ NOTARIO PÚBLICO: ________________`;
   };
 
   const handleCrearExpediente = () => {
+    const formatoInfo = formatoSeleccionado && tramiteInfo?.formatosDisponibles 
+      ? tramiteInfo.formatosDisponibles.find(f => f.id === formatoSeleccionado)
+      : null;
+      
     console.log("Creando expediente:", {
       tramite: tramiteSeleccionado,
+      formato: formatoInfo,
       datosCliente,
       documentos: Object.keys(documentosSubidos).length,
     });
@@ -1444,6 +1630,70 @@ Este link permite acceder al documento legal generado desde cualquier dispositiv
                   </Select>
                 </div>
 
+                {/* Selección de Formato */}
+                {tramiteInfo && tramiteInfo.formatosDisponibles && (
+                  <div>
+                    <Label htmlFor="formato">Formato del Documento</Label>
+                    <Select
+                      value={formatoSeleccionado}
+                      onValueChange={setFormatoSeleccionado}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un formato" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tramiteInfo.formatosDisponibles.map((formato) => (
+                          <SelectItem key={formato.id} value={formato.id}>
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">{formato.nombre}</div>
+                                <div className="text-sm text-gray-500">
+                                  {formato.descripcion}
+                                </div>
+                              </div>
+                              {formato.esRecomendado && (
+                                <Badge variant="secondary" className="ml-auto">
+                                  Recomendado
+                                </Badge>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Vista previa del formato seleccionado */}
+                    {formatoSeleccionado && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Eye className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-gray-700">
+                            Vista Previa del Formato
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {tramiteInfo.formatosDisponibles?.find(f => f.id === formatoSeleccionado)?.descripcion}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => {
+                            const formato = tramiteInfo.formatosDisponibles.find(f => f.id === formatoSeleccionado);
+                            if (formato) {
+                              window.open(`/documentos_legales/${formato.archivo}`, '_blank');
+                            }
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver Formato
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {tramiteInfo && (
                   <div className="mt-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
                     <h3 className="text-xl font-semibold text-blue-900 mb-4">
@@ -1538,10 +1788,196 @@ Este link permite acceder al documento legal generado desde cualquier dispositiv
                   </div>
                 )}
 
+                {/* Calculadora de Aranceles - Solo para compraventas */}
+                {tramiteSeleccionado === "compraventas" && (
+                  <Card className="bg-gray-50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2 text-gray-700">
+                        <DollarSign className="h-4 w-4 text-gray-500" />
+                        Calculadora de Aranceles
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600">
+                            Valor del inmueble
+                          </Label>
+                          <Input
+                            value={calculadoraAranceles.valorInmueble}
+                            onChange={(e) => setCalculadoraAranceles(prev => ({ ...prev, valorInmueble: e.target.value }))}
+                            placeholder="Ej: $500,000"
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600">
+                            Zona del inmueble
+                          </Label>
+                          <Select 
+                            value={calculadoraAranceles.zonaInmueble} 
+                            onValueChange={(value) => setCalculadoraAranceles(prev => ({ ...prev, zonaInmueble: value }))}
+                          >
+                            <SelectTrigger className="mt-1 h-8 text-sm">
+                              <SelectValue placeholder="Selecciona la zona" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="centro">Centro</SelectItem>
+                              <SelectItem value="zona-rio">Zona Río</SelectItem>
+                              <SelectItem value="otras">Otras zonas</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600">
+                            Estado civil
+                          </Label>
+                          <Select 
+                            value={calculadoraAranceles.estadoCivil} 
+                            onValueChange={(value) => setCalculadoraAranceles(prev => ({ ...prev, estadoCivil: value }))}
+                          >
+                            <SelectTrigger className="mt-1 h-8 text-sm">
+                              <SelectValue placeholder="Selecciona estado civil" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="soltero">Soltero</SelectItem>
+                              <SelectItem value="casado">Casado</SelectItem>
+                              <SelectItem value="divorciado">Divorciado</SelectItem>
+                              <SelectItem value="viudo">Viudo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600">
+                            ¿Utilizarás crédito bancario?
+                          </Label>
+                          <div className="flex gap-2 mt-1">
+                            <Button
+                              size="sm"
+                              variant={calculadoraAranceles.usarCredito ? "default" : "outline"}
+                              onClick={() => setCalculadoraAranceles(prev => ({ ...prev, usarCredito: true }))}
+                              className="h-8 text-xs"
+                            >
+                              Sí
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={!calculadoraAranceles.usarCredito ? "default" : "outline"}
+                              onClick={() => setCalculadoraAranceles(prev => ({ ...prev, usarCredito: false }))}
+                              className="h-8 text-xs"
+                            >
+                              No
+                            </Button>
+                          </div>
+                        </div>
+
+                        {calculadoraAranceles.valorInmueble && !isNaN(parseFloat(calculadoraAranceles.valorInmueble.replace(/[,$]/g, ''))) && (
+                          <div className="bg-white p-3 rounded border border-gray-200 space-y-2">
+                            {(() => {
+                              const valor = parseFloat(calculadoraAranceles.valorInmueble.replace(/[,$]/g, ''));
+                              const costos = calcularArancelesTotales(valor, calculadoraAranceles.usarCredito);
+                              
+                              return (
+                                <>
+                                  <div className="text-xs font-semibold text-gray-700 mb-2">Desglose de Aranceles</div>
+                                  
+                                  {/* ISAI */}
+                                  <div className="space-y-1">
+                                    <div className="text-xs font-medium text-gray-600">ISAI (Impuesto Sobre Adquisición de Inmuebles)</div>
+                                    <div className="text-xs space-y-0.5 ml-2">
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">ISAI por tramos:</span>
+                                        <span className="font-medium">${costos.isai.isai.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Sobretasa 0.4%:</span>
+                                        <span className="font-medium">${costos.isai.sobretasa.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between border-t pt-1 font-semibold">
+                                        <span className="text-gray-700">Subtotal ISAI:</span>
+                                        <span className="text-gray-900">${costos.isai.total.toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Honorarios Notariales */}
+                                  <div className="space-y-1">
+                                    <div className="text-xs font-medium text-gray-600">Honorarios Notariales</div>
+                                    <div className="text-xs space-y-0.5 ml-2">
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Compraventa (1.0%):</span>
+                                        <span className="font-medium">${costos.honorarios.compraventa.toLocaleString()}</span>
+                                      </div>
+                                      {calculadoraAranceles.usarCredito && (
+                                        <div className="flex justify-between">
+                                          <span className="text-gray-500">Hipoteca (0.5%):</span>
+                                          <span className="font-medium">${costos.honorarios.hipoteca.toLocaleString()}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Subtotal:</span>
+                                        <span className="font-medium">${costos.honorarios.subtotal.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">IVA (16%):</span>
+                                        <span className="font-medium">${costos.honorarios.iva.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between border-t pt-1 font-semibold">
+                                        <span className="text-gray-700">Total Honorarios:</span>
+                                        <span className="text-gray-900">${costos.honorarios.total.toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* RPPC */}
+                                  <div className="space-y-1">
+                                    <div className="text-xs font-medium text-gray-600">RPPC (Registro Público)</div>
+                                    <div className="text-xs space-y-0.5 ml-2">
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Análisis documento:</span>
+                                        <span className="font-medium">${costos.rppc.analisis.toLocaleString()}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Inscripción compraventa:</span>
+                                        <span className="font-medium">${costos.rppc.inscripcionCompraventa.toLocaleString()}</span>
+                                      </div>
+                                      {calculadoraAranceles.usarCredito && (
+                                        <div className="flex justify-between">
+                                          <span className="text-gray-500">Inscripción hipoteca:</span>
+                                          <span className="font-medium">${costos.rppc.inscripcionHipoteca.toLocaleString()}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-500">Certificados varios:</span>
+                                        <span className="font-medium">${(costos.rppc.certificadoInscripcion + costos.rppc.certificacionPartida + costos.rppc.certificadoNoInscripcion + costos.rppc.certificadoNoPropiedad).toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Total */}
+                                  <div className="border-t pt-2 mt-2">
+                                    <div className="flex justify-between text-sm font-bold">
+                                      <span className="text-gray-800">TOTAL ARANCELES:</span>
+                                      <span className="text-blue-600">${costos.total.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <div className="flex justify-end">
                   <Button
                     onClick={handleSiguiente}
-                    disabled={!tramiteSeleccionado}
+                    disabled={!tramiteSeleccionado || (tramiteInfo?.formatosDisponibles && !formatoSeleccionado)}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     Siguiente
@@ -1555,6 +1991,49 @@ Este link permite acceder al documento legal generado desde cualquier dispositiv
         {/* Paso 2: Gestión de Documentos y Datos (con pestañas) */}
         {pasoActual === 2 && (
           <div className="space-y-6">
+            {/* Mostrar aranceles calculados si existen */}
+            {calculadoraAranceles.costosCalculados && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-blue-900 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Aranceles Calculados
+                  </CardTitle>
+                  <CardDescription>
+                    Costos calculados para el trámite de compraventa
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-900">
+                        ${calculadoraAranceles.costosCalculados.total.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-blue-700">Total Aranceles</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-blue-900">
+                        ${calculadoraAranceles.costosCalculados.isai.total.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-blue-700">ISAI</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-blue-900">
+                        ${calculadoraAranceles.costosCalculados.honorarios.total.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-blue-700">Honorarios</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm text-blue-800">
+                    <p><strong>Valor del inmueble:</strong> ${calculadoraAranceles.valorInmueble}</p>
+                    <p><strong>Zona:</strong> {calculadoraAranceles.zonaInmueble}</p>
+                    <p><strong>Estado civil:</strong> {calculadoraAranceles.estadoCivil}</p>
+                    <p><strong>Crédito bancario:</strong> {calculadoraAranceles.usarCredito ? 'Sí' : 'No'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-blue-900">

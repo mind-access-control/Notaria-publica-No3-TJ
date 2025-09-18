@@ -123,9 +123,9 @@ export default function CitaSchedulingModal({
 
         <div className="space-y-6">
           {/* Información importante */}
-          <Alert className="border-emerald-200 bg-emerald-50">
-            <CheckCircle className="h-4 w-4 text-emerald-600" />
-            <AlertDescription className="text-emerald-800">
+          <Alert className="border-blue-200 bg-blue-50">
+            <CheckCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
               <strong>¡Excelente!</strong> Tu documento está listo para firma.
               Selecciona una cita que se ajuste a tu horario. La cita durará
               aproximadamente 60 minutos.
@@ -175,8 +175,8 @@ export default function CitaSchedulingModal({
                     key={cita.id}
                     className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
                       citaSeleccionada === cita.id
-                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200"
-                        : "border-gray-200 hover:border-emerald-300 hover:bg-gray-50"
+                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                        : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
                     }`}
                     onClick={() => setCitaSeleccionada(cita.id)}
                   >
@@ -209,12 +209,12 @@ export default function CitaSchedulingModal({
                       <div className="flex items-center gap-3">
                         <Badge
                           variant="outline"
-                          className="text-emerald-600 border-emerald-300"
+                          className="text-blue-600 border-blue-300"
                         >
                           Disponible
                         </Badge>
                         {citaSeleccionada === cita.id && (
-                          <CheckCircle className="h-5 w-5 text-emerald-600" />
+                          <CheckCircle className="h-5 w-5 text-blue-600" />
                         )}
                       </div>
                     </div>
@@ -242,7 +242,7 @@ export default function CitaSchedulingModal({
             <Button
               onClick={handleAgendarCita}
               disabled={!citaSeleccionada || agendando}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               {agendando ? (
                 <>

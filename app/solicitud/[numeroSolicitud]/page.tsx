@@ -312,6 +312,11 @@ export default function SolicitudStatusPage() {
             <StatusTracker
               estatusActual={solicitud.estatusActual}
               onStatusUpdate={handleStatusUpdate}
+              solicitud={solicitud}
+              onPagoClick={() => {
+                // El botón ahora redirige directamente a la página de pago
+                // No necesitamos lógica aquí
+              }}
             />
           </div>
 

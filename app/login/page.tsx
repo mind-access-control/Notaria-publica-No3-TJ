@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Chrome,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -31,6 +32,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUserTypeModal, setShowUserTypeModal] = useState(false);
+  const [googleUserType, setGoogleUserType] = useState<"cliente" | "licenciado" | null>(null);
 
   // Estados para login
   const [loginData, setLoginData] = useState({
@@ -117,6 +120,51 @@ export default function LoginPage() {
     } catch (err) {
       setError("Error interno del servidor");
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    // Simular autenticación con Google
+    setShowUserTypeModal(true);
+  };
+
+  const handleUserTypeSelection = async (userType: "cliente" | "licenciado") => {
+    setGoogleUserType(userType);
+    setShowUserTypeModal(false);
+    setIsSubmitting(true);
+
+    try {
+      // Simular login con Google
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Crear usuario simulado basado en el tipo seleccionado
+      const mockGoogleUser = {
+        id: `google-${Date.now()}`,
+        email: "usuario.google@gmail.com",
+        telefono: "+52 664 000 0000",
+        nombre: "Usuario Google",
+        password: "google-oauth",
+        role: userType === "licenciado" ? "notario" : "cliente",
+        activo: true,
+        fechaCreacion: new Date().toISOString(),
+        ultimoAcceso: new Date().toISOString(),
+      };
+
+      // Simular login exitoso
+      localStorage.setItem("authToken", btoa(JSON.stringify({ userId: mockGoogleUser.id, role: mockGoogleUser.role })));
+      localStorage.setItem("user", JSON.stringify(mockGoogleUser));
+      
+      // Redirigir directamente usando window.location para evitar interceptación del contexto
+      if (userType === "cliente") {
+        // Cliente va a su sección de cuenta
+        window.location.href = "/mi-cuenta";
+      } else {
+        // Licenciado va al perfil de licenciado
+        window.location.href = "/abogado";
+      }
+    } catch (err) {
+      setError("Error al autenticar con Google");
       setIsSubmitting(false);
     }
   };
@@ -245,6 +293,26 @@ export default function LoginPage() {
                     >
                       {isSubmitting ? "Iniciando sesión..." : "Iniciar Sesión"}
                     </Button>
+
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">O continúa con</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-gray-300 hover:bg-gray-50"
+                      onClick={handleGoogleLogin}
+                      disabled={isSubmitting}
+                    >
+                      <Chrome className="h-4 w-4 mr-2" />
+                      Google
+                    </Button>
                   </form>
 
                   <div className="mt-6 text-center">
@@ -257,7 +325,7 @@ export default function LoginPage() {
                         cliente123
                       </p>
                       <p>
-                        <strong>Notario:</strong>{" "}
+                        <strong>Licenciado:</strong>{" "}
                         maria.rodriguez@notaria3tijuana.com / notario123
                       </p>
                       <p>
@@ -356,7 +424,7 @@ export default function LoginPage() {
                         required
                       >
                         <option value="cliente">Cliente</option>
-                        <option value="notario">Notario/Abogado</option>
+                        <option value="notario">Licenciado</option>
                       </select>
                     </div>
 
@@ -424,6 +492,26 @@ export default function LoginPage() {
                     >
                       {isSubmitting ? "Registrando..." : "Registrarse"}
                     </Button>
+
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">O continúa con</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-gray-300 hover:bg-gray-50"
+                      onClick={handleGoogleLogin}
+                      disabled={isSubmitting}
+                    >
+                      <Chrome className="h-4 w-4 mr-2" />
+                      Google
+                    </Button>
                   </form>
                 </TabsContent>
               </Tabs>
@@ -432,6 +520,66 @@ export default function LoginPage() {
         </div>
       </div>
       <Footer />
+
+      {/* Modal para seleccionar tipo de usuario con Google */}
+      {showUserTypeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="text-center">Selecciona tu tipo de usuario</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600 text-center mb-6">
+                Para continuar con Google, selecciona el tipo de usuario que mejor describa tu rol:
+              </p>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleUserTypeSelection("cliente")}
+                  className="w-full h-16 text-left justify-start"
+                  variant="outline"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium">Cliente</div>
+                      <div className="text-sm text-gray-500">Solicito servicios notariales</div>
+                    </div>
+                  </div>
+                </Button>
+
+                <Button
+                  onClick={() => handleUserTypeSelection("licenciado")}
+                  className="w-full h-16 text-left justify-start"
+                  variant="outline"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium">Licenciado</div>
+                      <div className="text-sm text-gray-500">Proporciono servicios legales</div>
+                    </div>
+                  </div>
+                </Button>
+              </div>
+
+              <div className="pt-4 border-t">
+                <Button
+                  onClick={() => setShowUserTypeModal(false)}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

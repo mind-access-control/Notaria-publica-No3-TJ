@@ -60,6 +60,7 @@ export default function MiCuentaPage() {
   const [showCitaModal, setShowCitaModal] = useState(false);
   const [selectedSolicitudForCita, setSelectedSolicitudForCita] =
     useState<string>("");
+  const [arancelesCalculados, setArancelesCalculados] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -88,8 +89,18 @@ export default function MiCuentaPage() {
       }
     };
 
+    const cargarArancelesCalculados = () => {
+      try {
+        const datos = JSON.parse(localStorage.getItem("arancelesCalculados") || "[]");
+        setArancelesCalculados(datos);
+      } catch (error) {
+        console.error("Error cargando aranceles calculados:", error);
+      }
+    };
+
     cargarSolicitudes();
     cargarNotificaciones();
+    cargarArancelesCalculados();
 
     // Simular notificaciones demo - solo 2 únicas
     const simularNotificacionesDemo = () => {
@@ -339,13 +350,20 @@ export default function MiCuentaPage() {
 
           {/* Tabs */}
           <Tabs defaultValue="solicitudes" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger
                 value="solicitudes"
                 className="flex items-center gap-2"
               >
                 <FileText className="h-4 w-4" />
                 Mis Solicitudes
+              </TabsTrigger>
+              <TabsTrigger
+                value="aranceles"
+                className="flex items-center gap-2"
+              >
+                <DollarSign className="h-4 w-4" />
+                Aranceles
               </TabsTrigger>
               <TabsTrigger
                 value="nuevo-tramite"
@@ -483,6 +501,109 @@ export default function MiCuentaPage() {
                               Ver Detalles
                             </Button>
                           </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Tab: Aranceles Calculados */}
+            <TabsContent value="aranceles" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Aranceles Calculados
+                </h2>
+                <p className="text-sm text-gray-600">
+                  {arancelesCalculados.length} cálculo
+                  {arancelesCalculados.length !== 1 ? "s" : ""} encontrado
+                  {arancelesCalculados.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              {arancelesCalculados.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No hay aranceles calculados
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Los aranceles calculados aparecerán aquí cuando uses la calculadora
+                    </p>
+                    <Link href="/iniciar-tramite">
+                      <Button className="bg-emerald-600 hover:bg-emerald-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Calcular Aranceles
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-6">
+                  {arancelesCalculados.map((arancel, index) => (
+                    <Card key={arancel.id || index} className="border-l-4 border-l-blue-500">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg text-blue-900">
+                            {arancel.tramite === "compraventas" ? "Compraventa de Inmuebles" : arancel.tramite}
+                          </CardTitle>
+                          <Badge variant="outline" className="text-xs">
+                            {new Date(arancel.fechaCalculo).toLocaleDateString("es-MX")}
+                          </Badge>
+                        </div>
+                        <CardDescription>
+                          Cálculo de aranceles para trámite notarial
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Información del inmueble */}
+                          <div>
+                            <h4 className="font-semibold text-gray-900 mb-3">Información del Inmueble</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Valor:</span>
+                                <span className="font-medium">${arancel.valorInmueble}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Zona:</span>
+                                <span className="font-medium capitalize">{arancel.zonaInmueble}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Estado civil:</span>
+                                <span className="font-medium capitalize">{arancel.estadoCivil}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Crédito bancario:</span>
+                                <span className="font-medium">{arancel.usarCredito ? 'Sí' : 'No'}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Desglose de costos */}
+                          <div>
+                            <h4 className="font-semibold text-gray-900 mb-3">Desglose de Aranceles</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">ISAI:</span>
+                                <span className="font-medium">${arancel.costosCalculados.isai.total.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Honorarios:</span>
+                                <span className="font-medium">${arancel.costosCalculados.honorarios.total.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">RPPC:</span>
+                                <span className="font-medium">${(arancel.costosCalculados.rppc.inscripcionCompraventa + (arancel.usarCredito ? arancel.costosCalculados.rppc.inscripcionHipoteca : 0)).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between border-t pt-2 font-bold text-lg">
+                                <span className="text-gray-900">Total:</span>
+                                <span className="text-blue-600">${arancel.costosCalculados.total.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

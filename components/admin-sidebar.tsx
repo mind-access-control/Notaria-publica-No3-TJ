@@ -16,7 +16,6 @@ import {
   Settings,
   Eye,
   Wand2,
-  Scale,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -35,28 +34,16 @@ const navigationItems = [
     description: "Gestión de expedientes",
   },
   {
-    title: "Trámites",
-    href: "/admin/tramites",
-    icon: Scale,
-    description: "Configuración de trámites",
-  },
-  {
-    title: "Usuarios",
-    href: "/admin/usuarios",
-    icon: Users,
-    description: "Gestión de usuarios y roles",
+    title: "Formatos",
+    href: "/admin/formatos",
+    icon: Wand2,
+    description: "Plantillas de escrituras",
   },
   {
     title: "Citas",
     href: "/admin/citas",
     icon: Calendar,
     description: "Programación de citas",
-  },
-  {
-    title: "Formatos",
-    href: "/admin/formatos",
-    icon: Wand2,
-    description: "Plantillas de escrituras",
   },
   {
     title: "Cobros",
@@ -75,6 +62,12 @@ const navigationItems = [
     href: "/admin/reportes",
     icon: BarChart3,
     description: "Analytics y reportes",
+  },
+  {
+    title: "Usuarios",
+    href: "/admin/usuarios",
+    icon: Users,
+    description: "Gestión de usuarios y roles",
   },
 ];
 

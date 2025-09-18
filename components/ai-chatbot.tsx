@@ -1840,7 +1840,7 @@ export function AIChatbot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-3 sm:right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl"
+        className="fixed bottom-6 right-3 sm:right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-900 hover:from-blue-600 hover:to-blue-950 shadow-xl"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -1858,7 +1858,7 @@ export function AIChatbot() {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-white border-b border-slate-200 rounded-t-lg">
         <CardTitle className="text-lg font-semibold flex items-center gap-3 text-slate-800">
           <div className="relative">
-            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-900 rounded-full flex items-center justify-center">
               <Bot className="h-4 w-4 text-white" />
             </div>
           </div>
@@ -2046,13 +2046,13 @@ export function AIChatbot() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-3 text-xs hover:bg-emerald-50"
+                        className="h-7 px-3 text-xs hover:bg-blue-50"
                         onClick={() => toggleReaction(message.id, "thumbsUp")}
                       >
                         <ThumbsUp
                           className={`h-3 w-3 mr-1 ${
                             message.userReaction === "thumbsUp"
-                              ? "text-emerald-600"
+                              ? "text-blue-600"
                               : "text-slate-400"
                           }`}
                         />
@@ -2152,7 +2152,7 @@ export function AIChatbot() {
                       placeholder="Search emojis..."
                       value={emojiSearch}
                       onChange={(e) => setEmojiSearch(e.target.value)}
-                      className="pl-10 pr-4 h-10 border-slate-300 focus:border-emerald-500"
+                      className="pl-10 pr-4 h-10 border-slate-300 focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -2166,7 +2166,7 @@ export function AIChatbot() {
                       size="sm"
                       className={`px-4 py-2 text-xs whitespace-nowrap rounded-none border-b-2 ${
                         selectedEmojiCategory === key
-                          ? "border-emerald-500 text-emerald-600 bg-emerald-50"
+                          ? "border-blue-500 text-blue-600 bg-blue-50"
                           : "border-transparent text-slate-600 hover:text-slate-800"
                       }`}
                       onClick={() => setSelectedEmojiCategory(key)}
@@ -2275,7 +2275,7 @@ export function AIChatbot() {
                 disabled={isTyping}
                 className={`h-8 w-8 sm:h-10 sm:w-10 transition-all duration-200 ${
                   isSpeaking
-                    ? "bg-green-100 text-green-600 animate-pulse"
+                    ? "bg-blue-100 text-blue-600 animate-pulse"
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
                 title={isSpeaking ? "Detener audio" : "Repetir último mensaje"}
