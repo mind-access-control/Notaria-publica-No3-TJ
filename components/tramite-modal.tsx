@@ -323,8 +323,8 @@ const tramites = [
     name: "Elevación Judicial a Escritura Pública",
     icon: Scale,
     description: "Elevación de sentencia a escritura",
-    color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    iconColor: "text-emerald-600",
+    color: "bg-blue-50 border-blue-200 text-blue-700",
+    iconColor: "text-blue-600",
     estimatedCost: "$7,000 - $10,000",
     timeRequired: "2-3 horas",
     keywords: ["elevación", "judicial", "sentencia", "escritura", "juez"],
@@ -414,8 +414,8 @@ const tramites = [
     name: "Cancelación de Hipoteca",
     icon: CheckCircle,
     description: "Liberación de gravamen hipotecario",
-    color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    iconColor: "text-emerald-600",
+    color: "bg-blue-50 border-blue-200 text-blue-700",
+    iconColor: "text-blue-600",
     estimatedCost: "$3,500 - $5,500",
     timeRequired: "1-2 horas",
     keywords: ["cancelación", "hipoteca", "liberar", "pagar", "crédito"],
@@ -497,8 +497,8 @@ const tramites = [
     name: "Poderes",
     icon: Shield,
     description: "Representación legal confiable",
-    color: "bg-green-50 border-green-200 text-green-700",
-    iconColor: "text-green-600",
+    color: "bg-blue-50 border-blue-200 text-blue-700",
+    iconColor: "text-blue-600",
     estimatedCost: "$1,800 - $3,000",
     timeRequired: "30-60 minutos",
     keywords: ["poder", "representar", "apoderado", "facultades", "delegar"],
@@ -975,7 +975,7 @@ export function TramiteModal({
           {step === 2 && tramite && (
             <div className="space-y-6 mt-4 mb-8">
               {/* Información del trámite */}
-              <Card className="border-2 border-emerald-200 bg-emerald-50">
+              <Card className="border-2 border-blue-200 bg-blue-50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <tramite.icon
@@ -992,7 +992,7 @@ export function TramiteModal({
               </Card>
 
               {/* Párrafo de introducción */}
-              <div className="text-center px-4 py-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-100">
+              <div className="text-center px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-100">
                 <p className="text-gray-700 text-base leading-relaxed">
                   {tramite.id === "testamento" &&
                     "Proteger el futuro de tu familia es uno de los actos más importantes que puedes realizar. Un testamento bien estructurado garantiza que tus seres queridos estén protegidos y tus bienes se distribuyan según tus deseos."}
@@ -1124,7 +1124,7 @@ export function TramiteModal({
                   <ul className="space-y-2">
                     {tramite.requirements.map((req, index) => (
                       <li key={index} className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
                         <span className="text-sm">{req}</span>
                       </li>
                     ))}
@@ -1136,7 +1136,7 @@ export function TramiteModal({
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <DollarSign className="h-5 w-5 text-blue-600" />
                     Inversión Aproximada
                   </CardTitle>
                 </CardHeader>
@@ -1170,7 +1170,7 @@ export function TramiteModal({
                           <select
                             value={zonaInmueble}
                             onChange={(e) => setZonaInmueble(e.target.value)}
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="">Selecciona una zona</option>
                             <option value="centro">Centro (2.5%)</option>
@@ -1181,11 +1181,11 @@ export function TramiteModal({
                       </div>
 
                       {costoCalculado && (
-                        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                          <p className="text-lg font-bold text-green-600">
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <p className="text-lg font-bold text-blue-600">
                             ${costoCalculado.costo.toLocaleString()}
                           </p>
-                          <p className="text-xs text-green-600">
+                          <p className="text-xs text-blue-600">
                             Basado en {costoCalculado.porcentaje}% del valor del
                             inmueble
                           </p>
@@ -1195,7 +1195,7 @@ export function TramiteModal({
                   ) : (
                     <div className="space-y-3">
                       <div className="text-center">
-                        <p className="text-3xl font-bold text-green-600 mb-2">
+                        <p className="text-3xl font-bold text-blue-600 mb-2">
                           {tramite.estimatedCost}
                         </p>
                         <p className="text-sm text-gray-600">
@@ -1303,7 +1303,7 @@ export function TramiteModal({
                             <div className="border-t border-gray-300 pt-1 mt-2">
                               <div className="flex justify-between font-bold">
                                 <span>Total:</span>
-                                <span className="text-green-600">
+                                <span className="text-blue-600">
                                   $
                                   {obtenerDesgloseCosto(
                                     tramite.id
@@ -1332,7 +1332,7 @@ export function TramiteModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button
                     onClick={handleIniciarTramite}
-                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white"
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
                     size="lg"
                   >
                     <FileText className="h-6 w-6 flex-shrink-0" />
@@ -1351,7 +1351,7 @@ export function TramiteModal({
                   <Button
                     onClick={() => window.open("/citas", "_blank")}
                     variant="outline"
-                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 border-2 border-slate-300 hover:border-emerald-500 hover:bg-emerald-50"
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50"
                     size="lg"
                   >
                     <Calendar className="h-6 w-6 text-slate-600 flex-shrink-0" />
@@ -1372,14 +1372,14 @@ export function TramiteModal({
                   <Button
                     onClick={handleWhatsApp}
                     variant="outline"
-                    className="h-20 p-3 flex items-center gap-3 border-2 border-green-200 hover:border-green-500 hover:bg-green-50"
+                    className="h-20 p-3 flex items-center gap-3 border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
                   >
-                    <MessageCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <MessageCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
                     <div className="text-left min-w-0 flex-1">
-                      <div className="font-semibold text-green-700 text-sm leading-tight">
+                      <div className="font-semibold text-blue-700 text-sm leading-tight">
                         Enviar por WhatsApp
                       </div>
-                      <div className="text-xs text-green-600 leading-tight">
+                      <div className="text-xs text-blue-600 leading-tight">
                         Recibe información
                         <br />
                         instantánea
@@ -1413,7 +1413,7 @@ export function TramiteModal({
                 </div>
                 <Button
                   onClick={handleClose}
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Cerrar
                 </Button>

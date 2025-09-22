@@ -73,7 +73,7 @@ export function SolicitudInfo({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-emerald-600" />
+              <DollarSign className="h-5 w-5 text-blue-600" />
               Costos del Trámite
             </CardTitle>
           </CardHeader>
@@ -86,7 +86,7 @@ export function SolicitudInfo({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Pagado:</span>
-              <span className="font-semibold text-emerald-600">
+              <span className="font-semibold text-blue-600">
                 ${solicitud.pagosRealizados.toLocaleString("es-MX")}
               </span>
             </div>
@@ -94,7 +94,7 @@ export function SolicitudInfo({
               <span className="text-sm text-gray-600">Saldo pendiente:</span>
               <span
                 className={`font-semibold ${
-                  tieneSaldoPendiente ? "text-red-600" : "text-emerald-600"
+                  tieneSaldoPendiente ? "text-red-600" : "text-blue-600"
                 }`}
               >
                 ${solicitud.saldoPendiente.toLocaleString("es-MX")}
@@ -102,7 +102,7 @@ export function SolicitudInfo({
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${porcentajePagado}%` }}
               ></div>
             </div>

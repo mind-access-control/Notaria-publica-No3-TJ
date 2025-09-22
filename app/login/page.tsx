@@ -273,14 +273,14 @@ export default function LoginPage() {
                         size="sm"
                         onClick={() => {
                           setLoginData({
-                            email: "abogado@notaria3tijuana.com",
-                            password: "abogado123",
+                            email: "licenciado@notaria3tijuana.com",
+                            password: "licenciado123",
                           });
                         }}
                         className="text-xs justify-start"
                       >
                         <Shield className="h-3 w-3 mr-2" />
-                        Abogado: abogado@notaria3tijuana.com
+                        Licenciado: licenciado@notaria3tijuana.com
                       </Button>
                       <Button
                         type="button"

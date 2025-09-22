@@ -33,12 +33,12 @@ export function Header() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <nav className="sticky top-0 z-50 bg-gradient-to-r from-slate-800 via-blue-900 to-slate-900 backdrop-blur supports-[backdrop-filter]:bg-slate-800/95 border-b border-slate-700 shadow-xl">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center space-x-2">
-            <Shield className="h-8 w-8 text-primary" />
-            <div className="text-lg font-bold text-foreground">
+            <Shield className="h-8 w-8 text-white" />
+            <div className="text-lg font-bold text-white">
               Notaría Pública No. 3
             </div>
           </Link>
@@ -48,8 +48,8 @@ export function Header() {
               href="/"
               className={`transition-colors cursor-pointer px-3 py-2 rounded-md ${
                 isActive("/")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:text-primary hover:bg-primary/10"
+                  ? "bg-white/20 text-white"
+                  : "text-blue-100 hover:text-white hover:bg-white/10"
               }`}
             >
               Inicio
@@ -58,8 +58,8 @@ export function Header() {
               href="/servicios"
               className={`transition-colors cursor-pointer px-3 py-2 rounded-md ${
                 isActive("/servicios")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:text-primary hover:bg-primary/10"
+                  ? "bg-white/20 text-white"
+                  : "text-blue-100 hover:text-white hover:bg-white/10"
               }`}
             >
               Servicios
@@ -68,8 +68,8 @@ export function Header() {
               href="/nosotros"
               className={`transition-colors cursor-pointer px-3 py-2 rounded-md ${
                 isActive("/nosotros")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:text-primary hover:bg-primary/10"
+                  ? "bg-white/20 text-white"
+                  : "text-blue-100 hover:text-white hover:bg-white/10"
               }`}
             >
               Nosotros
@@ -78,8 +78,8 @@ export function Header() {
               href="/blog"
               className={`transition-colors cursor-pointer px-3 py-2 rounded-md ${
                 isActive("/blog")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:text-primary hover:bg-primary/10"
+                  ? "bg-white/20 text-white"
+                  : "text-blue-100 hover:text-white hover:bg-white/10"
               }`}
             >
               Blog
@@ -88,8 +88,8 @@ export function Header() {
               href="/contacto"
               className={`transition-colors cursor-pointer px-3 py-2 rounded-md ${
                 isActive("/contacto")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:text-primary hover:bg-primary/10"
+                  ? "bg-white/20 text-white"
+                  : "text-blue-100 hover:text-white hover:bg-white/10"
               }`}
             >
               Contacto
@@ -97,7 +97,7 @@ export function Header() {
             <Link href="/citas" className="cursor-pointer">
               <Button
                 size="sm"
-                className="bg-primary hover:bg-primary/90 cursor-pointer"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 cursor-pointer"
               >
                 Agendar Cita
               </Button>
@@ -106,8 +106,8 @@ export function Header() {
             {/* Botones de autenticación */}
             {isLoading ? (
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin"></div>
-                <span className="text-sm text-gray-600">Verificando...</span>
+                <div className="w-6 h-6 border-2 border-blue-300 border-t-white rounded-full animate-spin"></div>
+                <span className="text-sm text-blue-100">Verificando...</span>
               </div>
             ) : isAuthenticated ? (
               <DropdownMenu>
@@ -115,7 +115,7 @@ export function Header() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
                   >
                     <User className="h-4 w-4" />
                     {user?.nombre.split(" ")[0]}
@@ -150,7 +150,7 @@ export function Header() {
             ) : (
               <div className="flex items-center gap-2">
                 <Link href="/login">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
                     <LogIn className="h-4 w-4 mr-2" />
                     Iniciar Sesión
                   </Button>
@@ -160,7 +160,7 @@ export function Header() {
 
             <Link
               href="/login"
-              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-xs text-blue-200 hover:text-white transition-colors"
               title="Acceso Administrativo"
             >
               Admin

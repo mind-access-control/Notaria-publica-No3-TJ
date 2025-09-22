@@ -18,9 +18,9 @@ export function SolicitudHeader({ solicitud, userRole }: SolicitudHeaderProps) {
     switch (userRole) {
       case "admin":
         return "/admin";
-      case "abogado":
+      case "licenciado":
       case "notario":
-        return "/abogado";
+        return "/licenciado";
       case "cliente":
       default:
         return "/mi-cuenta";
@@ -31,7 +31,7 @@ export function SolicitudHeader({ solicitud, userRole }: SolicitudHeaderProps) {
     switch (userRole) {
       case "admin":
         return "Volver al Admin";
-      case "abogado":
+      case "licenciado":
       case "notario":
         return "Volver al Panel";
       case "cliente":
@@ -50,9 +50,9 @@ export function SolicitudHeader({ solicitud, userRole }: SolicitudHeaderProps) {
       case "APROBADO_PARA_FIRMA":
         return "bg-orange-100 text-orange-800 border-orange-200";
       case "LISTO_PARA_ENTREGA":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "COMPLETADO":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -68,7 +68,7 @@ export function SolicitudHeader({ solicitud, userRole }: SolicitudHeaderProps) {
   };
 
   return (
-    <Card className="border-2 border-emerald-200">
+    <Card className="border-2 border-blue-200">
       <CardHeader className="pb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -78,8 +78,8 @@ export function SolicitudHeader({ solicitud, userRole }: SolicitudHeaderProps) {
                 {getBackText()}
               </Button>
             </Link>
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-              <FileText className="h-6 w-6 text-emerald-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <FileText className="h-6 w-6 text-blue-600" />
             </div>
             <div>
               <CardTitle className="text-2xl text-gray-900">

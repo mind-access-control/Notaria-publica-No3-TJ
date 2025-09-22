@@ -254,7 +254,7 @@ export default function RealDocumentViewer({
               <div className="flex items-center gap-3">
                 <div>
                   <DialogTitle className="text-sm font-bold flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-emerald-600" />
+                    <FileText className="h-4 w-4 text-blue-600" />
                     {documento.nombre}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-gray-600">
@@ -273,7 +273,7 @@ export default function RealDocumentViewer({
                   <Badge
                     variant={documento.subido ? "default" : "outline"}
                     className={
-                      documento.subido ? "bg-green-100 text-green-800 text-xs" : "text-xs"
+                      documento.subido ? "bg-blue-100 text-blue-800 text-xs" : "text-xs"
                     }
                   >
                     {documento.subido ? "Completado" : "Pendiente"}
@@ -318,7 +318,7 @@ export default function RealDocumentViewer({
                 {isLoading && (
                   <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                     <div className="text-center">
-                      <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                       <p className="text-sm text-gray-600">
                         Cargando documento...
                       </p>
@@ -351,7 +351,7 @@ export default function RealDocumentViewer({
               {/* Header de pantalla completa */}
               <div className="flex items-center justify-between p-4 border-b bg-white">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-emerald-600" />
+                  <FileText className="h-5 w-5 text-blue-600" />
                   <span className="font-medium">{documento.nombre}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -375,7 +375,7 @@ export default function RealDocumentViewer({
                   {isLoading && (
                     <div className="h-full flex items-center justify-center">
                       <div className="text-center">
-                        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                         <p className="text-gray-600">Cargando documento...</p>
                       </div>
                     </div>

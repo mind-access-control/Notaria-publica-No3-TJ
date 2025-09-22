@@ -25,12 +25,12 @@ interface Notification {
 }
 
 interface NotificationsPanelProps {
-  abogadoId: string;
+  licenciadoId: string;
   isOpen: boolean;
   onToggle: () => void;
 }
 
-// Notificaciones mock para el abogado
+// Notificaciones mock para el licenciado
 const mockNotifications: Notification[] = [
   {
     id: "notif-001",
@@ -74,7 +74,7 @@ const mockNotifications: Notification[] = [
 ];
 
 export function NotificationsPanel({
-  abogadoId,
+  licenciadoId,
   isOpen,
   onToggle,
 }: NotificationsPanelProps) {
@@ -99,9 +99,9 @@ export function NotificationsPanel({
       case "documento":
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case "pago":
-        return <DollarSign className="h-4 w-4 text-green-500" />;
+        return <DollarSign className="h-4 w-4 text-blue-500" />;
       case "estado":
-        return <CheckCircle className="h-4 w-4 text-emerald-500" />;
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
       default:
         return <Bell className="h-4 w-4 text-gray-500" />;
     }
@@ -110,15 +110,15 @@ export function NotificationsPanel({
   const getNotificationColor = (tipo: string) => {
     switch (tipo) {
       case "asignacion":
-        return "bg-blue-50 border-blue-200";
+        return "bg-gradient-to-r from-slate-50 via-blue-50 to-slate-100 border-slate-300";
       case "documento":
-        return "bg-yellow-50 border-yellow-200";
+        return "bg-gradient-to-r from-slate-50 via-amber-50 to-slate-100 border-slate-300";
       case "pago":
-        return "bg-green-50 border-green-200";
+        return "bg-gradient-to-r from-slate-50 via-blue-50 to-slate-100 border-slate-300";
       case "estado":
-        return "bg-emerald-50 border-emerald-200";
+        return "bg-gradient-to-r from-slate-50 via-blue-50 to-slate-100 border-slate-300";
       default:
-        return "bg-gray-50 border-gray-200";
+        return "bg-gradient-to-r from-slate-50 to-slate-100 border-slate-300";
     }
   };
 
@@ -148,7 +148,7 @@ export function NotificationsPanel({
         variant="outline"
         size="sm"
         onClick={onToggle}
-        className="fixed top-4 right-4 z-50 bg-white shadow-lg hover:bg-gray-50"
+        className="fixed top-4 right-4 z-50 bg-gradient-to-r from-slate-50 via-blue-50 to-slate-100 border-slate-300 text-slate-800 shadow-lg hover:from-slate-100 hover:to-blue-100"
       >
         <Bell className="h-4 w-4 mr-2" />
         {unreadCount > 0 && (
@@ -161,11 +161,11 @@ export function NotificationsPanel({
       {/* Panel colapsable */}
       {isOpen && (
         <div className="fixed top-16 right-4 z-40 w-80 max-h-[calc(100vh-5rem)] overflow-y-auto">
-          <Card className="shadow-xl border-2">
-            <CardHeader className="pb-3">
+          <Card className="shadow-xl border-2 bg-gradient-to-br from-white via-slate-50 to-blue-50 border-slate-200">
+            <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 via-blue-50 to-slate-100 border-b border-slate-200">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-emerald-600" />
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-900">
+                  <Bell className="h-5 w-5 text-blue-600" />
                   ALERTAS
                   {unreadCount > 0 && (
                     <Badge variant="destructive" className="ml-2">
@@ -197,7 +197,7 @@ export function NotificationsPanel({
                       className={`p-3 rounded-lg border ${getNotificationColor(
                         notification.tipo
                       )} ${
-                        !notification.leida ? "ring-2 ring-emerald-200" : ""
+                        !notification.leida ? "ring-2 ring-blue-200" : ""
                       }`}
                     >
                       <div className="flex items-start gap-3">

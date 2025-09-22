@@ -55,7 +55,7 @@ interface Usuario {
   apellidoMaterno: string;
   email: string;
   telefono: string;
-  rol: "admin" | "notario" | "abogado" | "asistente" | "contador";
+  rol: "admin" | "notario" | "licenciado" | "asistente" | "contador";
   permisos: string[];
   activo: boolean;
   fechaCreacion: string;
@@ -141,7 +141,7 @@ const usuariosIniciales: Usuario[] = [
     apellidoMaterno: "Ruiz",
     email: "ana.garcia@notaria.com",
     telefono: "6643456789",
-    rol: "abogado",
+    rol: "licenciado",
     permisos: ["ver_expedientes", "revisar_documentos", "asignar_tareas"],
     activo: true,
     fechaCreacion: "2024-01-05",
@@ -202,9 +202,9 @@ const rolesDisponibles: Rol[] = [
     activo: true,
   },
   {
-    id: "abogado",
-    nombre: "Abogado",
-    descripcion: "Abogado con permisos de revisión y asesoría",
+    id: "licenciado",
+    nombre: "Licenciado",
+    descripcion: "Licenciado con permisos de revisión y asesoría",
     permisos: [
       "ver_expedientes",
       "revisar_documentos",
@@ -404,7 +404,7 @@ export default function GestionUsuarios() {
         return "bg-red-100 text-red-800";
       case "notario":
         return "bg-blue-100 text-blue-800";
-      case "abogado":
+      case "licenciado":
         return "bg-green-100 text-green-800";
       case "asistente":
         return "bg-yellow-100 text-yellow-800";
@@ -421,7 +421,7 @@ export default function GestionUsuarios() {
         return <Shield className="h-4 w-4" />;
       case "notario":
         return <User className="h-4 w-4" />;
-      case "abogado":
+      case "licenciado":
         return <UserCheck className="h-4 w-4" />;
       case "asistente":
         return <Users className="h-4 w-4" />;

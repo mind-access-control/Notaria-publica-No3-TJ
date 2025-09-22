@@ -1,4 +1,4 @@
-export type UserRole = "cliente" | "notario" | "abogado" | "cajero" | "admin";
+export type UserRole = "cliente" | "notario" | "licenciado" | "cajero" | "admin";
 
 export interface User {
   id: string;
@@ -10,9 +10,9 @@ export interface User {
   activo: boolean;
   fechaCreacion: string;
   ultimoAcceso?: string;
-  solicitudesAsignadas?: string[]; // Para notarios y abogados
+  solicitudesAsignadas?: string[]; // Para notarios y licenciados
   permisos?: string[]; // Permisos específicos del usuario
-  especialidades?: string[]; // Para abogados y notarios
+  especialidades?: string[]; // Para licenciados y notarios
 }
 
 export interface LoginCredentials {
@@ -59,12 +59,12 @@ export const mockUsers: User[] = [
     ],
   },
   {
-    id: "abogado-1",
-    email: "abogado@notaria3tijuana.com",
+    id: "licenciado-1",
+    email: "licenciado@notaria3tijuana.com",
     telefono: "+52 664 555 1111",
     nombre: "Carlos López Martínez",
-    password: "abogado123",
-    role: "abogado",
+    password: "licenciado123",
+    role: "licenciado",
     activo: true,
     fechaCreacion: "2025-01-01",
     ultimoAcceso: "2025-01-15",

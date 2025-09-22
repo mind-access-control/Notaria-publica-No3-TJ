@@ -24,9 +24,9 @@ export const expedientesMock: ExpedienteCompraventa[] = [
     tipoTramite: "compraventa",
     comprador: {
       id: "comp-001",
-      nombre: "Juan Carlos",
-      apellidoPaterno: "Pérez",
-      apellidoMaterno: "García",
+      nombre: "Jonathan Ruben",
+      apellidoPaterno: "Hernandez",
+      apellidoMaterno: "Gonzalez",
       fechaNacimiento: "1986-07-02",
       lugarNacimiento: "Tijuana, B.C.",
       estadoCivil: "casado",
@@ -106,58 +106,105 @@ export const expedientesMock: ExpedienteCompraventa[] = [
     documentos: [
       {
         id: "doc-001",
-        tipo: "identificacion_comprador",
-        nombre: "INE_Juan_Perez.pdf",
-        fechaSubida: "2025-01-15T10:35:00Z",
-        estado: "validado",
-        datosExtraidos: {
-          tipoDocumento: "identificacion_comprador",
-          datosPersonales: {
-            nombre: "Juan Carlos",
-            apellidoPaterno: "Pérez",
-            apellidoMaterno: "García",
-            fechaNacimiento: "1986-07-02",
-            curp: "HEGJ860702HMCRNN07",
-          },
-          confianza: 95,
-          camposExtraidos: [
-            "nombre",
-            "apellidoPaterno",
-            "apellidoMaterno",
-            "fechaNacimiento",
-            "curp",
-          ],
-          camposFaltantes: ["rfc", "telefono", "email"],
-        },
+        tipo: "identificacion_oficial",
+        nombre: "Identificación Oficial",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "INE o pasaporte vigente",
+        requerido: true,
       },
       {
         id: "doc-002",
-        tipo: "identificacion_vendedor",
-        nombre: "INE_Maria_Rodriguez.pdf",
-        fechaSubida: "2025-01-15T10:40:00Z",
-        estado: "validado",
-        datosExtraidos: {
-          tipoDocumento: "identificacion_vendedor",
-          datosPersonales: {
-            nombre: "María Elena",
-            apellidoPaterno: "Rodríguez",
-            apellidoMaterno: "López",
-            fechaNacimiento: "1975-03-15",
-            curp: "ROLM750315MBCDPR01",
-          },
-          confianza: 92,
-          camposExtraidos: [
-            "nombre",
-            "apellidoPaterno",
-            "apellidoMaterno",
-            "fechaNacimiento",
-            "curp",
-          ],
-          camposFaltantes: ["rfc", "telefono", "email"],
-        },
+        tipo: "curp",
+        nombre: "CURP",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Clave Única de Registro de Población",
+        requerido: true,
+      },
+      {
+        id: "doc-003",
+        tipo: "rfc_csf",
+        nombre: "RFC y Constancia de Situación Fiscal (CSF)",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal",
+        requerido: true,
+      },
+      {
+        id: "doc-004",
+        tipo: "acta_nacimiento",
+        nombre: "Acta de Nacimiento",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Acta de nacimiento reciente o legible",
+        requerido: true,
+      },
+      {
+        id: "doc-005",
+        tipo: "comprobante_domicilio",
+        nombre: "Comprobante de Domicilio",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Agua/luz/estado de cuenta, no mayor a 3 meses",
+        requerido: true,
+      },
+      {
+        id: "doc-006",
+        tipo: "datos_bancarios",
+        nombre: "Datos Bancarios",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "CLABE y banco para dispersión y comprobación de fondos",
+        requerido: true,
+      },
+      {
+        id: "doc-007",
+        tipo: "acta_matrimonio",
+        nombre: "Acta de Matrimonio",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Acta de matrimonio (si aplica)",
+        requerido: false,
+      },
+      {
+        id: "doc-008",
+        tipo: "carta_oferta_banco",
+        nombre: "Carta Oferta / Condiciones del Banco",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Carta oferta o condiciones del banco",
+        requerido: true,
+      },
+      {
+        id: "doc-009",
+        tipo: "avaluo_bancario",
+        nombre: "Avalúo Bancario",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
+        requerido: false,
+      },
+      {
+        id: "doc-010",
+        tipo: "polizas_credito",
+        nombre: "Pólizas Requeridas por el Crédito",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Pólizas de vida/daños, si aplican",
+        requerido: false,
+      },
+      {
+        id: "doc-011",
+        tipo: "instrucciones_dispersion",
+        nombre: "Instrucciones de Dispersión del Banco",
+        fechaSubida: null,
+        estado: "pendiente",
+        descripcion: "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca",
+        requerido: true,
       },
     ],
-    abogadoAsignado: "abogado-1",
+    licenciadoAsignado: "licenciado-1",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -294,7 +341,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-2",
+    licenciadoAsignado: "licenciado-2",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -462,7 +509,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-2",
+    licenciadoAsignado: "licenciado-2",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -686,7 +733,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-2",
+    licenciadoAsignado: "licenciado-2",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -896,7 +943,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "subido",
       },
     ],
-    abogadoAsignado: "abogado-1",
+    licenciadoAsignado: "licenciado-1",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -1074,7 +1121,7 @@ export const expedientesMock: ExpedienteCompraventa[] = [
         estado: "validado",
       },
     ],
-    abogadoAsignado: "abogado-1",
+    licenciadoAsignado: "licenciado-1",
     notarioAsignado: "notario-1",
     cajeroAsignado: "cajero-1",
     costos: {
@@ -1175,9 +1222,9 @@ export const getExpedientesByEstado = (
 
 // Función para obtener expedientes por abogado asignado
 export const getExpedientesByAbogado = (
-  abogadoId: string
+  licenciadoId: string
 ): ExpedienteCompraventa[] => {
-  return expedientesMock.filter((exp) => exp.abogadoAsignado === abogadoId);
+  return expedientesMock.filter((exp) => exp.licenciadoAsignado === licenciadoId);
 };
 
 // Función para obtener expediente por ID

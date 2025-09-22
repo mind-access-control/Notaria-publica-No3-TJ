@@ -16,11 +16,11 @@ export function SolicitudHistory({ solicitud }: SolicitudHistoryProps) {
     if (statusLower.includes('creada') || statusLower.includes('iniciada')) {
       return <FileText className="h-4 w-4 text-blue-600" />;
     } else if (statusLower.includes('completado') || statusLower.includes('finalizado')) {
-      return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
+      return <CheckCircle2 className="h-4 w-4 text-blue-600" />;
     } else if (statusLower.includes('revisión') || statusLower.includes('revision')) {
       return <Clock className="h-4 w-4 text-yellow-600" />;
     } else if (statusLower.includes('aprobado') || statusLower.includes('firma')) {
-      return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      return <CheckCircle2 className="h-4 w-4 text-blue-600" />;
     } else {
       return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -32,11 +32,11 @@ export function SolicitudHistory({ solicitud }: SolicitudHistoryProps) {
     if (statusLower.includes('creada') || statusLower.includes('iniciada')) {
       return 'bg-blue-100 text-blue-800 border-blue-200';
     } else if (statusLower.includes('completado') || statusLower.includes('finalizado')) {
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      return 'bg-blue-100 text-blue-800 border-blue-200';
     } else if (statusLower.includes('revisión') || statusLower.includes('revision')) {
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     } else if (statusLower.includes('aprobado') || statusLower.includes('firma')) {
-      return 'bg-green-100 text-green-800 border-green-200';
+      return 'bg-blue-100 text-blue-800 border-blue-200';
     } else {
       return 'bg-gray-100 text-gray-800 border-gray-200';
     }

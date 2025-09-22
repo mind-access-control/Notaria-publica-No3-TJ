@@ -12,38 +12,38 @@ import {
 
 export function Footer() {
   return (
-    <footer className="bg-card border-t border-border">
+    <footer className="bg-gradient-to-r from-slate-800 via-blue-900 to-slate-900 border-t border-slate-700">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-primary" />
-              <div className="text-lg font-bold text-foreground">
+              <Shield className="h-8 w-8 text-white" />
+              <div className="text-lg font-bold text-white">
                 Notaría Pública No. 3
               </div>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <p className="text-blue-100 text-sm leading-relaxed">
               Servicios notariales profesionales en Tijuana con más de 20 años
               de experiencia. Selecciona tu trámite y te guiamos paso a paso.
             </p>
             <div className="flex space-x-4">
-              <Facebook className="h-8 w-8 text-primary hover:text-primary-foreground cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-primary p-2 rounded-lg border border-primary/20" />
-              <Instagram className="h-8 w-8 text-primary hover:text-primary-foreground cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-primary p-2 rounded-lg border border-primary/20" />
-              <Linkedin className="h-8 w-8 text-primary hover:text-primary-foreground cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-primary p-2 rounded-lg border border-primary/20" />
+              <Facebook className="h-8 w-8 text-white hover:text-blue-200 cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-white/20 p-2 rounded-lg border border-white/30" />
+              <Instagram className="h-8 w-8 text-white hover:text-blue-200 cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-white/20 p-2 rounded-lg border border-white/30" />
+              <Linkedin className="h-8 w-8 text-white hover:text-blue-200 cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-white/20 p-2 rounded-lg border border-white/30" />
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">
+            <h3 className="text-lg font-semibold text-white">
               Enlaces Rápidos
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/citas"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
+                  className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
                 >
                   Agendar Cita
                 </Link>
@@ -51,7 +51,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/continuar-tramite"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
+                  className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
                 >
                   Continuar Trámite
                 </Link>
@@ -59,7 +59,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/contacto"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
+                  className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
                 >
                   Contacto
                 </Link>
@@ -67,7 +67,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/formatos"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
+                  className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
                 >
                   Formatos
                 </Link>
@@ -77,7 +77,7 @@ export function Footer() {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Contacto</h3>
+            <h3 className="text-lg font-semibold text-white">Contacto</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-primary mt-0.5" />
@@ -91,7 +91,7 @@ export function Footer() {
                 <Phone className="h-4 w-4 text-primary" />
                 <a
                   href="tel:+526641234567"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
+                  className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
                 >
                   (664) 123-4567
                 </a>
@@ -100,7 +100,7 @@ export function Footer() {
                 <Mail className="h-4 w-4 text-primary" />
                 <a
                   href="mailto:info@notaria3tijuana.com"
-                  className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-2 py-1 rounded"
+                  className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-2 py-1 rounded"
                 >
                   info@notaria3tijuana.com
                 </a>
@@ -116,22 +116,22 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8">
+        <div className="border-t border-slate-600 mt-8 pt-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-muted-foreground text-sm">
+            <p className="text-blue-100 text-sm">
               © 2024 Notaría Pública No. 3 Tijuana. Todos los derechos
               reservados.
             </p>
             <div className="flex gap-6 text-sm">
               <Link
                 href="/aviso-privacidad"
-                className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-3 py-1 rounded"
+                className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-3 py-1 rounded"
               >
                 Aviso de Privacidad
               </Link>
               <Link
                 href="/terminos-condiciones"
-                className="text-muted-foreground hover:text-primary transition-all duration-200 cursor-pointer hover:bg-primary/10 px-3 py-1 rounded"
+                className="text-blue-100 hover:text-white transition-all duration-200 cursor-pointer hover:bg-white/10 px-3 py-1 rounded"
               >
                 Términos y Condiciones
               </Link>

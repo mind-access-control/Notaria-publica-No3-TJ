@@ -73,7 +73,7 @@
 En la página de login (`/login`), ahora encontrarás **botones interactivos** en lugar de texto estático:
 
 - **👤 Cliente** - Autocompleta: `cliente@notaria3tijuana.com / cliente123`
-- **🛡️ Abogado** - Autocompleta: `abogado@notaria3tijuana.com / abogado123`
+- **🛡️ Licenciado** - Autocompleta: `licenciado@notaria3tijuana.com / licenciado123`
 - **🛡️ Notario** - Autocompleta: `maria.rodriguez@notaria3tijuana.com / notario123`
 - **👤 Cajero** - Autocompleta: `cajero@notaria3tijuana.com / cajero123`
 - **🛡️ Admin** - Autocompleta: `admin@notaria3tijuana.com / admin123`
@@ -126,15 +126,15 @@ En la página de login (`/login`), ahora encontrarás **botones interactivos** e
    - Escritura pública
    - CLG (Certificado de Libertad de Gravamen)
 
-### Paso 5: Acceso como Abogado
+### Paso 5: Acceso como Licenciado
 
 1. **Cerrar sesión del cliente**
-2. **Hacer clic en el botón "Abogado"** en la sección "Credenciales de prueba"
+2. **Hacer clic en el botón "Licenciado"** en la sección "Credenciales de prueba"
    - Los campos se llenarán automáticamente
-   - Email: `abogado@notaria3tijuana.com`
-   - Password: `abogado123`
+   - Email: `licenciado@notaria3tijuana.com`
+   - Password: `licenciado123`
 3. **Hacer clic en "Iniciar Sesión"**
-4. **Verificar redirección a:** `/abogado`
+4. **Verificar redirección a:** `/licenciado`
 
 ### Paso 6: Gestión en Dashboard Kanban
 
@@ -159,7 +159,7 @@ En la página de login (`/login`), ahora encontrarás **botones interactivos** e
 
 ### Paso 8: Acceso como Cajero
 
-1. **Cerrar sesión del abogado**
+1. **Cerrar sesión del licenciado**
 2. **Hacer clic en el botón "Cajero"** en la sección "Credenciales de prueba"
    - Los campos se llenarán automáticamente
    - Email: `cajero@notaria3tijuana.com`
@@ -199,8 +199,8 @@ En la página de login (`/login`), ahora encontrarás **botones interactivos** e
 | Rol     | Email                       | Password   | Redirección   |
 | ------- | --------------------------- | ---------- | ------------- |
 | Cliente | cliente@notaria3tijuana.com | cliente123 | /mi-cuenta    |
-| Abogado | abogado@notaria3tijuana.com | abogado123 | /abogado      |
-| Notario | notario@notaria3tijuana.com | notario123 | /abogado      |
+| Licenciado | licenciado@notaria3tijuana.com | licenciado123 | /licenciado      |
+| Notario | notario@notaria3tijuana.com | notario123 | /licenciado      |
 | Cajero  | cajero@notaria3tijuana.com  | cajero123  | /admin/cobros |
 | Admin   | admin@notaria3tijuana.com   | admin123   | /admin        |
 

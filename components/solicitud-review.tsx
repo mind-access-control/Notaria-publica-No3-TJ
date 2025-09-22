@@ -227,7 +227,7 @@ export function SolicitudReview({
     onStatusUpdate(newStatus);
     // Redirigir después de cambiar estatus
     setTimeout(() => {
-      router.push("/abogado");
+      router.push("/licenciado");
     }, 1000);
   };
 
@@ -274,7 +274,7 @@ export function SolicitudReview({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "reviewed":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-blue-500" />;
       case "needs_correction":
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
@@ -285,7 +285,7 @@ export function SolicitudReview({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "reviewed":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "needs_correction":
         return "bg-red-100 text-red-800 border-red-200";
       default:
@@ -302,7 +302,7 @@ export function SolicitudReview({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
-              onClick={() => router.push("/abogado")}
+              onClick={() => router.push("/licenciado")}
               variant="outline"
               size="sm"
             >
@@ -330,7 +330,7 @@ export function SolicitudReview({
                       setSelectedMainDocument(getMainDocument());
                       setShowDocumentModal(true);
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Ver{" "}
@@ -393,7 +393,7 @@ export function SolicitudReview({
                         <span className="font-medium text-gray-600 capitalize">
                           {key.replace(/([A-Z])/g, " $1").trim()}:
                         </span>
-                        <span className="text-gray-900">{value}</span>
+                        <span className="text-gray-900">{String(value)}</span>
                       </div>
                     ))}
                   </div>
@@ -459,7 +459,7 @@ export function SolicitudReview({
                       onClick={() =>
                         handleSectionReview(section.id, "reviewed")
                       }
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-blue-600 hover:bg-blue-700"
                     >
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Aprobar
@@ -631,7 +631,7 @@ export function SolicitudReview({
                   id={key}
                   value={value as string}
                   onChange={(e) =>
-                    setEditingData((prev) => ({
+                    setEditingData((prev: any) => ({
                       ...prev,
                       [key]: e.target.value,
                     }))

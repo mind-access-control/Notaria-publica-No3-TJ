@@ -14,7 +14,7 @@ export interface UserNotification {
   citaId?: string;
   acciones?: {
     texto: string;
-    accion: "agendar_cita" | "ver_documento" | "contactar_abogado";
+    accion: "agendar_cita" | "ver_documento" | "contactar_licenciado";
   }[];
 }
 

@@ -100,9 +100,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               window.location.href = "/admin";
             } else if (
               response.user?.role === "notario" ||
-              response.user?.role === "abogado"
+              response.user?.role === "licenciado"
             ) {
-              window.location.href = "/abogado";
+              window.location.href = "/licenciado";
             } else if (response.user?.role === "cajero") {
               window.location.href = "/admin/cobros";
             } else {
@@ -159,8 +159,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Para admin, permitir acceso a todas las solicitudes
     if (user.role === "admin") return true;
 
-    // Para notarios y abogados, permitir acceso a todas las solicitudes asignadas
-    if (user.role === "notario" || user.role === "abogado") {
+    // Para notarios y licenciados, permitir acceso a todas las solicitudes asignadas
+    if (user.role === "notario" || user.role === "licenciado") {
       return true; // Temporalmente permitir acceso a todas las solicitudes
     }
 

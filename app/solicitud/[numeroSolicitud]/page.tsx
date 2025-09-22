@@ -60,8 +60,8 @@ const PASOS_FLUJO = [
     completado: false,
   },
   {
-    id: "validacion_abogado",
-    titulo: "Validación por Abogado",
+    id: "validacion_licenciado",
+    titulo: "Validación por Licenciado",
     descripcion: "Revisión y validación de documentos por el equipo legal",
     completado: false,
   },
@@ -538,7 +538,7 @@ export default function SolicitudStatusPage() {
     PASOS_FLUJO[3].completado = true;
     PASOS_FLUJO[3].activo = false;
 
-    // Activar paso 5 (validacion_abogado)
+    // Activar paso 5 (validacion_licenciado)
     PASOS_FLUJO[4].activo = true;
   };
 
@@ -1179,7 +1179,7 @@ export default function SolicitudStatusPage() {
                             </div>
                             <p className="text-sm text-gray-600">
                               {paymentCompleted
-                                ? "El abogado revisará tus documentos y validará la información."
+                                ? "El Licenciado revisará tus documentos y validará la información."
                                 : documentos.filter((doc) => doc.subido)
                                     .length === documentos.length
                                 ? "Realiza el pago inicial para activar tu solicitud."

@@ -14,7 +14,7 @@ export interface Cita {
   sala: string;
   estado: "PROGRAMADA" | "EN_CURSO" | "COMPLETADA" | "CANCELADA";
   notas?: string;
-  abogadoId: string;
+  licenciadoId: string;
 }
 
 // Función para generar hora actual + minutos
@@ -44,7 +44,7 @@ export const citas: Cita[] = [
     sala: "Sala de Audiencias A",
     estado: "PROGRAMADA",
     notas: "Revisión de documentos y firma del testamento",
-    abogadoId: "notario-1",
+    licenciadoId: "notario-1",
   },
   {
     id: "CITA-002",
@@ -62,7 +62,7 @@ export const citas: Cita[] = [
     sala: "Sala de Audiencias B",
     estado: "PROGRAMADA",
     notas: "Firma de escritura de compraventa de inmueble",
-    abogadoId: "notario-1",
+    licenciadoId: "notario-1",
   },
   {
     id: "CITA-003",
@@ -80,7 +80,7 @@ export const citas: Cita[] = [
     sala: "Sala de Audiencias A",
     estado: "PROGRAMADA",
     notas: "Otorgamiento de poder notarial para gestión de bienes",
-    abogadoId: "notario-1",
+    licenciadoId: "notario-1",
   },
   {
     id: "CITA-004",
@@ -98,7 +98,7 @@ export const citas: Cita[] = [
     sala: "Sala de Audiencias C",
     estado: "PROGRAMADA",
     notas: "Revisión y firma de testamento",
-    abogadoId: "notario-1",
+    licenciadoId: "notario-1",
   },
   {
     id: "CITA-005",
@@ -116,7 +116,7 @@ export const citas: Cita[] = [
     sala: "Sala de Audiencias B",
     estado: "PROGRAMADA",
     notas: "Firma de escritura de donación de vehículo",
-    abogadoId: "notario-1",
+    licenciadoId: "notario-1",
   },
   {
     id: "CITA-006",
@@ -134,49 +134,49 @@ export const citas: Cita[] = [
     sala: "Sala de Audiencias A",
     estado: "COMPLETADA",
     notas: "Poder notarial para representación legal",
-    abogadoId: "notario-1",
+    licenciadoId: "notario-1",
   },
 ];
 
-// Función para obtener citas de un abogado
+// Función para obtener citas de un licenciado
 export const getCitasAbogado = async (
-  abogadoId: string,
+  licenciadoId: string,
   fecha?: string
 ): Promise<Cita[]> => {
   // Simular delay de API
   await new Promise((resolve) => setTimeout(resolve, 300));
 
-  let citasAbogado = citas.filter((cita) => cita.abogadoId === abogadoId);
+  let citasLicenciado = citas.filter((cita) => cita.licenciadoId === licenciadoId);
 
   // Si se especifica una fecha, filtrar por esa fecha
   if (fecha) {
-    citasAbogado = citasAbogado.filter((cita) => cita.fecha === fecha);
+    citasLicenciado = citasLicenciado.filter((cita) => cita.fecha === fecha);
   }
 
   // Ordenar por fecha y hora
-  citasAbogado.sort((a, b) => {
+  citasLicenciado.sort((a, b) => {
     const fechaA = new Date(`${a.fecha} ${a.hora}`);
     const fechaB = new Date(`${b.fecha} ${b.hora}`);
     return fechaA.getTime() - fechaB.getTime();
   });
 
-  return citasAbogado;
+  return citasLicenciado;
 };
 
 // Función para obtener citas del día actual
-export const getCitasHoy = async (abogadoId: string): Promise<Cita[]> => {
+export const getCitasHoy = async (licenciadoId: string): Promise<Cita[]> => {
   const hoy = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  return getCitasAbogado(abogadoId, hoy);
+  return getCitasAbogado(licenciadoId, hoy);
 };
 
 // Función para obtener próximas citas (próximas 2 horas)
-export const getProximasCitas = async (abogadoId: string): Promise<Cita[]> => {
+export const getProximasCitas = async (licenciadoId: string): Promise<Cita[]> => {
   const ahora = new Date();
   const en2Horas = new Date(ahora.getTime() + 2 * 60 * 60 * 1000);
 
-  const citasAbogado = await getCitasAbogado(abogadoId);
+  const citasLicenciado = await getCitasAbogado(licenciadoId);
 
-  return citasAbogado.filter((cita) => {
+  return citasLicenciado.filter((cita) => {
     const fechaCita = new Date(`${cita.fecha} ${cita.hora}`);
     return (
       fechaCita >= ahora &&

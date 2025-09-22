@@ -48,8 +48,8 @@ export default function HomePage() {
     if (!isLoading && isAuthenticated) {
       if (user?.role === "admin") {
         router.push("/admin");
-      } else if (user?.role === "notario" || user?.role === "abogado") {
-        router.push("/abogado");
+      } else if (user?.role === "notario" || user?.role === "licenciado") {
+        router.push("/licenciado");
       } else {
         router.push("/mi-cuenta");
       }

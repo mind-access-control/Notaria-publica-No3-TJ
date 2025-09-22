@@ -125,7 +125,7 @@ export const solicitudes: Solicitud[] = [
       telefono: "+52 664 123 4567",
     },
     notario: {
-      id: "abogado-1",
+      id: "licenciado-1",
       nombre: "Carlos López Martínez",
       email: "carlos.lopez@notaria3tijuana.com",
       telefono: "+52 664 555 1111",
@@ -134,7 +134,7 @@ export const solicitudes: Solicitud[] = [
     pagosRealizados: 5000,
     saldoPendiente: 10000,
   },
-  // Solicitudes de ejemplo para el abogado
+  // Solicitudes de ejemplo para el licenciado
   {
     numeroSolicitud: "NT3-2025-00124",
     tipoTramite: "Escritura de Compraventa",
@@ -205,7 +205,7 @@ export const solicitudes: Solicitud[] = [
       telefono: "+52 664 234 5678",
     },
     notario: {
-      id: "abogado-1",
+      id: "licenciado-1",
       nombre: "Carlos López Martínez",
       email: "carlos.lopez@notaria3tijuana.com",
       telefono: "+52 664 555 1111",
@@ -279,7 +279,7 @@ export const solicitudes: Solicitud[] = [
       telefono: "+52 664 345 6789",
     },
     notario: {
-      id: "abogado-1",
+      id: "licenciado-1",
       nombre: "Carlos López Martínez",
       email: "carlos.lopez@notaria3tijuana.com",
       telefono: "+52 664 555 1111",
@@ -366,7 +366,7 @@ export const solicitudes: Solicitud[] = [
       telefono: "+52 664 456 7890",
     },
     notario: {
-      id: "abogado-1",
+      id: "licenciado-1",
       nombre: "Carlos López Martínez",
       email: "carlos.lopez@notaria3tijuana.com",
       telefono: "+52 664 555 1111",
@@ -462,7 +462,7 @@ export const solicitudes: Solicitud[] = [
       telefono: "+52 664 567 8901",
     },
     notario: {
-      id: "abogado-1",
+      id: "licenciado-1",
       nombre: "Carlos López Martínez",
       email: "carlos.lopez@notaria3tijuana.com",
       telefono: "+52 664 555 1111",
@@ -564,7 +564,7 @@ export const solicitudes: Solicitud[] = [
       telefono: "+52 664 678 9012",
     },
     notario: {
-      id: "abogado-1",
+      id: "licenciado-1",
       nombre: "Carlos López Martínez",
       email: "carlos.lopez@notaria3tijuana.com",
       telefono: "+52 664 555 1111",
@@ -1274,8 +1274,8 @@ export const getUserSolicitudes = async (
   if (user?.role === "cliente") {
     // Para clientes, devolver sus propias solicitudes
     userSolicitudes = solicitudes.filter((s) => s.cliente.id === userId);
-  } else if (user?.role === "abogado" || user?.role === "notario") {
-    // Para abogados/notarios, devolver las solicitudes asignadas a ellos
+  } else if (user?.role === "licenciado" || user?.role === "notario") {
+    // Para licenciados/notarios, devolver las solicitudes asignadas a ellos
     userSolicitudes = solicitudes.filter((s) => s.notario.id === userId);
   } else if (user?.role === "admin") {
     // Para admin, devolver todas las solicitudes

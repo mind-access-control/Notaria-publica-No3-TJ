@@ -290,9 +290,9 @@ export default function MiCuentaPage() {
           router.push(`/solicitud/${notification.solicitudId}`);
         }
         break;
-      case "contactar_abogado":
+      case "contactar_licenciado":
         // Aquí podrías abrir un modal de contacto o redirigir a una página de contacto
-        console.log("Contactar abogado");
+        console.log("Contactar licenciado");
         break;
     }
   };

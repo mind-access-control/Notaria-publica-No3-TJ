@@ -49,35 +49,35 @@ export default function AbogadoDashboard() {
       return;
     }
 
-    // Verificar que el usuario sea abogado o notario
-    if (user?.role !== "abogado" && user?.role !== "notario") {
+    // Verificar que el usuario sea licenciado o notario
+    if (user?.role !== "licenciado" && user?.role !== "notario") {
       router.push("/mi-cuenta");
       return;
     }
   }, [isAuthenticated, user, router]);
 
   // Calcular estadísticas
-  const expedientesAbogado = expedientesMock.filter(
-    (exp) => exp.abogadoAsignado === user?.id
+  const expedientesLicenciado = expedientesMock.filter(
+    (exp) => exp.licenciadoAsignado === user?.id
   );
-  const expedientesRecibidos = expedientesAbogado.filter(
+  const expedientesRecibidos = expedientesLicenciado.filter(
     (exp) => exp.estado === "RECIBIDO"
   ).length;
-  const expedientesEnValidacion = expedientesAbogado.filter(
+  const expedientesEnValidacion = expedientesLicenciado.filter(
     (exp) => exp.estado === "EN_VALIDACION"
   ).length;
-  const expedientesEnPreparacion = expedientesAbogado.filter(
+  const expedientesEnPreparacion = expedientesLicenciado.filter(
     (exp) => exp.estado === "EN_PREPARACION"
   ).length;
-  const expedientesListosFirma = expedientesAbogado.filter(
+  const expedientesListosFirma = expedientesLicenciado.filter(
     (exp) => exp.estado === "LISTO_PARA_FIRMA"
   ).length;
-  const expedientesCompletados = expedientesAbogado.filter(
+  const expedientesCompletados = expedientesLicenciado.filter(
     (exp) => exp.estado === "COMPLETADO"
   ).length;
 
-  const totalExpedientes = expedientesAbogado.length;
-  const expedientesConPagoPendiente = expedientesAbogado.filter(
+  const totalExpedientes = expedientesLicenciado.length;
+  const expedientesConPagoPendiente = expedientesLicenciado.filter(
     (exp) => exp.costos.saldoPendiente > 0
   ).length;
 
@@ -107,7 +107,7 @@ export default function AbogadoDashboard() {
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                {user.role === "abogado" ? "Abogado" : "Notario"}
+                {user.role === "licenciado" ? "Licenciado" : "Notario"}
               </Badge>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
@@ -232,7 +232,7 @@ export default function AbogadoDashboard() {
 
           {/* Tab: Kanban */}
           <TabsContent value="kanban" className="space-y-6">
-            <AbogadoKanbanDashboard abogadoId={user.id} />
+            <AbogadoKanbanDashboard licenciadoId={user.id} />
           </TabsContent>
 
             <Card>
@@ -465,7 +465,7 @@ export default function AbogadoDashboard() {
                         Rol
                       </label>
                       <p className="text-sm">
-                        {user.role === "abogado" ? "Abogado" : "Notario"}
+                        {user.role === "licenciado" ? "Licenciado" : "Notario"}
                       </p>
                     </div>
                   </div>
@@ -485,7 +485,7 @@ export default function AbogadoDashboard() {
 
       {/* Panel de notificaciones colapsable */}
       <NotificationsPanel
-        abogadoId={user.id}
+        licenciadoId={user.id}
         isOpen={notificationsOpen}
         onToggle={() => setNotificationsOpen(!notificationsOpen)}
       />

@@ -83,7 +83,7 @@
 - ✅ Pago recibido y aplicado correctamente
 - ✅ Expediente activado para procesamiento
 - ⏳ Documentos en proceso de revisión legal
-- 📋 Próximo paso: Validación de documentos por el abogado
+- 📋 Próximo paso: Validación de documentos por el licenciado
 
 ---
 

@@ -71,7 +71,7 @@ export function StatusTracker({
   const getStepColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "text-emerald-600 bg-emerald-100 border-emerald-200";
+        return "text-blue-600 bg-blue-100 border-blue-200";
       case "current":
         return "text-blue-600 bg-blue-100 border-blue-200";
       case "upcoming":
@@ -97,7 +97,7 @@ export function StatusTracker({
     <Card>
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
-          <Clock className="h-6 w-6 text-emerald-600" />
+          <Clock className="h-6 w-6 text-blue-600" />
           Progreso del Trámite
         </CardTitle>
       </CardHeader>
@@ -146,7 +146,7 @@ export function StatusTracker({
                         <div
                           className={`h-0.5 w-full ${
                             index < currentStepIndex
-                              ? "bg-emerald-600"
+                              ? "bg-blue-600"
                               : "bg-gray-200"
                           }`}
                         ></div>
@@ -199,7 +199,7 @@ export function StatusTracker({
                     {status === "completed" && (
                       <Badge
                         variant="outline"
-                        className="mt-2 text-xs bg-emerald-50 text-emerald-700 border-emerald-200"
+                        className="mt-2 text-xs bg-blue-50 text-blue-700 border-blue-200"
                       >
                         Completado
                       </Badge>
@@ -237,7 +237,7 @@ export function StatusTracker({
                     onStatusUpdate(nextStep.key);
                   }
                 }}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 <ArrowRight className="h-4 w-4 mr-2" />
                 Avanzar a {estatusSteps[currentStepIndex + 1]?.title}

@@ -139,7 +139,7 @@ export interface ExpedienteCompraventa {
   documentos: DocumentoCompraventa[];
 
   // Información del proceso
-  abogadoAsignado?: string;
+  licenciadoAsignado?: string;
   notarioAsignado?: string;
   cajeroAsignado?: string;
 

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { AbogadoKanbanDashboard } from "@/components/abogado-kanban-dashboard";
 import { NotificationsPanel } from "@/components/notifications-panel";
+import { PostFirmaExpedienteCard } from "@/components/post-firma-expediente-card";
 import { expedientesMock } from "@/lib/expedientes-data";
 
 export default function AbogadoDashboard() {
@@ -49,35 +50,35 @@ export default function AbogadoDashboard() {
       return;
     }
 
-    // Verificar que el usuario sea abogado o notario
-    if (user?.role !== "abogado" && user?.role !== "notario") {
+    // Verificar que el usuario sea licenciado o notario
+    if (user?.role !== "licenciado" && user?.role !== "notario") {
       router.push("/mi-cuenta");
       return;
     }
   }, [isAuthenticated, user, router]);
 
   // Calcular estadísticas
-  const expedientesAbogado = expedientesMock.filter(
-    (exp) => exp.abogadoAsignado === user?.id
+  const expedientesLicenciado = expedientesMock.filter(
+    (exp) => exp.licenciadoAsignado === user?.id
   );
-  const expedientesRecibidos = expedientesAbogado.filter(
+  const expedientesRecibidos = expedientesLicenciado.filter(
     (exp) => exp.estado === "RECIBIDO"
   ).length;
-  const expedientesEnValidacion = expedientesAbogado.filter(
+  const expedientesEnValidacion = expedientesLicenciado.filter(
     (exp) => exp.estado === "EN_VALIDACION"
   ).length;
-  const expedientesEnPreparacion = expedientesAbogado.filter(
+  const expedientesEnPreparacion = expedientesLicenciado.filter(
     (exp) => exp.estado === "EN_PREPARACION"
   ).length;
-  const expedientesListosFirma = expedientesAbogado.filter(
+  const expedientesListosFirma = expedientesLicenciado.filter(
     (exp) => exp.estado === "LISTO_PARA_FIRMA"
   ).length;
-  const expedientesCompletados = expedientesAbogado.filter(
+  const expedientesCompletados = expedientesLicenciado.filter(
     (exp) => exp.estado === "COMPLETADO"
   ).length;
 
-  const totalExpedientes = expedientesAbogado.length;
-  const expedientesConPagoPendiente = expedientesAbogado.filter(
+  const totalExpedientes = expedientesLicenciado.length;
+  const expedientesConPagoPendiente = expedientesLicenciado.filter(
     (exp) => exp.costos.saldoPendiente > 0
   ).length;
 
@@ -107,7 +108,7 @@ export default function AbogadoDashboard() {
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                {user.role === "abogado" ? "Abogado" : "Notario"}
+                {user.role === "licenciado" ? "Licenciado" : "Notario"}
               </Badge>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
@@ -212,7 +213,7 @@ export default function AbogadoDashboard() {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="kanban" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Kanban
@@ -220,6 +221,10 @@ export default function AbogadoDashboard() {
             <TabsTrigger value="reportes" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Reportes
+            </TabsTrigger>
+            <TabsTrigger value="post-firma" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Post firma
             </TabsTrigger>
             <TabsTrigger
               value="configuracion"
@@ -232,7 +237,7 @@ export default function AbogadoDashboard() {
 
           {/* Tab: Kanban */}
           <TabsContent value="kanban" className="space-y-6">
-            <AbogadoKanbanDashboard abogadoId={user.id} />
+            <AbogadoKanbanDashboard licenciadoId={user.id} />
           </TabsContent>
 
           <TabsContent value="reportes" className="space-y-6">
@@ -311,7 +316,7 @@ export default function AbogadoDashboard() {
                           <span className="text-sm">Valor Total</span>
                           <span className="font-medium text-emerald-600">
                             $
-                            {expedientesAbogado
+                            {expedientesLicenciado
                               .reduce((sum, exp) => sum + exp.costos.total, 0)
                               .toLocaleString("es-MX")}
                           </span>
@@ -319,6 +324,39 @@ export default function AbogadoDashboard() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Post firma */}
+          <TabsContent value="post-firma" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Documentos e Impuestos Post-Firma</CardTitle>
+                <CardDescription>
+                  Gestión de documentos e impuestos que se deben entregar después de la firma del proceso notarial
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Componente colapsable para cada expediente completado o listo para firma */}
+                  {expedientesLicenciado
+                    .filter(exp => exp.estado === "COMPLETADO" || exp.estado === "LISTO_PARA_FIRMA")
+                    .map((expediente) => (
+                      <PostFirmaExpedienteCard 
+                        key={expediente.id} 
+                        expediente={expediente} 
+                      />
+                    ))}
+                  
+                  {expedientesLicenciado.filter(exp => exp.estado === "COMPLETADO" || exp.estado === "LISTO_PARA_FIRMA").length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No hay expedientes listos para mostrar</p>
+                      <p className="text-sm">Los documentos post-firma aparecerán aquí una vez que los expedientes estén listos para firma o completados</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -359,7 +397,7 @@ export default function AbogadoDashboard() {
                         Rol
                       </label>
                       <p className="text-sm">
-                        {user.role === "abogado" ? "Abogado" : "Notario"}
+                        {user.role === "licenciado" ? "Licenciado" : "Notario"}
                       </p>
                     </div>
                   </div>
@@ -379,7 +417,7 @@ export default function AbogadoDashboard() {
 
       {/* Panel de notificaciones colapsable */}
       <NotificationsPanel
-        abogadoId={user.id}
+        licenciadoId={user.id}
         isOpen={notificationsOpen}
         onToggle={() => setNotificationsOpen(!notificationsOpen)}
       />
