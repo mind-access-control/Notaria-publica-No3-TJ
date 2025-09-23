@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Chrome,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -31,6 +32,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [googleUser, setGoogleUser] = useState<any>(null);
 
   // Estados para login
   const [loginData, setLoginData] = useState({
@@ -118,6 +121,56 @@ export default function LoginPage() {
       setError("Error interno del servidor");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Función para simular SSO de Google
+  const handleGoogleSSO = () => {
+    // Simular datos de Google (en producción usarías la API real de Google)
+    const mockGoogleUser = {
+      email: "usuario@gmail.com",
+      name: "Usuario Google",
+      picture: "https://via.placeholder.com/150",
+    };
+    
+    setGoogleUser(mockGoogleUser);
+    setShowProfileModal(true);
+  };
+
+  // Función para seleccionar perfil después del SSO
+  const handleProfileSelection = async (role: string) => {
+    if (!googleUser) return;
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      // Mapear roles a credenciales existentes del sistema
+      const roleCredentials = {
+        cliente: { email: "cliente@notaria3tijuana.com", password: "cliente123" },
+        licenciado: { email: "licenciado@notaria3tijuana.com", password: "licenciado123" },
+        notario: { email: "maria.rodriguez@notaria3tijuana.com", password: "notario123" },
+        admin: { email: "admin@notaria3tijuana.com", password: "admin123" }
+      };
+
+      const credentials = roleCredentials[role as keyof typeof roleCredentials];
+      
+      if (!credentials) {
+        setError("Tipo de perfil no válido");
+        return;
+      }
+
+      // Hacer login con las credenciales correspondientes al rol
+      const response = await login(credentials, redirectUrl);
+
+      if (!response.success) {
+        setError("Error al iniciar sesión con Google");
+      }
+    } catch (err) {
+      setError("Error interno del servidor");
+    } finally {
+      setIsSubmitting(false);
+      setShowProfileModal(false);
     }
   };
 
@@ -244,6 +297,28 @@ export default function LoginPage() {
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? "Iniciando sesión..." : "Iniciar Sesión"}
+                    </Button>
+
+                    {/* Separador */}
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">O continúa con</span>
+                      </div>
+                    </div>
+
+                    {/* Botón de Google SSO */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-2 border-blue-600 hover:bg-blue-50 hover:border-blue-700 text-blue-800 font-medium"
+                      onClick={handleGoogleSSO}
+                      disabled={isSubmitting}
+                    >
+                      <Chrome className="h-4 w-4 mr-2 text-blue-700" />
+                      Continuar con Google
                     </Button>
                   </form>
 
@@ -494,6 +569,102 @@ export default function LoginPage() {
           </Card>
         </div>
       </div>
+      
+      {/* Modal de Selección de Perfil para SSO */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl border border-gray-100">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Chrome className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Selecciona tu perfil
+              </h2>
+              <p className="text-gray-600 text-sm">
+                {googleUser?.name} ({googleUser?.email})
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                onClick={() => handleProfileSelection("cliente")}
+                className="w-full justify-start h-auto p-4 bg-white border-2 border-blue-200 hover:bg-blue-900 hover:border-blue-900 hover:shadow-xl transition-all duration-300 group"
+                disabled={isSubmitting}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-700 transition-colors duration-300">
+                    <User className="h-4 w-4 text-blue-600 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800 group-hover:text-white transition-colors duration-300">Cliente</p>
+                    <p className="text-xs text-gray-600 group-hover:text-blue-200 transition-colors duration-300">Acceso al portal de clientes</p>
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => handleProfileSelection("licenciado")}
+                className="w-full justify-start h-auto p-4 bg-white border-2 border-blue-300 hover:bg-blue-900 hover:border-blue-900 hover:shadow-xl transition-all duration-300 group"
+                disabled={isSubmitting}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center group-hover:bg-blue-700 transition-colors duration-300">
+                    <Shield className="h-4 w-4 text-blue-700 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800 group-hover:text-white transition-colors duration-300">Licenciado</p>
+                    <p className="text-xs text-gray-600 group-hover:text-blue-200 transition-colors duration-300">Acceso al dashboard de licenciados</p>
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => handleProfileSelection("notario")}
+                className="w-full justify-start h-auto p-4 bg-white border-2 border-blue-400 hover:bg-blue-900 hover:border-blue-900 hover:shadow-xl transition-all duration-300 group"
+                disabled={isSubmitting}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-300 rounded-full flex items-center justify-center group-hover:bg-blue-700 transition-colors duration-300">
+                    <Shield className="h-4 w-4 text-blue-800 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800 group-hover:text-white transition-colors duration-300">Notario</p>
+                    <p className="text-xs text-gray-600 group-hover:text-blue-200 transition-colors duration-300">Acceso completo del sistema</p>
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => handleProfileSelection("admin")}
+                className="w-full justify-start h-auto p-4 bg-white border-2 border-blue-500 hover:bg-blue-900 hover:border-blue-900 hover:shadow-xl transition-all duration-300 group"
+                disabled={isSubmitting}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center group-hover:bg-blue-700 transition-colors duration-300">
+                    <Shield className="h-4 w-4 text-white group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800 group-hover:text-white transition-colors duration-300">Administrador</p>
+                    <p className="text-xs text-gray-600 group-hover:text-blue-200 transition-colors duration-300">Acceso administrativo completo</p>
+                  </div>
+                </div>
+              </Button>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setShowProfileModal(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

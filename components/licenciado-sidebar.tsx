@@ -41,12 +41,6 @@ const menuItems = [
     description: "Gestión de expedientes",
   },
   {
-    id: "reportes",
-    label: "Reportes",
-    icon: BarChart3,
-    description: "Análisis y estadísticas",
-  },
-  {
     id: "documentacion",
     label: "Post firma",
     icon: FileText,
@@ -63,6 +57,12 @@ const menuItems = [
     label: "Citas",
     icon: Calendar,
     description: "Agenda y citas",
+  },
+  {
+    id: "reportes",
+    label: "Reportes",
+    icon: BarChart3,
+    description: "Análisis y estadísticas",
   },
   {
     id: "configuracion",
@@ -93,7 +93,7 @@ export function LicenciadoSidebar({
     <div
       className={`bg-gradient-to-b from-slate-900 via-blue-900 to-slate-900 text-white shadow-2xl transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
-      } h-screen flex flex-col fixed left-0 top-0 z-40`}
+      } h-screen fixed left-0 top-0 z-40 overflow-y-auto`}
     >
       {/* Header */}
       <div className="p-4 border-b border-white/10">
@@ -142,7 +142,7 @@ export function LicenciadoSidebar({
       )}
 
       {/* Navigation Menu */}
-      <div className="flex-1 p-4 space-y-2">
+      <div className="p-4 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
