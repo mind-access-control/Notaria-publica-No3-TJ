@@ -52,6 +52,33 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Notaría Brand Colors - Sistema Centralizado
+        notaria: {
+          50: "#f8fafc", // Muy claro
+          100: "#e1e8ed", // Claro con tinte azul
+          200: "#cbd5e1", // Medio claro
+          300: "#94a3b8", // Medio
+          400: "#64748b", // Medio oscuro
+          500: "#475569", // Oscuro
+          600: "#334155", // Muy oscuro
+          700: "#1e293b", // Header/Footer oscuro
+          800: "#1e40af", // Azul principal
+          900: "#0f172a", // Más oscuro
+          950: "#020617", // Negro azulado
+        },
+
+        // Variables CSS de marca para usar en Tailwind
+        brand: {
+          primary: "var(--brand-primary)",
+          secondary: "var(--brand-secondary)",
+          accent: "var(--brand-accent)",
+          "bg-light": "var(--brand-bg-light)",
+          "bg-medium": "var(--brand-bg-medium)",
+          "bg-dark": "var(--brand-bg-dark)",
+          "text-primary": "var(--brand-text-primary)",
+          "text-secondary": "var(--brand-text-secondary)",
+          "text-light": "var(--brand-text-light)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -4,74 +4,120 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0); /* #ffffff */
-  --foreground: oklch(0.4 0 0); /* #374151 */
-  --card: oklch(0.98 0.02 240); /* #f0f9ff - azul muy claro */
-  --card-foreground: oklch(0.4 0 0); /* #374151 */
-  --popover: oklch(1 0 0); /* #ffffff */
-  --popover-foreground: oklch(0.4 0 0); /* #374151 */
-  --primary: oklch(0.35 0.15 240); /* #1e3a8a - azul marino */
-  --primary-foreground: oklch(1 0 0); /* #ffffff */
-  --secondary: oklch(0.98 0.02 240); /* #f0f9ff - azul muy claro */
-  --secondary-foreground: oklch(0.4 0 0); /* #374151 */
-  --muted: oklch(0.99 0 0); /* #f8fafc */
-  --muted-foreground: oklch(0.4 0 0); /* #374151 */
-  --accent: oklch(0.6 0.15 240); /* #3b82f6 - azul */
-  --accent-foreground: oklch(0.4 0 0); /* #374151 */
+  /* ========================================
+   * NOTARÍA BRANDING SYSTEM - Cambiar aquí para todo el sitio
+   * ======================================== */
+
+  /* COLORES PRINCIPALES */
+  --brand-primary: oklch(0.42 0.09 240); /* #1e40af - Azul principal de la notaría */
+  --brand-secondary: oklch(0.35 0.05 240); /* Azul más oscuro */
+  --brand-accent: oklch(0.88 0.02 240); /* Azul claro para acentos */
+
+  /* COLORES DE FONDO */
+  --brand-bg-light: oklch(0.99 0.005 240); /* Fondo muy claro */
+  --brand-bg-medium: oklch(0.96 0.01 240); /* Fondo medio */
+  --brand-bg-dark: oklch(0.25 0.01 240); /* Fondo oscuro (header/footer) */
+
+  /* COLORES DE TEXTO */
+  --brand-text-primary: oklch(0.25 0.01 240); /* Texto principal */
+  --brand-text-secondary: oklch(0.45 0.01 240); /* Texto secundario */
+  --brand-text-light: oklch(0.88 0.02 240); /* Texto claro */
+
+  /* GRADIENTES DE MARCA */
+  --brand-gradient-header: linear-gradient(to right, #1e293b, #1e40af, #0f172a);
+  --brand-gradient-primary: linear-gradient(to right, var(--brand-primary), var(--brand-secondary));
+  --brand-gradient-light: linear-gradient(to right, var(--brand-bg-light), var(--brand-bg-medium));
+
+  /* ========================================
+   * SISTEMA DE TOKENS SHADCN/UI
+   * ======================================== */
+
+  --background: oklch(1 0 0); /* Fondo blanco limpio */
+  --foreground: var(--brand-text-primary);
+  --card: var(--brand-bg-light);
+  --card-foreground: var(--brand-text-primary);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--brand-text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: var(--brand-bg-medium);
+  --secondary-foreground: var(--brand-text-primary);
+  --muted: var(--brand-bg-medium);
+  --muted-foreground: var(--brand-text-secondary);
+  --accent: var(--brand-accent);
+  --accent-foreground: var(--brand-text-primary);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.85 0 0); /* #d1d5db */
-  --input: oklch(0.98 0.02 240); /* #f0f9ff - azul muy claro */
-  --ring: oklch(0.6 0.1 240 / 0.5); /* soft blue ring */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.35 0.15 240); /* #1e3a8a - azul marino */
-  --chart-3: oklch(0.6 0.118 184.704);
-  --chart-4: oklch(0.398 0.07 227.392);
-  --chart-5: oklch(0.828 0.189 84.429);
-  --radius: 0.5rem; /* Modern rounded corners */
-  --sidebar: oklch(0.98 0.02 240); /* #f0f9ff - azul muy claro */
-  --sidebar-foreground: oklch(0.4 0 0); /* #374151 */
-  --sidebar-primary: oklch(0.35 0.15 240); /* #1e3a8a - azul marino */
-  --sidebar-primary-foreground: oklch(1 0 0); /* #ffffff */
-  --sidebar-accent: oklch(0.6 0.15 240); /* #3b82f6 - azul */
-  --sidebar-accent-foreground: oklch(0.4 0 0); /* #374151 */
-  --sidebar-border: oklch(0.85 0 0); /* #d1d5db */
-  --sidebar-ring: oklch(0.6 0.1 240 / 0.5); /* soft blue ring */
+  --border: oklch(0.9 0.01 240);
+  --input: var(--brand-bg-medium);
+  --ring: oklch(0.42 0.09 240 / 0.3);
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-secondary);
+  --chart-3: oklch(0.6 0.05 240);
+  --chart-4: var(--brand-text-secondary);
+  --chart-5: oklch(0.75 0.01 240);
+  --radius: 0.5rem;
+  --sidebar: var(--brand-bg-medium);
+  --sidebar-foreground: var(--brand-text-primary);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: var(--brand-accent);
+  --sidebar-accent-foreground: var(--brand-text-primary);
+  --sidebar-border: oklch(0.9 0.01 240);
+  --sidebar-ring: oklch(0.42 0.09 240 / 0.3);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6 0.15 240); /* Brighter blue for dark mode */
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.7 0.15 240);
-  --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.6 0.15 240);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.6 0.15 240);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* ========================================
+   * MODO OSCURO - Usando variables de marca
+   * ======================================== */
+
+  /* Actualizar variables de marca para modo oscuro */
+  --brand-primary: oklch(0.65 0.12 240); /* Azul más brillante para modo oscuro */
+  --brand-secondary: oklch(0.55 0.08 240); /* Azul más oscuro */
+  --brand-accent: oklch(0.25 0.01 240); /* Acento más oscuro */
+
+  --brand-bg-light: oklch(0.12 0.01 240); /* Fondo claro oscuro */
+  --brand-bg-medium: oklch(0.2 0.01 240); /* Fondo medio oscuro */
+  --brand-bg-dark: oklch(0.09 0.01 240); /* Fondo muy oscuro */
+
+  --brand-text-primary: oklch(0.95 0.005 240); /* Texto claro */
+  --brand-text-secondary: oklch(0.65 0.01 240); /* Texto secundario claro */
+  --brand-text-light: oklch(0.95 0.005 240); /* Texto muy claro */
+
+  /* Tokens del sistema */
+  --background: var(--brand-bg-dark);
+  --foreground: var(--brand-text-primary);
+  --card: var(--brand-bg-light);
+  --card-foreground: var(--brand-text-primary);
+  --popover: var(--brand-bg-light);
+  --popover-foreground: var(--brand-text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--brand-text-primary);
+  --secondary: var(--brand-bg-medium);
+  --secondary-foreground: var(--brand-text-primary);
+  --muted: var(--brand-bg-medium);
+  --muted-foreground: var(--brand-text-secondary);
+  --accent: var(--brand-accent);
+  --accent-foreground: var(--brand-text-primary);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: var(--brand-text-primary);
+  --border: var(--brand-bg-medium);
+  --input: var(--brand-bg-medium);
+  --ring: oklch(0.65 0.12 240 / 0.4);
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-secondary);
+  --chart-3: oklch(0.75 0.08 240);
+  --chart-4: var(--brand-text-secondary);
+  --chart-5: oklch(0.65 0.01 240);
+  --sidebar: var(--brand-bg-light);
+  --sidebar-foreground: var(--brand-text-primary);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: var(--brand-text-primary);
+  --sidebar-accent: var(--brand-accent);
+  --sidebar-accent-foreground: var(--brand-text-primary);
+  --sidebar-border: var(--brand-bg-medium);
+  --sidebar-ring: oklch(0.65 0.12 240 / 0.4);
 }
 
 @theme inline {
