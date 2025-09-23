@@ -1332,7 +1332,7 @@ export function TramiteModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button
                     onClick={handleIniciarTramite}
-                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                    className="h-32 p-4 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-900 hover:from-blue-600 hover:to-blue-950 text-white"
                     size="lg"
                   >
                     <FileText className="h-6 w-6 flex-shrink-0" />
@@ -1413,7 +1413,7 @@ export function TramiteModal({
                 </div>
                 <Button
                   onClick={handleClose}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-gradient-to-r from-blue-500 to-blue-900 hover:from-blue-600 hover:to-blue-950"
                 >
                   Cerrar
                 </Button>

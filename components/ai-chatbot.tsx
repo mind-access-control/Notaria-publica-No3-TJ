@@ -1840,7 +1840,7 @@ export function AIChatbot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-3 sm:right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl"
+        className="fixed bottom-6 right-3 sm:right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-900 hover:from-blue-600 hover:to-blue-950 shadow-xl"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
