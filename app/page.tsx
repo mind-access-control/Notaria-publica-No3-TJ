@@ -101,22 +101,22 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="space-y-8 lg:space-y-10 text-center lg:text-left">
               <div className="space-y-6">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></div>
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
                   Servicios Notariales Profesionales
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-slate-900 leading-tight tracking-tight">
                   Tu Notaría de{" "}
                   <span className="relative">
-                    <span className="text-emerald-600">Confianza</span>
-                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"></div>
+                    <span className="text-blue-600">Confianza</span>
+                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"></div>
                   </span>
                   <br />
                   <span className="text-slate-700">en Tijuana</span>
                 </h1>
                 <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-2xl">
                   Más de{" "}
-                  <span className="font-semibold text-emerald-600">
+                  <span className="font-semibold text-blue-600">
                     20 años
                   </span>{" "}
                   brindando servicios notariales con la más alta calidad,
@@ -129,18 +129,18 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   onClick={() => setIsTramiteModalOpen(true)}
-                  className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0 text-lg py-6"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-900 hover:to-blue-900 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0 text-lg py-6 group"
                 >
-                  <HelpCircle className="mr-3 h-6 w-6" />
+                  <HelpCircle className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
                   ¿Qué trámite necesitas?
                 </Button>
                 <Link href="/citas" className="group cursor-pointer flex-1">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 bg-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 text-lg py-6"
+                    className="w-full border-2 border-slate-300 text-slate-700 hover:bg-blue-900 hover:border-blue-900 hover:text-white bg-white shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 text-lg py-6 group"
                   >
-                    <Calendar className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform" />
+                    <Calendar className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
                     Agendar Cita
                   </Button>
                 </Link>
@@ -150,12 +150,12 @@ export default function HomePage() {
             <div className="relative order-first lg:order-last">
               <div className="relative">
                 {/* Decorative Elements */}
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-20 blur-xl"></div>
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 blur-xl"></div>
                 <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full opacity-10 blur-xl"></div>
 
                 {/* Main Image Container */}
                 <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border border-slate-200">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-3xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent rounded-3xl"></div>
                   <img
                     src="/notaria3image.png"
                     alt="Notaría Pública No. 3 Tijuana"
@@ -165,7 +165,7 @@ export default function HomePage() {
                   {/* Overlay Badge */}
                   <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-slate-200">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-medium text-slate-700">
                         Desde 2004
                       </span>
@@ -182,15 +182,15 @@ export default function HomePage() {
       <section className="py-16 sm:py-20 bg-gradient-to-b from-white to-slate-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium mb-6">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
               Nuestros Valores
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
               ¿Por qué elegir{" "}
               <span className="relative">
-                <span className="text-emerald-600">nuestra notaría</span>?
-                <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"></div>
+                <span className="text-blue-600">nuestra notaría</span>?
+                <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"></div>
               </span>
             </h2>
             <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
@@ -200,59 +200,59 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
+            <Card className="group text-center border-0 bg-white hover:bg-blue-900 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
               <CardHeader className="pb-6 pt-8">
                 <div className="relative mx-auto mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 group-hover:from-blue-700 group-hover:to-blue-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
                     <Users className="h-8 w-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-400 group-hover:bg-blue-200 rounded-full opacity-60 group-hover:opacity-100 transition-all duration-300"></div>
                 </div>
-                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-white transition-colors duration-300">
                   Atención Personalizada
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-8">
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-600 group-hover:text-blue-200 transition-colors duration-300 leading-relaxed">
                   Cada cliente recibe atención dedicada y asesoría especializada
                   para su trámite específico
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
+            <Card className="group text-center border-0 bg-white hover:bg-blue-900 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
               <CardHeader className="pb-6 pt-8">
                 <div className="relative mx-auto mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 group-hover:from-blue-700 group-hover:to-blue-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
                     <Clock className="h-8 w-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-400 group-hover:bg-blue-200 rounded-full opacity-60 group-hover:opacity-100 transition-all duration-300"></div>
                 </div>
-                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-white transition-colors duration-300">
                   Tiempos Rápidos
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-8">
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-600 group-hover:text-blue-200 transition-colors duration-300 leading-relaxed">
                   Procesos eficientes que respetan tu tiempo y urgencias
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="group text-center border-0 bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
+            <Card className="group text-center border-0 bg-white hover:bg-blue-900 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden">
               <CardHeader className="pb-6 pt-8">
                 <div className="relative mx-auto mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 group-hover:from-blue-700 group-hover:to-blue-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
                     <Shield className="h-8 w-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-400 group-hover:bg-blue-200 rounded-full opacity-60 group-hover:opacity-100 transition-all duration-300"></div>
                 </div>
-                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-white transition-colors duration-300">
                   Asesoría Sin Costo
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-8">
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-600 group-hover:text-blue-200 transition-colors duration-300 leading-relaxed">
                   Consulta inicial gratuita para orientarte en tu trámite
                   específico
                 </p>
@@ -277,7 +277,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <HelpCircle className="h-8 w-8 text-white" />
                 </div>
                 <CardTitle className="text-lg sm:text-xl">
@@ -299,7 +299,7 @@ export default function HomePage() {
 
             <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Calendar className="h-8 w-8 text-white" />
                 </div>
                 <CardTitle className="text-lg sm:text-xl">
@@ -320,7 +320,7 @@ export default function HomePage() {
 
             <Card className="border-border hover:shadow-lg transition-all hover:scale-105">
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <FileText className="h-8 w-8 text-white" />
                 </div>
                 <CardTitle className="text-lg sm:text-xl">
