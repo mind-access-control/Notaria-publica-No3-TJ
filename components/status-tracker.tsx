@@ -5,7 +5,14 @@ import { EstatusSolicitud } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, Clock, ArrowRight, CreditCard, FileText } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
+  ArrowRight,
+  CreditCard,
+  FileText,
+} from "lucide-react";
 
 interface StatusTrackerProps {
   estatusActual: EstatusSolicitud;
@@ -74,8 +81,9 @@ export function StatusTracker({
   );
 
   // Verificar si todos los documentos están subidos
-  const todosDocumentosSubidos = solicitud ? 
-    solicitud.documentosRequeridos.every(doc => doc.subido) : false;
+  const todosDocumentosSubidos = solicitud
+    ? solicitud.documentosRequeridos.every((doc) => doc.subido)
+    : false;
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStepIndex) {
@@ -124,16 +132,19 @@ export function StatusTracker({
         <div className="space-y-6">
           {/* Desktop version - horizontal timeline */}
           <div className="hidden md:block">
-            <div className="flex items-center justify-between">
-              {estatusSteps.map((step, index) => {
-                const status = getStepStatus(index);
-                const isLast = index === estatusSteps.length - 1;
+            <div className="relative">
+              {/* Línea de conexión de fondo */}
+              <div className="absolute top-6 left-12 right-12 h-0.5 bg-gray-200"></div>
 
-                return (
-                  <div key={step.key} className="flex items-center">
-                    <div className="flex flex-col items-center">
+              {/* Contenedor de pasos */}
+              <div className="flex justify-between relative z-10">
+                {estatusSteps.map((step, index) => {
+                  const status = getStepStatus(index);
+
+                  return (
+                    <div key={step.key} className="flex flex-col items-center">
                       <div
-                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${getStepColor(
+                        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center bg-white ${getStepColor(
                           status
                         )}`}
                       >
@@ -160,20 +171,27 @@ export function StatusTracker({
                         </p>
                       </div>
                     </div>
-                    {!isLast && (
-                      <div className="flex-1 mx-4">
-                        <div
-                          className={`h-0.5 w-full ${
-                            index < currentStepIndex
-                              ? "bg-emerald-600"
-                              : "bg-gray-200"
-                          }`}
-                        ></div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {/* Líneas de progreso */}
+              <div className="absolute top-6 left-12 right-12 h-0.5">
+                {estatusSteps.slice(0, -1).map((_, index) => (
+                  <div
+                    key={index}
+                    className={`absolute h-full ${
+                      index < currentStepIndex
+                        ? "bg-emerald-600"
+                        : "bg-gray-200"
+                    }`}
+                    style={{
+                      left: `${(index / (estatusSteps.length - 1)) * 100}%`,
+                      width: `${100 / (estatusSteps.length - 1)}%`,
+                    }}
+                  ></div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -249,34 +267,44 @@ export function StatusTracker({
           {/* CTA de pago - siempre visible pero habilitado solo cuando todos los documentos estén subidos */}
           {solicitud && solicitud.pagosRealizados === 0 && (
             <div className="pt-4 border-t">
-              <div className={`border rounded-lg p-4 mb-4 ${
-                todosDocumentosSubidos 
-                  ? 'bg-blue-50 border-blue-200' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div
+                className={`border rounded-lg p-4 mb-4 ${
+                  todosDocumentosSubidos
+                    ? "bg-blue-50 border-blue-200"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
                 <div className="flex items-center gap-3 mb-3">
-                  <CreditCard className={`h-5 w-5 ${
-                    todosDocumentosSubidos ? 'text-blue-600' : 'text-gray-400'
-                  }`} />
-                  <h3 className={`font-semibold ${
-                    todosDocumentosSubidos ? 'text-blue-900' : 'text-gray-600'
-                  }`}>
+                  <CreditCard
+                    className={`h-5 w-5 ${
+                      todosDocumentosSubidos ? "text-blue-600" : "text-gray-400"
+                    }`}
+                  />
+                  <h3
+                    className={`font-semibold ${
+                      todosDocumentosSubidos ? "text-blue-900" : "text-gray-600"
+                    }`}
+                  >
                     Paso Siguiente: Realizar Pago
                   </h3>
                 </div>
-                <p className={`text-sm mb-4 ${
-                  todosDocumentosSubidos ? 'text-blue-700' : 'text-gray-500'
-                }`}>
-                  {todosDocumentosSubidos 
-                    ? 'Ahora que se han validado todos sus documentos, pueden proceder a pagar para continuar con la revisión.'
-                    : 'Complete la subida de todos los documentos para habilitar el pago.'
-                  }
+                <p
+                  className={`text-sm mb-4 ${
+                    todosDocumentosSubidos ? "text-blue-700" : "text-gray-500"
+                  }`}
+                >
+                  {todosDocumentosSubidos
+                    ? "Ahora que se han validado todos sus documentos, pueden proceder a pagar para continuar con la revisión."
+                    : "Complete la subida de todos los documentos para habilitar el pago."}
                 </p>
                 <div className="flex items-center justify-between">
-                  <div className={`text-sm ${
-                    todosDocumentosSubidos ? 'text-blue-800' : 'text-gray-500'
-                  }`}>
-                    <strong>Costo total:</strong> ${solicitud.costoTotal.toLocaleString("es-MX")}
+                  <div
+                    className={`text-sm ${
+                      todosDocumentosSubidos ? "text-blue-800" : "text-gray-500"
+                    }`}
+                  >
+                    <strong>Costo total:</strong> $
+                    {solicitud.costoTotal.toLocaleString("es-MX")}
                   </div>
                   <Button
                     onClick={() => {
@@ -286,9 +314,9 @@ export function StatusTracker({
                     }}
                     disabled={!todosDocumentosSubidos}
                     className={`${
-                      todosDocumentosSubidos 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
-                        : 'bg-gray-400 cursor-not-allowed'
+                      todosDocumentosSubidos
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-400 cursor-not-allowed"
                     }`}
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
@@ -299,21 +327,24 @@ export function StatusTracker({
             </div>
           )}
 
-        {/* Botón para ir a recibo - solo cuando NO esté en ARMANDO_EXPEDIENTE */}
-        {solicitud && estatusActual !== "ARMANDO_EXPEDIENTE" && (
-          <div className="pt-4 border-t">
-            <Button
-              onClick={() => {
-                console.log("Navegando a recibo para solicitud:", solicitud.numeroSolicitud);
-                window.location.href = `/solicitud/${solicitud.numeroSolicitud}/recibo`;
-              }}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Ver Recibo
-            </Button>
-          </div>
-        )}
+          {/* Botón para ir a recibo - solo cuando NO esté en ARMANDO_EXPEDIENTE */}
+          {solicitud && estatusActual !== "ARMANDO_EXPEDIENTE" && (
+            <div className="pt-4 border-t">
+              <Button
+                onClick={() => {
+                  console.log(
+                    "Navegando a recibo para solicitud:",
+                    solicitud.numeroSolicitud
+                  );
+                  window.location.href = `/solicitud/${solicitud.numeroSolicitud}/recibo`;
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Ver Recibo
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
