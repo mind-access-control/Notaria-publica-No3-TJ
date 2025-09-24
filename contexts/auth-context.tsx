@@ -54,12 +54,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem("authToken");
+        console.log("AuthContext - Token encontrado:", !!token);
         if (token) {
           const userData = await getUserByToken(token);
+          console.log("AuthContext - Datos de usuario obtenidos:", !!userData);
           if (userData) {
             setUser(userData);
           } else {
             // Token inválido, limpiar
+            console.log("AuthContext - Token inválido, limpiando");
             localStorage.removeItem("authToken");
           }
         }
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem("authToken");
       } finally {
         setIsLoading(false);
+        console.log("AuthContext - Carga completada");
       }
     };
 

@@ -506,73 +506,41 @@ function DocumentUploadStep({
 
   const handleExtractInformation = async () => {
     setIsExtracting(true);
-
-    // Simular proceso de OCR con diferentes estados
-    const filesWithExtraction = uploadedFiles.map((file, index) => {
-      // Simular diferentes estados de procesamiento
-      let extractionStatus = "TERMINADO";
-      let documentType = "OTRO";
-
-      if (
-        file.name.toLowerCase().includes("ine") ||
-        file.name.toLowerCase().includes("identificacion")
-      ) {
-        documentType = "INE";
-        extractionStatus = index === 0 ? "EXTRAYENDO" : "TERMINADO";
-      } else if (file.name.toLowerCase().includes("curp")) {
-        documentType = "CURP";
-        extractionStatus = "TERMINADO";
-      } else if (
-        file.name.toLowerCase().includes("domicilio") ||
-        file.name.toLowerCase().includes("comprobante")
-      ) {
-        documentType = "DOMICILIO";
-        extractionStatus = "TERMINADO";
-      } else if (
-        file.name.toLowerCase().includes("acta") ||
-        file.name.toLowerCase().includes("nacimiento")
-      ) {
-        documentType = "ACTA_NACIMIENTO";
-        extractionStatus = "TERMINADO";
-      } else if (
-        file.name.toLowerCase().includes("rfc") ||
-        file.name.toLowerCase().includes("fiscal")
-      ) {
-        documentType = "RFC";
-        extractionStatus = "TERMINADO";
-      } else if (
-        file.name.toLowerCase().includes("bancario") ||
-        file.name.toLowerCase().includes("cuenta")
-      ) {
-        documentType = "DATOS_BANCARIOS";
-        extractionStatus = "TERMINADO";
-      } else {
-        extractionStatus =
-          index === uploadedFiles.length - 1 ? "NO_IDENTIFICADO" : "TERMINADO";
-      }
-
-      return {
-        ...file,
-        status: "extracted",
-        extractionStatus,
-        documentType,
-        extractedData:
-          extractionStatus === "TERMINADO"
-            ? {
-                documentType,
-                confidence: Math.random() * 0.3 + 0.7, // 70-100%
-                data: {
-                  nombre: "GRACIELA RODRIGUEZ LOPEZ",
-                  fechaNacimiento: "01/12/1988",
-                  domicilio: "CUARZO 105, COLONIA SAN PEDRITO PEÑUELAS",
-                },
-              }
-            : null,
-      };
-    });
-
-    // Simular tiempo de procesamiento
+    // Simular proceso de OCR
     await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Simular clasificación y extracción
+    const filesWithExtraction = uploadedFiles.map((file) => ({
+      ...file,
+      status: "extracted",
+      extractedData: {
+        documentType:
+          file.name.toLowerCase().includes("ine") ||
+          file.name.toLowerCase().includes("identificacion")
+            ? "INE"
+            : file.name.toLowerCase().includes("curp")
+            ? "CURP"
+            : file.name.toLowerCase().includes("domicilio") ||
+              file.name.toLowerCase().includes("comprobante")
+            ? "DOMICILIO"
+            : file.name.toLowerCase().includes("acta") ||
+              file.name.toLowerCase().includes("nacimiento")
+            ? "ACTA_NACIMIENTO"
+            : file.name.toLowerCase().includes("rfc") ||
+              file.name.toLowerCase().includes("fiscal")
+            ? "RFC"
+            : file.name.toLowerCase().includes("bancario") ||
+              file.name.toLowerCase().includes("cuenta")
+            ? "DATOS_BANCARIOS"
+            : "OTRO",
+        confidence: Math.random() * 0.3 + 0.7, // 70-100%
+        data: {
+          nombre: "GRACIELA RODRIGUEZ LOPEZ",
+          fechaNacimiento: "01/12/1988",
+          domicilio: "CUARZO 105, COLONIA SAN PEDRITO PEÑUELAS",
+        },
+      },
+    }));
 
     setUploadedFiles(filesWithExtraction);
     setIsExtracting(false);
@@ -581,29 +549,6 @@ function DocumentUploadStep({
 
   const handleDeleteFile = (fileId: string) => {
     setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
-  };
-
-  const handleEditFile = (fileId: string) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".pdf,.jpg,.jpeg,.png";
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const newFile = {
-          id: fileId, // Mantener el mismo ID
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          status: "uploaded",
-          url: URL.createObjectURL(file),
-        };
-        setUploadedFiles((prev) =>
-          prev.map((f) => (f.id === fileId ? newFile : f))
-        );
-      }
-    };
-    input.click();
   };
 
   const handleViewDocument = (file: any) => {
@@ -637,62 +582,52 @@ function DocumentUploadStep({
   };
 
   return (
-    <div
-      className={
-        extractionComplete ? "w-full" : "grid grid-cols-1 lg:grid-cols-2 gap-8"
-      }
-    >
-      {/* Lista de documentos requeridos - Solo visible antes de extraer */}
-      {!extractionComplete && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Documentos Requeridos
-            </h3>
-            <Button
-              onClick={handleFileUpload}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Subir documentos
-            </Button>
-          </div>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                {solicitud.documentosRequeridos.map(
-                  (doc: any, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <p className="font-medium text-sm">{doc.nombre}</p>
-                          <p className="text-xs text-gray-500">
-                            {doc.descripcion}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {uploadedFiles.some((f) =>
-                          doesFileMatchDocument(f.name, doc.nombre)
-                        ) ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Lista de documentos requeridos */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Documentos Requeridos
+          </h3>
+          <Button
+            onClick={handleFileUpload}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Subir documentos
+          </Button>
         </div>
-      )}
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              {solicitud.documentosRequeridos.map((doc: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="font-medium text-sm">{doc.nombre}</p>
+                      <p className="text-xs text-gray-500">{doc.descripcion}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {uploadedFiles.some((f) =>
+                      doesFileMatchDocument(f.name, doc.nombre)
+                    ) ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Área de subida y gestión de documentos */}
       <div className="space-y-4">
@@ -717,7 +652,7 @@ function DocumentUploadStep({
               </Button>
             </CardContent>
           </Card>
-        ) : !extractionComplete ? (
+        ) : (
           <Card>
             <CardContent className="p-4">
               <div className="space-y-3">
@@ -730,7 +665,16 @@ function DocumentUploadStep({
                       <FileText className="h-5 w-5 text-blue-600" />
                       <div>
                         <p className="font-medium text-sm">{file.name}</p>
-                        <p className="text-xs text-gray-500">Subido</p>
+                        <p className="text-xs text-gray-500">
+                          {file.extractedData?.documentType && (
+                            <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs mr-2">
+                              {file.extractedData.documentType}
+                            </span>
+                          )}
+                          {file.status === "extracted"
+                            ? "Información extraída"
+                            : "Subido"}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -753,129 +697,39 @@ function DocumentUploadStep({
                 ))}
               </div>
 
-              <div className="mt-4 pt-4 border-t">
-                <Button
-                  onClick={handleExtractInformation}
-                  disabled={isExtracting}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  {isExtracting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Extrayendo información...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Extraer información
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              {/* Tabla de documentos procesados */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Documento
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Etiqueta
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Estatus
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {uploadedFiles.map((file) => (
-                      <tr key={file.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-blue-600 mr-3" />
-                            <div className="text-sm font-medium text-gray-900">
-                              {file.name}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          {file.documentType && file.documentType !== "OTRO" ? (
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                              {file.documentType}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-500">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              file.extractionStatus === "TERMINADO"
-                                ? "bg-green-100 text-green-800"
-                                : file.extractionStatus === "EXTRAYENDO"
-                                ? "bg-orange-100 text-orange-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {file.extractionStatus}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditFile(file.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-4 w-4 text-gray-400" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleViewDocument(file)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-4 w-4 text-gray-400" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteFile(file.id)}
-                              className={`h-8 w-8 p-0 ${
-                                file.extractionStatus === "TERMINADO"
-                                  ? "text-purple-500"
-                                  : "text-gray-400"
-                              }`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {uploadedFiles.length > 0 && !extractionComplete && (
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    onClick={handleExtractInformation}
+                    disabled={isExtracting}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isExtracting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Extrayendo información...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Extraer información
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
-              <div className="p-4 border-t bg-gray-50">
-                <Button
-                  onClick={handleConfirmDocuments}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Confirmar documentos
-                </Button>
-              </div>
+              {extractionComplete && (
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    onClick={handleConfirmDocuments}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Confirmar documentos
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -906,137 +760,38 @@ function DocumentValidationStep({
 
   const handleDocumentClick = (doc: any) => {
     setSelectedDocument(doc);
-    // Si el documento tiene información extraída, mostrarla directamente
-    if (doc.extractedData?.data) {
-      setEditingData(doc.extractedData.data);
-      setIsEditing(false);
-    } else {
-      // Si no tiene información extraída, mostrar datos vacíos
-      setEditingData({});
-      setIsEditing(false);
-    }
+    setEditingData(doc.extractedData?.data || {});
+    setIsEditing(false);
   };
 
   const handleSaveData = () => {
-    // Guardar la información editada
+    // Aquí se guardaría la información editada
     setIsEditing(false);
-    // Los datos ya están en editingData, se usarán cuando se valide
+    // Simular actualización
     console.log("Datos guardados:", editingData);
   };
 
   const handleCancelEdit = () => {
-    setEditingData(viewingDocument?.extractedData?.data || {});
+    setEditingData(selectedDocument?.extractedData?.data || {});
     setIsEditing(false);
   };
 
-  // Función para obtener campos específicos según el tipo de documento
-  const getDocumentFields = (documentType: string) => {
-    switch (documentType) {
-      case "INE":
-        return [
-          { key: "nombre", label: "Nombre completo", type: "text" },
-          {
-            key: "fechaNacimiento",
-            label: "Fecha de nacimiento",
-            type: "date",
-          },
-          { key: "domicilio", label: "Domicilio", type: "text" },
-          { key: "curp", label: "CURP", type: "text" },
-          { key: "claveElector", label: "Clave de elector", type: "text" },
-        ];
-      case "DOMICILIO":
-        return [
-          { key: "direccion", label: "Dirección completa", type: "text" },
-          { key: "codigoPostal", label: "Código postal", type: "text" },
-          { key: "colonia", label: "Colonia", type: "text" },
-          { key: "municipio", label: "Municipio", type: "text" },
-          { key: "estado", label: "Estado", type: "text" },
-        ];
-      case "ACTA_NACIMIENTO":
-        return [
-          { key: "nombre", label: "Nombre completo", type: "text" },
-          {
-            key: "fechaNacimiento",
-            label: "Fecha de nacimiento",
-            type: "date",
-          },
-          {
-            key: "lugarNacimiento",
-            label: "Lugar de nacimiento",
-            type: "text",
-          },
-          { key: "nombrePadre", label: "Nombre del padre", type: "text" },
-          { key: "nombreMadre", label: "Nombre de la madre", type: "text" },
-        ];
-      case "RFC":
-        return [
-          { key: "rfc", label: "RFC", type: "text" },
-          { key: "nombre", label: "Nombre completo", type: "text" },
-          {
-            key: "fechaNacimiento",
-            label: "Fecha de nacimiento",
-            type: "date",
-          },
-          { key: "domicilio", label: "Domicilio fiscal", type: "text" },
-        ];
-      case "DATOS_BANCARIOS":
-        return [
-          { key: "nombreTitular", label: "Nombre del titular", type: "text" },
-          { key: "numeroCuenta", label: "Número de cuenta", type: "text" },
-          { key: "clabe", label: "CLABE", type: "text" },
-          { key: "banco", label: "Banco", type: "text" },
-          { key: "sucursal", label: "Sucursal", type: "text" },
-        ];
-      case "CURP":
-        return [
-          { key: "curp", label: "CURP", type: "text" },
-          { key: "nombre", label: "Nombre completo", type: "text" },
-          {
-            key: "fechaNacimiento",
-            label: "Fecha de nacimiento",
-            type: "date",
-          },
-          { key: "sexo", label: "Sexo", type: "text" },
-          {
-            key: "entidadNacimiento",
-            label: "Entidad de nacimiento",
-            type: "text",
-          },
-        ];
-      default:
-        return [
-          { key: "nombre", label: "Nombre completo", type: "text" },
-          {
-            key: "fechaNacimiento",
-            label: "Fecha de nacimiento",
-            type: "date",
-          },
-          { key: "domicilio", label: "Domicilio", type: "text" },
-        ];
-    }
-  };
-
-  const handleViewDocument = (info: any) => {
+  const handleViewDocument = (doc: any) => {
     // Crear un objeto de documento con información real para la visualización
     const documentToView = {
-      name: info.nombre,
+      name: doc.nombre,
       type: "application/pdf", // Asumimos PDF por defecto
       size: 1024 * 1024, // 1MB simulado
       status: "extracted",
       url:
-        info.archivo?.url ||
+        doc.archivo?.url ||
         "/sample-documents/" +
-          info.nombre.toLowerCase().replace(/\s+/g, "_") +
+          doc.nombre.toLowerCase().replace(/\s+/g, "_") +
           ".pdf",
-      extractedData: {
-        data: info.datos,
-        confidence: 0.85,
-        documentType: info.tipo,
-      },
-      archivo: info.archivo,
+      extractedData: doc.extractedData,
+      archivo: doc.archivo,
     };
     setViewingDocument(documentToView);
-    setEditingData(info.datos);
   };
 
   const handleCloseDocumentViewer = () => {
@@ -1044,20 +799,17 @@ function DocumentValidationStep({
   };
 
   const handleValidateDocument = () => {
-    if (!viewingDocument) return;
-
     // Marcar el documento como validado
     const updatedSolicitud = {
       ...solicitud,
       documentosRequeridos: solicitud.documentosRequeridos.map((doc: any) => {
-        // Comparar por el nombre del documento original, no por los datos extraídos
-        if (doc.nombre === viewingDocument.name) {
+        if (doc.id === selectedDocument.id) {
           return {
             ...doc,
             validado: true,
             extractedData: {
               ...doc.extractedData,
-              data: editingData || doc.extractedData?.data,
+              data: editingData,
             },
           };
         }
@@ -1066,168 +818,190 @@ function DocumentValidationStep({
       fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
     };
     onSolicitudUpdate(updatedSolicitud);
-    setViewingDocument(null);
+    setSelectedDocument(null);
     setEditingData(null);
     setIsEditing(false);
   };
 
-  // Extraer información de documentos procesados
-  const extractedInfo = solicitud.documentosRequeridos
-    .filter((doc: any) => doc.extractedData?.data)
-    .map((doc: any) => ({
-      id: doc.id,
-      nombre: doc.nombre,
-      tipo: doc.extractedData.documentType,
-      datos: doc.extractedData.data,
-      validado: doc.validado,
-      archivo: doc.archivo,
-    }));
-
-  // Verificar si todos los documentos están validados
-  const allDocumentsValidated =
-    extractedInfo.length > 0 &&
-    extractedInfo.every((info: any) => info.validado);
-
   return (
-    <div className="space-y-6">
-      {/* Lista de información extraída */}
-      <div>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Información Extraída
-          </h3>
-        </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Lista de documentos para validar */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Documentos para Validar
+        </h3>
 
         <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Información de
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Estatus
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {extractedInfo.map((info: any) => (
-                    <tr key={info.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {info.nombre}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Información de {info.nombre}
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleViewDocument(info)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Eye className="h-4 w-4 text-gray-400" />
-                          </Button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <Button
-                          onClick={() => handleDocumentClick(info)}
-                          className={`px-4 py-2 text-sm font-medium rounded-full ${
-                            info.validado
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {info.validado ? "VALIDADO" : "VALIDAR INFORMACIÓN"}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Botón de realizar pago cuando todos los documentos estén validados */}
-        {allDocumentsValidated && (
-          <div className="mt-6">
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              {solicitud.documentosRequeridos.map((doc: any, index: number) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedDocument?.id === doc.id
+                      ? "bg-purple-50 border border-purple-200"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleDocumentClick(doc)}
+                >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                        />
-                      </svg>
-                    </div>
+                    <FileText className="h-5 w-5 text-blue-600" />
                     <div>
-                      <h3 className="text-lg font-semibold text-blue-900">
-                        Paso Siguiente: Realizar Pago
-                      </h3>
-                      <p className="text-sm text-blue-700">
-                        Todos los documentos han sido validados correctamente.
-                        Para continuar con el trámite, es necesario realizar el
-                        pago correspondiente.
-                      </p>
+                      <p className="font-medium text-sm">{doc.nombre}</p>
+                      <p className="text-xs text-gray-500">{doc.descripcion}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm text-blue-600 mb-2">
-                      Costo total: $25,000
-                    </div>
-                    <Button
-                      onClick={() => {
-                        // Actualizar estado a PAGO_PENDIENTE
-                        const updatedSolicitud = {
-                          ...solicitud,
-                          estatusActual: "PAGO_PENDIENTE",
-                          fechaUltimaActualizacion: new Date()
-                            .toISOString()
-                            .split("T")[0],
-                        };
-                        onSolicitudUpdate(updatedSolicitud);
-                        // Redirigir a la página de pago
-                        window.location.href = `/solicitud/${solicitud.numeroSolicitud}/pago`;
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs ${
+                        doc.validado
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
                     >
-                      <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                        />
-                      </svg>
-                      Realizar Pago
+                      {doc.validado ? "VALIDADO" : "PENDIENTE"}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleViewDocument(doc)}
+                    >
+                      <Eye className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Área de validación */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Validar Información
+        </h3>
+
+        {selectedDocument ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold">{selectedDocument.nombre}</h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    {isEditing ? "Cancelar" : "Editar"}
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre completo
+                    </label>
+                    <input
+                      type="text"
+                      value={editingData?.nombre || ""}
+                      onChange={(e) =>
+                        setEditingData({
+                          ...editingData,
+                          nombre: e.target.value,
+                        })
+                      }
+                      disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fecha de nacimiento
+                    </label>
+                    <input
+                      type="text"
+                      value={editingData?.fechaNacimiento || ""}
+                      onChange={(e) =>
+                        setEditingData({
+                          ...editingData,
+                          fechaNacimiento: e.target.value,
+                        })
+                      }
+                      disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Domicilio
+                    </label>
+                    <textarea
+                      value={editingData?.domicilio || ""}
+                      onChange={(e) =>
+                        setEditingData({
+                          ...editingData,
+                          domicilio: e.target.value,
+                        })
+                      }
+                      disabled={!isEditing}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    />
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      onClick={handleSaveData}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Guardar
+                    </Button>
+                    <Button onClick={handleCancelEdit} variant="outline">
+                      <X className="h-4 w-4 mr-2" />
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
+
+                {!isEditing && !selectedDocument.validado && (
+                  <div className="pt-4 border-t">
+                    <Button
+                      onClick={handleValidateDocument}
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Validar Documento
+                    </Button>
+                  </div>
+                )}
+
+                {selectedDocument.validado && (
+                  <div className="pt-4 border-t">
+                    <div className="flex items-center justify-center gap-2 text-green-600">
+                      <CheckCircle2 className="h-5 w-5" />
+                      <span className="font-medium">Documento Validado</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">
+                Selecciona un documento para validar su información
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
 
@@ -1236,21 +1010,6 @@ function DocumentValidationStep({
         isOpen={!!viewingDocument}
         onClose={handleCloseDocumentViewer}
         document={viewingDocument}
-        onSave={handleSaveData}
-        onCancel={handleCancelEdit}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-        editingData={editingData}
-        setEditingData={setEditingData}
-        onValidate={handleValidateDocument}
-        isValidated={selectedDocument?.validado}
-        documentFields={
-          viewingDocument
-            ? getDocumentFields(
-                viewingDocument.extractedData?.documentType || ""
-              )
-            : []
-        }
       />
     </div>
   );

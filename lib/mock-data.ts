@@ -119,8 +119,9 @@ export const solicitudes: Solicitud[] = [
       {
         estatus: "EN_REVISION_INTERNA",
         fecha: "2025-01-20",
-        descripcion: "Pago realizado exitosamente. Trámite enviado a revisión interna.",
-        usuario: "Sistema"
+        descripcion:
+          "Pago realizado exitosamente. Trámite enviado a revisión interna.",
+        usuario: "Sistema",
       },
     ],
     fechaCreacion: "2025-01-10",
@@ -862,7 +863,8 @@ export const solicitudes: Solicitud[] = [
       {
         id: 3,
         nombre: "RFC y Constancia de Situación Fiscal (CSF)",
-        descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal",
+        descripcion:
+          "Registro Federal de Contribuyentes y constancia de situación fiscal",
         subido: true,
         archivo: "11 RFC.pdf",
         fechaSubida: "2024-12-22",
@@ -910,7 +912,8 @@ export const solicitudes: Solicitud[] = [
       {
         id: 9,
         nombre: "Avalúo Bancario",
-        descripcion: "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
+        descripcion:
+          "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
         subido: false,
         archivo: undefined,
         fechaSubida: undefined,
@@ -926,7 +929,8 @@ export const solicitudes: Solicitud[] = [
       {
         id: 11,
         nombre: "Instrucciones de Dispersión del Banco",
-        descripcion: "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca",
+        descripcion:
+          "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca",
         subido: false,
         archivo: undefined,
         fechaSubida: undefined,
@@ -1233,7 +1237,8 @@ export const createSolicitud = async (
           {
             id: 3,
             nombre: "RFC y Constancia de Situación Fiscal (CSF)",
-            descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal",
+            descripcion:
+              "Registro Federal de Contribuyentes y constancia de situación fiscal",
             subido: false,
           },
           {
@@ -1251,7 +1256,8 @@ export const createSolicitud = async (
           {
             id: 6,
             nombre: "Datos Bancarios",
-            descripcion: "CLABE y banco para dispersión y comprobación de fondos",
+            descripcion:
+              "CLABE y banco para dispersión y comprobación de fondos",
             subido: false,
           },
           {
@@ -1269,7 +1275,8 @@ export const createSolicitud = async (
           {
             id: 9,
             nombre: "Avalúo Bancario",
-            descripcion: "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
+            descripcion:
+              "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
             subido: false,
           },
           {
@@ -1281,7 +1288,8 @@ export const createSolicitud = async (
           {
             id: 11,
             nombre: "Instrucciones de Dispersión del Banco",
-            descripcion: "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca",
+            descripcion:
+              "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca",
             subido: false,
           },
         ];
@@ -1372,13 +1380,127 @@ export const getUserSolicitudes = async (
 
   let userSolicitudes: Solicitud[] = [];
 
-  if (user?.role === "cliente") {
+  // Si no encontramos el usuario en mockUsers, crear un usuario temporal
+  let currentUser = user;
+  if (!user) {
+    // Crear un usuario temporal basado en el token
+    try {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        const decoded = JSON.parse(atob(token));
+        currentUser = {
+          id: userId,
+          email: "usuario@email.com",
+          telefono: "+52 664 000 0000",
+          nombre: "Usuario Registrado",
+          password: "",
+          role: decoded.role || "cliente",
+          activo: true,
+          fechaCreacion: new Date().toISOString(),
+        };
+      }
+    } catch (error) {
+      console.error("Error decodificando token:", error);
+    }
+  }
+
+  if (currentUser?.role === "cliente") {
     // Para clientes, devolver sus propias solicitudes
     userSolicitudes = solicitudes.filter((s) => s.cliente.id === userId);
-  } else if (user?.role === "abogado" || user?.role === "notario") {
+
+    // Si el usuario no tiene solicitudes (usuario nuevo), devolver algunas de ejemplo
+    if (userSolicitudes.length === 0) {
+      // Crear una solicitud de ejemplo para el usuario nuevo
+      const nuevaSolicitud: Solicitud = {
+        numeroSolicitud: `NT3-2025-${String(Date.now()).slice(-5)}`,
+        tipoTramite: "Compraventa de Inmuebles",
+        costoTotal: 25000,
+        saldoPendiente: 0,
+        pagosRealizados: 25000,
+        estatusActual: "ARMANDO_EXPEDIENTE",
+        documentosRequeridos: [
+          {
+            nombre: "Identificación oficial",
+            descripcion: "INE vigente",
+            subido: false,
+            archivo: null,
+            extractedData: null,
+            validado: false,
+          },
+          {
+            nombre: "CURP",
+            descripcion: "Clave Única de Registro de Población",
+            subido: false,
+            archivo: null,
+            extractedData: null,
+            validado: false,
+          },
+          {
+            nombre: "Comprobante de domicilio",
+            descripcion: "No mayor a 3 meses",
+            subido: false,
+            archivo: null,
+            extractedData: null,
+            validado: false,
+          },
+          {
+            nombre: "Acta de nacimiento",
+            descripcion: "Certificada",
+            subido: false,
+            archivo: null,
+            extractedData: null,
+            validado: false,
+          },
+          {
+            nombre: "RFC y Constancia de Situación Fiscal (CSF)",
+            descripcion: "Del SAT",
+            subido: false,
+            archivo: null,
+            extractedData: null,
+            validado: false,
+          },
+          {
+            nombre: "Datos bancarios",
+            descripcion: "Estado de cuenta o comprobante",
+            subido: false,
+            archivo: null,
+            extractedData: null,
+            validado: false,
+          },
+        ],
+        historial: [
+          {
+            estatus: "ARMANDO_EXPEDIENTE",
+            fecha: new Date().toISOString().split("T")[0],
+            descripcion: "Trámite iniciado. Pendiente de subir documentos.",
+            usuario: "Sistema",
+          },
+        ],
+        fechaCreacion: new Date().toISOString().split("T")[0],
+        fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+        cliente: {
+          id: userId,
+          nombre: currentUser.nombre,
+          email: currentUser.email,
+          telefono: currentUser.telefono,
+        },
+        notario: {
+          id: "notario-1",
+          nombre: "Dra. María Elena Rodríguez",
+          email: "maria.rodriguez@notaria3tijuana.com",
+          telefono: "+52 664 987 6543",
+        },
+      };
+
+      userSolicitudes = [nuevaSolicitud];
+    }
+  } else if (
+    currentUser?.role === "abogado" ||
+    currentUser?.role === "notario"
+  ) {
     // Para abogados/notarios, devolver las solicitudes asignadas a ellos
     userSolicitudes = solicitudes.filter((s) => s.notario.id === userId);
-  } else if (user?.role === "admin") {
+  } else if (currentUser?.role === "admin") {
     // Para admin, devolver todas las solicitudes
     userSolicitudes = solicitudes;
   }
@@ -1387,10 +1509,97 @@ export const getUserSolicitudes = async (
     "🔍 Buscando solicitudes para usuario:",
     userId,
     "rol:",
-    user?.role
+    currentUser?.role
   );
   console.log("📊 Total de solicitudes en el sistema:", solicitudes.length);
   console.log("📋 Solicitudes del usuario:", userSolicitudes.length);
+
+  // Si por alguna razón no hay solicitudes, crear una de ejemplo
+  if (userSolicitudes.length === 0) {
+    console.log("⚠️ No se encontraron solicitudes, creando una de ejemplo");
+    const solicitudEjemplo: Solicitud = {
+      numeroSolicitud: `NT3-2025-${String(Date.now()).slice(-5)}`,
+      tipoTramite: "Compraventa de Inmuebles",
+      costoTotal: 25000,
+      saldoPendiente: 0,
+      pagosRealizados: 25000,
+      estatusActual: "ARMANDO_EXPEDIENTE",
+      documentosRequeridos: [
+        {
+          nombre: "Identificación oficial",
+          descripcion: "INE vigente",
+          subido: false,
+          archivo: null,
+          extractedData: null,
+          validado: false,
+        },
+        {
+          nombre: "CURP",
+          descripcion: "Clave Única de Registro de Población",
+          subido: false,
+          archivo: null,
+          extractedData: null,
+          validado: false,
+        },
+        {
+          nombre: "Comprobante de domicilio",
+          descripcion: "No mayor a 3 meses",
+          subido: false,
+          archivo: null,
+          extractedData: null,
+          validado: false,
+        },
+        {
+          nombre: "Acta de nacimiento",
+          descripcion: "Certificada",
+          subido: false,
+          archivo: null,
+          extractedData: null,
+          validado: false,
+        },
+        {
+          nombre: "RFC y Constancia de Situación Fiscal (CSF)",
+          descripcion: "Del SAT",
+          subido: false,
+          archivo: null,
+          extractedData: null,
+          validado: false,
+        },
+        {
+          nombre: "Datos bancarios",
+          descripcion: "Estado de cuenta o comprobante",
+          subido: false,
+          archivo: null,
+          extractedData: null,
+          validado: false,
+        },
+      ],
+      historial: [
+        {
+          estatus: "ARMANDO_EXPEDIENTE",
+          fecha: new Date().toISOString().split("T")[0],
+          descripcion: "Trámite iniciado. Pendiente de subir documentos.",
+          usuario: "Sistema",
+        },
+      ],
+      fechaCreacion: new Date().toISOString().split("T")[0],
+      fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+      cliente: {
+        id: userId,
+        nombre: currentUser?.nombre || "Usuario",
+        email: currentUser?.email || "usuario@email.com",
+        telefono: currentUser?.telefono || "+52 664 000 0000",
+      },
+      notario: {
+        id: "notario-1",
+        nombre: "Dra. María Elena Rodríguez",
+        email: "maria.rodriguez@notaria3tijuana.com",
+        telefono: "+52 664 987 6543",
+      },
+    };
+
+    userSolicitudes = [solicitudEjemplo];
+  }
 
   return userSolicitudes;
 };

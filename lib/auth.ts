@@ -210,6 +210,13 @@ export const registerUser = async (
   // Agregar a la lista de usuarios (en producción esto iría a la base de datos)
   mockUsers.push(newUser);
 
+  console.log("🔐 Usuario registrado:", {
+    id: newUser.id,
+    email: newUser.email,
+    role: newUser.role,
+    totalUsers: mockUsers.length,
+  });
+
   // Generar token
   const token = btoa(
     JSON.stringify({ userId: newUser.id, role: newUser.role })

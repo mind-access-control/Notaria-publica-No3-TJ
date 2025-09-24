@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/contexts/auth-context";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -13,13 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   FileText,
   Plus,
@@ -37,142 +29,140 @@ import {
   X,
   CheckCircle2,
 } from "lucide-react";
-import { Solicitud } from "@/lib/mock-data";
-import { getUserSolicitudes } from "@/lib/mock-data";
-import {
-  UserNotification,
-  getUserNotifications,
-} from "@/lib/user-notifications-data";
-import CitaSchedulingModal from "@/components/cita-scheduling-modal";
 import Link from "next/link";
 
 export default function MiCuentaPage() {
-  const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [showFloatingNotification, setShowFloatingNotification] =
     useState(false);
-  const [showCitaModal, setShowCitaModal] = useState(false);
-  const [selectedSolicitudForCita, setSelectedSolicitudForCita] =
-    useState<string>("");
-  const [arancelesCalculados, setArancelesCalculados] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  // Usuario hardcodeado
+  const user = {
+    id: "user-hardcoded",
+    nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
+    email: "juan.perez@email.com",
+    telefono: "+52 664 123 4567",
+    role: "cliente" as const,
+  };
+
+  // Solicitud hardcodeada de compraventa
+  const solicitudHardcodeada = {
+    numeroSolicitud: "NT3-2025-00123",
+    tipoTramite: "Compraventa de Inmuebles",
+    costoTotal: 25000,
+    saldoPendiente: 0,
+    pagosRealizados: 25000,
+    estatusActual: "ARMANDO_EXPEDIENTE" as const,
+    documentosRequeridos: [
+      {
+        nombre: "Identificación oficial",
+        descripcion: "INE vigente",
+        subido: false,
+        archivo: null,
+        extractedData: null,
+        validado: false,
+      },
+      {
+        nombre: "CURP",
+        descripcion: "Clave Única de Registro de Población",
+        subido: false,
+        archivo: null,
+        extractedData: null,
+        validado: false,
+      },
+      {
+        nombre: "Comprobante de domicilio",
+        descripcion: "No mayor a 3 meses",
+        subido: false,
+        archivo: null,
+        extractedData: null,
+        validado: false,
+      },
+      {
+        nombre: "Acta de nacimiento",
+        descripcion: "Certificada",
+        subido: false,
+        archivo: null,
+        extractedData: null,
+        validado: false,
+      },
+      {
+        nombre: "RFC y Constancia de Situación Fiscal (CSF)",
+        descripcion: "Del SAT",
+        subido: false,
+        archivo: null,
+        extractedData: null,
+        validado: false,
+      },
+      {
+        nombre: "Datos bancarios",
+        descripcion: "Estado de cuenta o comprobante",
+        subido: false,
+        archivo: null,
+        extractedData: null,
+        validado: false,
+      },
+    ],
+    historial: [
+      {
+        estatus: "ARMANDO_EXPEDIENTE",
+        fecha: new Date().toISOString().split("T")[0],
+        descripcion: "Trámite iniciado. Pendiente de subir documentos.",
+        usuario: "Sistema",
+      },
+    ],
+    fechaCreacion: new Date().toISOString().split("T")[0],
+    fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+    cliente: {
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      telefono: user.telefono,
+    },
+    notario: {
+      id: "notario-1",
+      nombre: "Dra. María Elena Rodríguez",
+      email: "maria.rodriguez@notaria3tijuana.com",
+      telefono: "+52 664 987 6543",
+    },
+  };
+
+  const solicitudes = [solicitudHardcodeada];
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
+    console.log("Mi Cuenta Hardcodeada - Cargando página");
 
-    const cargarSolicitudes = async () => {
-      try {
-        const userSolicitudes = await getUserSolicitudes(user?.id || "");
-        setSolicitudes(userSolicitudes);
-      } catch (error) {
-        console.error("Error cargando solicitudes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const cargarNotificaciones = async () => {
-      try {
-        // Limpiar notificaciones existentes para empezar limpio
-        setNotifications([]);
-        setHasNewNotification(false);
-      } catch (error) {
-        console.error("Error cargando notificaciones:", error);
-      }
-    };
-
-    const cargarArancelesCalculados = () => {
-      try {
-        const datos = JSON.parse(localStorage.getItem("arancelesCalculados") || "[]");
-        setArancelesCalculados(datos);
-      } catch (error) {
-        console.error("Error cargando aranceles calculados:", error);
-      }
-    };
-
-    cargarSolicitudes();
-    cargarNotificaciones();
-    cargarArancelesCalculados();
-
-    // Simular notificaciones demo - solo 2 únicas
-    const simularNotificacionesDemo = () => {
-      // Primera notificación a los 5 segundos - Estado del documento
+    // Simular notificaciones demo después de 3 segundos
+    setTimeout(() => {
+      const nuevaNotificacion = {
+        id: "demo-notif-hardcoded",
+        tipo: "revision_expediente",
+        titulo: "Trámite en Progreso",
+        mensaje:
+          "Tu solicitud de compraventa está lista para subir documentos. Continúa con el proceso.",
+        fecha: new Date().toISOString(),
+        leida: false,
+        solicitudId: solicitudHardcodeada.numeroSolicitud,
+        acciones: [{ texto: "Continuar Trámite", accion: "ver_documento" }],
+      };
+      setNotifications([nuevaNotificacion]);
+      setHasNewNotification(true);
+      setShowFloatingNotification(true);
       setTimeout(() => {
-        const nuevaNotificacion1 = {
-          id: "demo-notif-1-unica",
-          tipo: "revision_expediente" as const,
-          titulo: "Estatus del Documento",
-          mensaje:
-            "Tu documento está siendo revisado por nuestro equipo legal. Te notificaremos cuando esté listo para firma.",
-          fecha: new Date().toISOString(),
-          leida: false,
-          solicitudId: "NT3-2025-001",
-          acciones: [
-            { texto: "Ver Progreso", accion: "ver_documento" as const },
-          ],
-        };
-        setNotifications((prev) => {
-          // Evitar duplicados - solo agregar si no existe
-          const yaExiste = prev.some((n) => n.id === "demo-notif-1-unica");
-          if (yaExiste) return prev;
-          return [nuevaNotificacion1, ...prev];
-        });
-        setHasNewNotification(true);
-        setShowFloatingNotification(true);
-        setTimeout(() => {
-          setShowFloatingNotification(false);
-        }, 8000);
+        setShowFloatingNotification(false);
       }, 5000);
-
-      // Segunda notificación a los 10 segundos (5 segundos después de la primera) - Cita disponible
-      setTimeout(() => {
-        const nuevaNotificacion2 = {
-          id: "demo-notif-2-unica",
-          tipo: "documento_listo_firma" as const,
-          titulo: "Cita Disponible",
-          mensaje:
-            "¡Tu documento está listo! Puedes agendar tu cita para la firma. Selecciona el horario que mejor te convenga.",
-          fecha: new Date().toISOString(),
-          leida: false,
-          solicitudId: "NT3-2025-001",
-          acciones: [
-            { texto: "Agendar Cita", accion: "agendar_cita" as const },
-          ],
-        };
-        setNotifications((prev) => {
-          // Evitar duplicados - solo agregar si no existe
-          const yaExiste = prev.some((n) => n.id === "demo-notif-2-unica");
-          if (yaExiste) return prev;
-          return [nuevaNotificacion2, ...prev];
-        });
-        setHasNewNotification(true);
-        setShowFloatingNotification(true);
-        setTimeout(() => {
-          setShowFloatingNotification(false);
-        }, 8000);
-      }, 10000);
-    };
-
-    // Solo ejecutar la simulación si está autenticado
-    if (isAuthenticated && user?.id) {
-      simularNotificacionesDemo();
-    }
-  }, [isAuthenticated, user?.id, router]);
+    }, 3000);
+  }, []);
 
   const getStatusColor = (estatus: string) => {
     switch (estatus) {
+      case "ARMANDO_EXPEDIENTE":
+        return "bg-yellow-100 text-yellow-800";
       case "EN_REVISION_INTERNA":
         return "bg-blue-100 text-blue-800";
-      case "DOCUMENTOS_PENDIENTES":
-        return "bg-yellow-100 text-yellow-800";
       case "PAGO_PENDIENTE":
         return "bg-orange-100 text-orange-800";
       case "COMPLETADO":
@@ -192,10 +182,10 @@ export default function MiCuentaPage() {
 
   const getStatusIcon = (estatus: string) => {
     switch (estatus) {
+      case "ARMANDO_EXPEDIENTE":
+        return <FileText className="h-4 w-4" />;
       case "EN_REVISION_INTERNA":
         return <Clock className="h-4 w-4" />;
-      case "DOCUMENTOS_PENDIENTES":
-        return <FileText className="h-4 w-4" />;
       case "PAGO_PENDIENTE":
         return <DollarSign className="h-4 w-4" />;
       case "COMPLETADO":
@@ -239,58 +229,16 @@ export default function MiCuentaPage() {
     }
   };
 
-  const handleNotificationAction = (
-    notification: UserNotification,
-    action: string
-  ) => {
+  const handleNotificationAction = (notification: any, action: string) => {
     switch (action) {
-      case "agendar_cita":
-        // Usar la primera solicitud disponible o el ID de la notificación
-        const solicitudParaCita =
-          solicitudes.length > 0
-            ? solicitudes[0].numeroSolicitud
-            : notification.solicitudId || "";
-        setSelectedSolicitudForCita(solicitudParaCita);
-        setShowCitaModal(true);
-        break;
       case "ver_documento":
-        // Navegar a la primera solicitud disponible (como "Ver Detalles")
-        if (solicitudes.length > 0) {
-          router.push(`/solicitud/${solicitudes[0].numeroSolicitud}`);
-        } else if (notification.solicitudId) {
-          router.push(`/solicitud/${notification.solicitudId}`);
-        }
+        router.push(`/solicitud/${solicitudHardcodeada.numeroSolicitud}`);
         break;
       case "contactar_abogado":
-        // Aquí podrías abrir un modal de contacto o redirigir a una página de contacto
         console.log("Contactar abogado");
         break;
     }
   };
-
-  const handleCitaAgendada = () => {
-    // Recargar notificaciones después de agendar cita
-    const cargarNotificaciones = async () => {
-      try {
-        const userNotifications = await getUserNotifications(user?.id || "");
-        setNotifications(userNotifications);
-      } catch (error) {
-        console.error("Error recargando notificaciones:", error);
-      }
-    };
-    cargarNotificaciones();
-  };
-
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -329,20 +277,11 @@ export default function MiCuentaPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    try {
-                      setIsLoggingOut(true);
-                      await logout();
-                      router.push("/");
-                    } finally {
-                      setIsLoggingOut(false);
-                    }
-                  }}
+                  onClick={() => router.push("/")}
                   className="text-red-600"
-                  disabled={isLoggingOut}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+                  Cerrar Sesión
                 </Button>
               </div>
             </div>
@@ -381,132 +320,98 @@ export default function MiCuentaPage() {
                   Mis Solicitudes
                 </h2>
                 <p className="text-sm text-gray-600">
-                  {solicitudes.length} solicitud
-                  {solicitudes.length !== 1 ? "es" : ""} encontrada
-                  {solicitudes.length !== 1 ? "s" : ""}
+                  {solicitudes.length} solicitud encontrada
                 </p>
               </div>
 
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">Cargando solicitudes...</p>
-                </div>
-              ) : solicitudes.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No tienes solicitudes
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      Comienza iniciando tu primer trámite
-                    </p>
-                    <Link href="/iniciar-tramite">
-                      <Button className="bg-emerald-600 hover:bg-emerald-700">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Iniciar Primer Trámite
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-6">
-                  {solicitudes.map((solicitud) => (
-                    <Card
-                      key={solicitud.numeroSolicitud}
-                      className="hover:shadow-md transition-shadow"
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2">
-                              <FileText className="h-5 w-5 text-emerald-600" />
-                              {solicitud.tipoTramite}
-                            </CardTitle>
-                            <CardDescription className="mt-2">
-                              Solicitud #{solicitud.numeroSolicitud}
-                            </CardDescription>
+              <div className="grid gap-6">
+                {solicitudes.map((solicitud) => (
+                  <Card
+                    key={solicitud.numeroSolicitud}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-emerald-600" />
+                            {solicitud.tipoTramite}
+                          </CardTitle>
+                          <CardDescription className="mt-2">
+                            Solicitud #{solicitud.numeroSolicitud}
+                          </CardDescription>
+                        </div>
+                        <Badge
+                          className={getStatusColor(solicitud.estatusActual)}
+                        >
+                          <div className="flex items-center gap-1">
+                            {getStatusIcon(solicitud.estatusActual)}
+                            {formatStatusText(solicitud.estatusActual)}
                           </div>
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Calendar className="h-4 w-4" />
+                          <span>Fecha: {solicitud.fechaCreacion}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <DollarSign className="h-4 w-4" />
+                          <span>
+                            Costo: $
+                            {solicitud.costoTotal.toLocaleString("es-MX")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <FileText className="h-4 w-4" />
+                          <span>
+                            {
+                              solicitud.documentosRequeridos.filter(
+                                (doc) => doc.subido
+                              ).length
+                            }
+                            /{solicitud.documentosRequeridos.length} documentos
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-gray-600">Estatus:</span>
                           <Badge
                             className={getStatusColor(solicitud.estatusActual)}
                           >
                             <div className="flex items-center gap-1">
                               {getStatusIcon(solicitud.estatusActual)}
-                              {solicitud.estatusActual.replace(/_/g, " ")}
+                              {formatStatusText(solicitud.estatusActual)}
                             </div>
                           </Badge>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="h-4 w-4" />
-                            <span>Fecha: {solicitud.fechaCreacion}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <DollarSign className="h-4 w-4" />
-                            <span>
-                              Costo: $
-                              {solicitud.costoTotal.toLocaleString("es-MX")}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <FileText className="h-4 w-4" />
-                            <span>
-                              {
-                                solicitud.documentosRequeridos.filter(
-                                  (doc) => doc.subido
-                                ).length
-                              }
-                              /{solicitud.documentosRequeridos.length}{" "}
-                              documentos
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Estatus:</span>
-                            <Badge
-                              className={getStatusColor(
-                                solicitud.estatusActual
-                              )}
-                            >
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(solicitud.estatusActual)}
-                                {formatStatusText(solicitud.estatusActual)}
-                              </div>
-                            </Badge>
-                          </div>
-                        </div>
+                      </div>
 
-                        <div className="flex items-center justify-between pt-4 border-t">
-                          <div className="text-sm text-gray-600">
-                            <p>
-                              Última actualización:{" "}
-                              {solicitud.fechaUltimaActualizacion}
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="text-sm text-gray-600">
+                          <p>
+                            Última actualización:{" "}
+                            {solicitud.fechaUltimaActualizacion}
+                          </p>
+                          {solicitud.saldoPendiente > 0 && (
+                            <p className="text-orange-600 font-medium">
+                              Saldo pendiente: $
+                              {solicitud.saldoPendiente.toLocaleString("es-MX")}
                             </p>
-                            {solicitud.saldoPendiente > 0 && (
-                              <p className="text-orange-600 font-medium">
-                                Saldo pendiente: $
-                                {solicitud.saldoPendiente.toLocaleString(
-                                  "es-MX"
-                                )}
-                              </p>
-                            )}
-                          </div>
-                          <Link
-                            href={`/solicitud/${solicitud.numeroSolicitud}`}
-                          >
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-2" />
-                              Ver Detalles
-                            </Button>
-                          </Link>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                        <Link href={`/solicitud/${solicitud.numeroSolicitud}`}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Detalles
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </TabsContent>
 
             {/* Tab: Aranceles Calculados */}
@@ -515,101 +420,85 @@ export default function MiCuentaPage() {
                 <h2 className="text-2xl font-semibold text-gray-900">
                   Aranceles Calculados
                 </h2>
-                <p className="text-sm text-gray-600">
-                  {arancelesCalculados.length} cálculo
-                  {arancelesCalculados.length !== 1 ? "s" : ""} encontrado
-                  {arancelesCalculados.length !== 1 ? "s" : ""}
-                </p>
+                <p className="text-sm text-gray-600">1 cálculo encontrado</p>
               </div>
 
-              {arancelesCalculados.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No hay aranceles calculados
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      Los aranceles calculados aparecerán aquí cuando uses la calculadora
-                    </p>
-                    <Link href="/iniciar-tramite">
-                      <Button className="bg-emerald-600 hover:bg-emerald-700">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Calcular Aranceles
-                      </Button>
-                    </Link>
+              <div className="grid gap-6">
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-blue-900">
+                        Compraventa de Inmuebles
+                      </CardTitle>
+                      <Badge variant="outline" className="text-xs">
+                        {new Date().toLocaleDateString("es-MX")}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      Cálculo de aranceles para trámite notarial
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Información del inmueble */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Información del Inmueble
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Valor:</span>
+                            <span className="font-medium">$1,500,000</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Zona:</span>
+                            <span className="font-medium capitalize">
+                              Centro
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Estado civil:</span>
+                            <span className="font-medium capitalize">
+                              Soltero
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">
+                              Crédito bancario:
+                            </span>
+                            <span className="font-medium">Sí</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desglose de costos */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Desglose de Aranceles
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">ISAI:</span>
+                            <span className="font-medium">$15,000</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Honorarios:</span>
+                            <span className="font-medium">$8,500</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">RPPC:</span>
+                            <span className="font-medium">$1,500</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2 font-bold text-lg">
+                            <span className="text-gray-900">Total:</span>
+                            <span className="text-blue-600">$25,000</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <div className="grid gap-6">
-                  {arancelesCalculados.map((arancel, index) => (
-                    <Card key={arancel.id || index} className="border-l-4 border-l-blue-500">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg text-blue-900">
-                            {arancel.tramite === "compraventas" ? "Compraventa de Inmuebles" : arancel.tramite}
-                          </CardTitle>
-                          <Badge variant="outline" className="text-xs">
-                            {new Date(arancel.fechaCalculo).toLocaleDateString("es-MX")}
-                          </Badge>
-                        </div>
-                        <CardDescription>
-                          Cálculo de aranceles para trámite notarial
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Información del inmueble */}
-                          <div>
-                            <h4 className="font-semibold text-gray-900 mb-3">Información del Inmueble</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Valor:</span>
-                                <span className="font-medium">${arancel.valorInmueble}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Zona:</span>
-                                <span className="font-medium capitalize">{arancel.zonaInmueble}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Estado civil:</span>
-                                <span className="font-medium capitalize">{arancel.estadoCivil}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Crédito bancario:</span>
-                                <span className="font-medium">{arancel.usarCredito ? 'Sí' : 'No'}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Desglose de costos */}
-                          <div>
-                            <h4 className="font-semibold text-gray-900 mb-3">Desglose de Aranceles</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">ISAI:</span>
-                                <span className="font-medium">${arancel.costosCalculados.isai.total.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Honorarios:</span>
-                                <span className="font-medium">${arancel.costosCalculados.honorarios.total.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">RPPC:</span>
-                                <span className="font-medium">${(arancel.costosCalculados.rppc.inscripcionCompraventa + (arancel.usarCredito ? arancel.costosCalculados.rppc.inscripcionHipoteca : 0)).toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between border-t pt-2 font-bold text-lg">
-                                <span className="text-gray-900">Total:</span>
-                                <span className="text-blue-600">${arancel.costosCalculados.total.toLocaleString()}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              </div>
             </TabsContent>
 
             {/* Tab: Nuevo Trámite */}
@@ -707,22 +596,24 @@ export default function MiCuentaPage() {
                         {notification.acciones &&
                           notification.acciones.length > 0 && (
                             <div className="flex gap-2 mt-2">
-                              {notification.acciones.map((accion, idx) => (
-                                <Button
-                                  key={idx}
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs h-6 px-2"
-                                  onClick={() =>
-                                    handleNotificationAction(
-                                      notification,
-                                      accion.accion
-                                    )
-                                  }
-                                >
-                                  {accion.texto}
-                                </Button>
-                              ))}
+                              {notification.acciones.map(
+                                (accion: any, idx: number) => (
+                                  <Button
+                                    key={idx}
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs h-6 px-2"
+                                    onClick={() =>
+                                      handleNotificationAction(
+                                        notification,
+                                        accion.accion
+                                      )
+                                    }
+                                  >
+                                    {accion.texto}
+                                  </Button>
+                                )
+                              )}
                             </div>
                           )}
                       </div>
@@ -776,15 +667,6 @@ export default function MiCuentaPage() {
           </div>
         </div>
       )}
-
-      {/* Modal de agendamiento de citas */}
-      <CitaSchedulingModal
-        isOpen={showCitaModal}
-        onClose={() => setShowCitaModal(false)}
-        solicitudId={selectedSolicitudForCita}
-        userId={user?.id || ""}
-        onCitaAgendada={handleCitaAgendada}
-      />
     </div>
   );
 }

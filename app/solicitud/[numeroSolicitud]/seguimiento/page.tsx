@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  MessageCircle, 
+import {
+  FileText,
+  Clock,
+  CheckCircle2,
+  MessageCircle,
   Phone,
   Mail,
   Calendar,
   User,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import { solicitudes } from "@/lib/mock-data";
 import { StatusTracker } from "@/components/status-tracker";
@@ -30,46 +30,56 @@ export default function SeguimientoPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    console.log("Cargando página de seguimiento para solicitud:", numeroSolicitud);
-    console.log("Solicitudes disponibles:", solicitudes.map(s => s.numeroSolicitud));
-    
+    console.log(
+      "Cargando página de seguimiento para solicitud:",
+      numeroSolicitud
+    );
+    console.log(
+      "Solicitudes disponibles:",
+      solicitudes.map((s) => s.numeroSolicitud)
+    );
+
     const solicitudEncontrada = solicitudes.find(
       (s) => s.numeroSolicitud === numeroSolicitud
     );
-    
+
     console.log("Solicitud encontrada:", solicitudEncontrada);
-    
+
     if (solicitudEncontrada) {
       setSolicitud(solicitudEncontrada);
     } else {
       // Si no encuentra la solicitud, usar la primera disponible para testing
-      console.log("No se encontró la solicitud, usando la primera disponible para testing");
+      console.log(
+        "No se encontró la solicitud, usando la primera disponible para testing"
+      );
       setSolicitud(solicitudes[0]);
     }
   }, [numeroSolicitud]);
 
   const handleEnviarMensaje = async () => {
     if (!mensaje.trim()) return;
-    
+
     setEnviandoMensaje(true);
-    
+
     // Simular envío de mensaje
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Agregar mensaje al historial
-    const solicitudIndex = solicitudes.findIndex(s => s.numeroSolicitud === numeroSolicitud);
+    const solicitudIndex = solicitudes.findIndex(
+      (s) => s.numeroSolicitud === numeroSolicitud
+    );
     if (solicitudIndex !== -1) {
       solicitudes[solicitudIndex].historial.push({
         estatus: solicitud.estatusActual,
         fecha: new Date().toISOString(),
         descripcion: `Mensaje del cliente: ${mensaje}`,
-        usuario: "Cliente"
+        usuario: "Cliente",
       });
     }
-    
+
     setMensaje("");
     setEnviandoMensaje(false);
-    
+
     // Mostrar confirmación
     alert("Mensaje enviado correctamente. El notario te responderá pronto.");
   };
@@ -81,16 +91,16 @@ export default function SeguimientoPage() {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    
+
     // Simular proceso de logout
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Limpiar datos de autenticación
-    localStorage.removeItem('auth');
-    localStorage.removeItem('user');
-    
+    localStorage.removeItem("auth");
+    localStorage.removeItem("user");
+
     // Redirigir a la página principal
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   if (!solicitud) {
@@ -117,20 +127,31 @@ export default function SeguimientoPage() {
                   Seguimiento del Trámite
                 </h1>
                 <p className="text-gray-600">
-                  Solicitud #{solicitud.numeroSolicitud} - {solicitud.tipoTramite}
+                  Solicitud #{solicitud.numeroSolicitud} -{" "}
+                  {solicitud.tipoTramite}
                 </p>
               </div>
             </div>
-            
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
-            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => (window.location.href = "/mi-cuenta")}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Mi Cuenta
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -166,8 +187,8 @@ export default function SeguimientoPage() {
                 <Alert>
                   <MessageCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Puedes comunicarte directamente con el licenciado a cargo de tu trámite 
-                    para resolver dudas o solicitar actualizaciones.
+                    Puedes comunicarte directamente con el licenciado a cargo de
+                    tu trámite para resolver dudas o solicitar actualizaciones.
                   </AlertDescription>
                 </Alert>
 
@@ -183,7 +204,7 @@ export default function SeguimientoPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"
                     />
                   </div>
-                  
+
                   <Button
                     onClick={handleEnviarMensaje}
                     disabled={!mensaje.trim() || enviandoMensaje}
@@ -216,31 +237,42 @@ export default function SeguimientoPage() {
               <CardContent>
                 <div className="space-y-4">
                   {solicitud.historial
-                    .filter((entry: any) => entry.usuario === "Cliente" || entry.usuario === "Notario")
+                    .filter(
+                      (entry: any) =>
+                        entry.usuario === "Cliente" ||
+                        entry.usuario === "Notario"
+                    )
                     .slice(-5)
                     .reverse()
                     .map((entry: any, index: number) => (
-                    <div key={index} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-shrink-0">
-                        {entry.usuario === "Cliente" ? (
-                          <User className="h-5 w-5 text-blue-600" />
-                        ) : (
-                          <FileText className="h-5 w-5 text-green-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">
-                            {entry.usuario === "Cliente" ? "Tú" : "Licenciado"}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {new Date(entry.fecha).toLocaleString("es-MX")}
-                          </span>
+                      <div
+                        key={index}
+                        className="flex gap-3 p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex-shrink-0">
+                          {entry.usuario === "Cliente" ? (
+                            <User className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-green-600" />
+                          )}
                         </div>
-                        <p className="text-sm text-gray-700">{entry.descripcion}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm">
+                              {entry.usuario === "Cliente"
+                                ? "Tú"
+                                : "Licenciado"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(entry.fecha).toLocaleString("es-MX")}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            {entry.descripcion}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -261,15 +293,17 @@ export default function SeguimientoPage() {
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <User className="h-8 w-8 text-blue-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">Lic. María González</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Lic. María González
+                  </h3>
                   <p className="text-sm text-gray-600">Licenciado en Derecho</p>
                   <Badge variant="outline" className="mt-2">
                     En Revisión
                   </Badge>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-gray-400" />
@@ -278,22 +312,39 @@ export default function SeguimientoPage() {
                       <p className="text-sm text-gray-600">(664) 123-4567</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-sm text-gray-600">notario3@notaria.com</p>
+                      <p className="text-sm text-gray-600">
+                        notario3@notaria.com
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <Calendar className="h-4 w-4 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium">Horario</p>
-                      <p className="text-sm text-gray-600">Lun-Vie 9:00-18:00</p>
+                      <p className="text-sm text-gray-600">
+                        Lun-Vie 9:00-18:00
+                      </p>
                     </div>
                   </div>
+                </div>
+
+                <Separator />
+
+                <div className="text-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => (window.location.href = "/mi-cuenta")}
+                    className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Ver Mi Cuenta
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -315,7 +366,7 @@ export default function SeguimientoPage() {
                       <p className="text-sm text-gray-600">(664) 123-4567</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-gray-400" />
                     <div>
@@ -324,14 +375,18 @@ export default function SeguimientoPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="text-sm text-gray-600">
                   <p className="font-medium mb-2">Dirección:</p>
-                  <p>Av. Revolución 1234<br />
-                  Zona Centro, Tijuana, BC<br />
-                  CP 22000</p>
+                  <p>
+                    Av. Revolución 1234
+                    <br />
+                    Zona Centro, Tijuana, BC
+                    <br />
+                    CP 22000
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -352,14 +407,19 @@ export default function SeguimientoPage() {
                       {solicitud.estatusActual.replace(/_/g, " ")}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Documentos:</span>
                     <span className="text-sm font-medium">
-                      {solicitud.documentosRequeridos.filter((doc: any) => doc.subido).length} / {solicitud.documentosRequeridos.length}
+                      {
+                        solicitud.documentosRequeridos.filter(
+                          (doc: any) => doc.subido
+                        ).length
+                      }{" "}
+                      / {solicitud.documentosRequeridos.length}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Pago:</span>
                     <span className="text-sm font-medium text-green-600">
