@@ -22,7 +22,6 @@ import {
   User,
   AlertCircle,
   Plus,
-  Users,
 } from "lucide-react";
 
 // Usar los datos compartidos de trámites
@@ -34,6 +33,36 @@ const TRAMITES_DISPONIBLES = getAllTramites().map((tramite) => ({
   documentos: tramite.requirements,
   requisitos: tramite.requirements, // Usar los mismos requisitos como documentos
 }));
+
+// Función helper para convertir IDs de zona a nombres legibles
+const getZonaDisplayName = (zonaId: string) => {
+  switch (zonaId) {
+    case "centro":
+      return "Centro";
+    case "zona-rio":
+      return "Zona Río";
+    case "otras-zonas":
+      return "Otras Zonas";
+    default:
+      return zonaId;
+  }
+};
+
+// Función helper para convertir IDs de estado civil a nombres legibles
+const getEstadoCivilDisplayName = (estadoCivil: string) => {
+  switch (estadoCivil) {
+    case "soltero":
+      return "Soltero";
+    case "casado":
+      return "Casado";
+    case "divorciado":
+      return "Divorciado";
+    case "viudo":
+      return "Viudo";
+    default:
+      return estadoCivil;
+  }
+};
 
 export default function IniciarTramitePage() {
   const router = useRouter();
@@ -256,6 +285,31 @@ export default function IniciarTramitePage() {
                         (arancel) => arancel.tramite === tramiteSeleccionado
                       );
 
+                      console.log(
+                        "Arancel calculado encontrado:",
+                        arancelCalculado
+                      );
+                      console.log(
+                        "Zona en arancel:",
+                        arancelCalculado?.zonaInmueble
+                      );
+                      console.log(
+                        "Estado civil en arancel:",
+                        arancelCalculado?.estadoCivil
+                      );
+                      console.log(
+                        "Usar crédito en arancel:",
+                        arancelCalculado?.usarCredito
+                      );
+                      console.log(
+                        "Valor inmueble en arancel:",
+                        arancelCalculado?.valorInmueble
+                      );
+                      console.log(
+                        "Costos calculados:",
+                        arancelCalculado?.costosCalculados
+                      );
+
                       if (
                         arancelCalculado &&
                         arancelCalculado.costosCalculados
@@ -275,17 +329,27 @@ export default function IniciarTramitePage() {
                                 <div className="text-sm space-y-1 text-gray-700">
                                   <div>
                                     <span className="font-medium">Valor:</span>{" "}
-                                    ${arancelCalculado.valorInmueble}
+                                    $
+                                    {parseFloat(
+                                      arancelCalculado.valorInmueble.replace(
+                                        /[,$]/g,
+                                        ""
+                                      )
+                                    ).toLocaleString("es-MX")}
                                   </div>
                                   <div>
                                     <span className="font-medium">Zona:</span>{" "}
-                                    {arancelCalculado.zonaInmueble}
+                                    {getZonaDisplayName(
+                                      arancelCalculado.zonaInmueble
+                                    )}
                                   </div>
                                   <div>
                                     <span className="font-medium">
                                       Estado civil:
                                     </span>{" "}
-                                    {arancelCalculado.estadoCivil}
+                                    {getEstadoCivilDisplayName(
+                                      arancelCalculado.estadoCivil
+                                    )}
                                   </div>
                                   <div>
                                     <span className="font-medium">
@@ -352,43 +416,6 @@ export default function IniciarTramitePage() {
                       }
                       return null;
                     })()}
-
-                    {/* Información del proceso multi-partes */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
-                          <Users className="h-5 w-5 text-amber-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-900 mb-2">
-                            Proceso Multi-Partes
-                          </h4>
-                          <p className="text-sm text-amber-800 mb-2">
-                            Este trámite de compraventa involucra tres partes
-                            principales:
-                          </p>
-                          <ul className="text-sm text-amber-800 space-y-1 ml-4">
-                            <li>
-                              • <strong>Comprador:</strong> Usted (proceso
-                              actual)
-                            </li>
-                            <li>
-                              • <strong>Vendedor:</strong> Deberá validar y
-                              subir sus documentos
-                            </li>
-                            <li>
-                              • <strong>Notaría:</strong> Revisará y validará
-                              toda la información
-                            </li>
-                          </ul>
-                          <p className="text-sm text-amber-800 mt-2 font-medium">
-                            ⚠️ Recuerda que será necesario que el vendedor suba
-                            sus documentos y valide esta información antes de
-                            completar el pago.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Botón de crear solicitud */}
                     <div className="pt-4 border-t border-gray-200">

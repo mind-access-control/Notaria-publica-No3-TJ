@@ -61,6 +61,26 @@ export function TramiteAdviceModal({
 
   const tramite = tramites.find((t) => t.id === selectedTramiteId);
 
+  // Limpiar datos obsoletos al abrir el modal
+  useEffect(() => {
+    if (isOpen && selectedTramiteId) {
+      const datosExistentes = JSON.parse(
+        localStorage.getItem("arancelesCalculados") || "[]"
+      );
+      const datosActuales = datosExistentes.find(
+        (item: any) => item.tramite === selectedTramiteId
+      );
+
+      if (datosActuales) {
+        console.log("Cargando datos existentes:", datosActuales);
+        setZonaInmueble(datosActuales.zonaInmueble || "");
+        setEstadoCivil(datosActuales.estadoCivil || "");
+        setUsarCredito(datosActuales.usarCredito || false);
+        setValorInmueble(datosActuales.valorInmueble || "");
+      }
+    }
+  }, [isOpen, selectedTramiteId]);
+
   const handleWhatsApp = () => {
     const message = `Hola, me interesa hacer un ${
       tramite?.name
@@ -99,6 +119,19 @@ export function TramiteAdviceModal({
       );
 
       if (costosCalculados) {
+        console.log(
+          "ANTES de crear datosCalculados - zonaInmueble:",
+          zonaInmueble
+        );
+        console.log(
+          "ANTES de crear datosCalculados - estadoCivil:",
+          estadoCivil
+        );
+        console.log(
+          "ANTES de crear datosCalculados - usarCredito:",
+          usarCredito
+        );
+
         const datosCalculados = {
           tramite: selectedTramiteId,
           valorInmueble: valorInmueble,
@@ -111,6 +144,10 @@ export function TramiteAdviceModal({
         };
 
         console.log("Guardando datos desde modal:", datosCalculados);
+        console.log("Zona seleccionada:", zonaInmueble);
+        console.log("Estado civil:", estadoCivil);
+        console.log("Usar crédito:", usarCredito);
+        console.log("Valor inmueble:", valorInmueble);
 
         // Obtener datos existentes y agregar el nuevo
         const datosExistentes = JSON.parse(
@@ -255,7 +292,12 @@ export function TramiteAdviceModal({
 
     // Solo para compraventa, usar el cálculo detallado
     if (tramiteId === "compraventa") {
-      return calcularArancelesTotales(valorNum, usarCredito);
+      const aranceles = calcularArancelesTotales(valorNum, usarCredito);
+      return {
+        ...aranceles,
+        zona: zona,
+        valorInmueble: valorNum,
+      };
     }
 
     switch (tramiteId) {
@@ -370,10 +412,10 @@ export function TramiteAdviceModal({
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-1">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <DialogTitle className="text-sm font-semibold text-center">
+              <DialogTitle className="text-xl font-semibold text-center">
                 Asesoría para {tramite.name}
               </DialogTitle>
-              <DialogDescription className="text-center text-xs">
+              <DialogDescription className="text-center text-base">
                 Aquí tienes toda la información que necesitas para tu trámite
               </DialogDescription>
             </div>
@@ -395,15 +437,15 @@ export function TramiteAdviceModal({
             <Card className="border border-blue-200 bg-blue-50">
               <CardContent className="px-3 py-1">
                 <div className="flex items-center gap-2">
-                  <div className="text-sm font-semibold text-blue-800">
+                  <div className="text-lg font-semibold text-blue-800">
                     {tramite.name}
                   </div>
                   <div className="text-gray-400">•</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-lg text-gray-600">
                     {tramite.description}
                   </div>
                   <div className="text-gray-400">•</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-lg text-gray-600">
                     {tramite.id === "compraventa" &&
                       "Servicio especializado en escrituración segura de propiedades"}
                     {tramite.id === "testamento" &&
@@ -495,18 +537,18 @@ export function TramiteAdviceModal({
                 {tramite.id === "compraventa" && (
                   <Card className="flex-1">
                     <CardHeader className="pb-1 pt-2">
-                      <CardTitle className="text-xs flex items-center gap-2">
-                        <Users className="h-3 w-3 text-blue-600" />
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Users className="h-4 w-4 text-blue-600" />
                         Información Adicional
                       </CardTitle>
-                      <CardDescription className="text-xs">
+                      <CardDescription className="text-base">
                         Para personalizar documentos
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 pt-0">
                       {/* Pregunta de estado civil */}
                       <div>
-                        <label className="text-xs font-medium text-gray-700 mb-1 block">
+                        <label className="text-base font-medium text-gray-700 mb-1 block">
                           ¿Estado civil?
                         </label>
                         <div className="grid grid-cols-2 gap-1">
@@ -514,8 +556,40 @@ export function TramiteAdviceModal({
                             (estado) => (
                               <button
                                 key={estado}
-                                onClick={() => setEstadoCivil(estado)}
-                                className={`px-1 py-1 text-xs rounded-md border transition-colors ${
+                                onClick={() => {
+                                  setEstadoCivil(estado);
+                                  // Guardar inmediatamente en localStorage
+                                  const datosExistentes = JSON.parse(
+                                    localStorage.getItem(
+                                      "arancelesCalculados"
+                                    ) || "[]"
+                                  );
+                                  const indiceExistente =
+                                    datosExistentes.findIndex(
+                                      (item: any) =>
+                                        item.tramite === selectedTramiteId
+                                    );
+                                  if (indiceExistente >= 0) {
+                                    datosExistentes[
+                                      indiceExistente
+                                    ].estadoCivil = estado;
+                                  } else {
+                                    datosExistentes.push({
+                                      tramite: selectedTramiteId,
+                                      zonaInmueble: zonaInmueble,
+                                      estadoCivil: estado,
+                                      usarCredito: usarCredito,
+                                      valorInmueble: valorInmueble,
+                                      fechaCalculo: new Date().toISOString(),
+                                      id: `temp-${Date.now()}`,
+                                    });
+                                  }
+                                  localStorage.setItem(
+                                    "arancelesCalculados",
+                                    JSON.stringify(datosExistentes)
+                                  );
+                                }}
+                                className={`px-2 py-1 text-base rounded-md border transition-colors ${
                                   estadoCivil === estado
                                     ? "bg-blue-100 border-blue-300 text-blue-700"
                                     : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -531,13 +605,42 @@ export function TramiteAdviceModal({
 
                       {/* Pregunta de crédito bancario */}
                       <div>
-                        <label className="text-xs font-medium text-gray-700 mb-1 block">
+                        <label className="text-base font-medium text-gray-700 mb-1 block">
                           ¿Crédito bancario?
                         </label>
                         <div className="flex gap-1">
                           <button
-                            onClick={() => setUsarCredito(true)}
-                            className={`flex-1 px-1 py-1 text-xs rounded-md border transition-colors ${
+                            onClick={() => {
+                              setUsarCredito(true);
+                              // Guardar inmediatamente en localStorage
+                              const datosExistentes = JSON.parse(
+                                localStorage.getItem("arancelesCalculados") ||
+                                  "[]"
+                              );
+                              const indiceExistente = datosExistentes.findIndex(
+                                (item: any) =>
+                                  item.tramite === selectedTramiteId
+                              );
+                              if (indiceExistente >= 0) {
+                                datosExistentes[indiceExistente].usarCredito =
+                                  true;
+                              } else {
+                                datosExistentes.push({
+                                  tramite: selectedTramiteId,
+                                  zonaInmueble: zonaInmueble,
+                                  estadoCivil: estadoCivil,
+                                  usarCredito: true,
+                                  valorInmueble: valorInmueble,
+                                  fechaCalculo: new Date().toISOString(),
+                                  id: `temp-${Date.now()}`,
+                                });
+                              }
+                              localStorage.setItem(
+                                "arancelesCalculados",
+                                JSON.stringify(datosExistentes)
+                              );
+                            }}
+                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
                               usarCredito
                                 ? "bg-blue-100 border-blue-300 text-blue-700"
                                 : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -546,8 +649,37 @@ export function TramiteAdviceModal({
                             Sí
                           </button>
                           <button
-                            onClick={() => setUsarCredito(false)}
-                            className={`flex-1 px-1 py-1 text-xs rounded-md border transition-colors ${
+                            onClick={() => {
+                              setUsarCredito(false);
+                              // Guardar inmediatamente en localStorage
+                              const datosExistentes = JSON.parse(
+                                localStorage.getItem("arancelesCalculados") ||
+                                  "[]"
+                              );
+                              const indiceExistente = datosExistentes.findIndex(
+                                (item: any) =>
+                                  item.tramite === selectedTramiteId
+                              );
+                              if (indiceExistente >= 0) {
+                                datosExistentes[indiceExistente].usarCredito =
+                                  false;
+                              } else {
+                                datosExistentes.push({
+                                  tramite: selectedTramiteId,
+                                  zonaInmueble: zonaInmueble,
+                                  estadoCivil: estadoCivil,
+                                  usarCredito: false,
+                                  valorInmueble: valorInmueble,
+                                  fechaCalculo: new Date().toISOString(),
+                                  id: `temp-${Date.now()}`,
+                                });
+                              }
+                              localStorage.setItem(
+                                "arancelesCalculados",
+                                JSON.stringify(datosExistentes)
+                              );
+                            }}
+                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
                               !usarCredito
                                 ? "bg-blue-100 border-blue-300 text-blue-700"
                                 : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -566,8 +698,8 @@ export function TramiteAdviceModal({
               <div className="flex flex-col">
                 <Card className="flex-1">
                   <CardHeader className="pb-1 pt-2">
-                    <CardTitle className="text-xs flex items-center gap-2">
-                      <FileText className="h-3 w-3 text-blue-600" />
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-blue-600" />
                       Documentos Requeridos
                     </CardTitle>
                   </CardHeader>
@@ -581,9 +713,9 @@ export function TramiteAdviceModal({
                           }))
                       ).map((req, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <CheckCircle className="h-2.5 w-2.5 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <CheckCircle className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
                           <div className="flex items-center gap-1">
-                            <span className="text-xs leading-relaxed">
+                            <span className="text-base leading-relaxed">
                               {req.texto}
                             </span>
                             {req.tooltip && (
@@ -607,27 +739,255 @@ export function TramiteAdviceModal({
 
             {/* Calculadora de Aranceles - Solo para compraventa */}
             {tramite.id === "compraventa" ? (
-              <Card className="bg-gray-50">
-                <CardHeader className="pb-1 pt-1">
-                  <CardTitle className="text-xs flex items-center gap-2 text-gray-700">
-                    <Calculator className="h-3 w-3 text-gray-500" />
-                    Calculadora de Aranceles
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-lg">
+                <CardHeader className="pb-2 pt-3">
+                  <CardTitle className="text-xl font-bold flex items-center gap-3 text-blue-900">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Calculator className="h-6 w-6 text-blue-600" />
+                    </div>
+                    Calculadora de Aranceles - Notaría 3 Tijuana
                   </CardTitle>
+                  <p className="text-base text-blue-700 mt-1">
+                    Calcula los costos exactos según la zona y valor de tu
+                    inmueble
+                  </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
-                        Valor del inmueble:
-                      </label>
-                      <Input
-                        value={valorInmueble}
-                        onChange={(e) => setValorInmueble(e.target.value)}
-                        placeholder="Ej: $500,000"
-                        className="h-6 text-xs flex-1"
-                      />
+                  {/* Selección de Zona */}
+                  <div className="bg-white p-4 rounded-lg border border-blue-100 mb-4">
+                    <h4 className="text-base font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      Selecciona la Zona de Tijuana
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-3">
+                      La zona determina los costos legales y el avalúo mínimo
+                      requerido
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {[
+                        {
+                          id: "centro",
+                          nombre: "Centro",
+                          avaluoMinimo: 1200000,
+                          descripcion: "Zona comercial y residencial céntrica",
+                        },
+                        {
+                          id: "zona-rio",
+                          nombre: "Zona Río",
+                          avaluoMinimo: 1800000,
+                          descripcion: "Zona residencial de alto valor",
+                        },
+                        {
+                          id: "otras-zonas",
+                          nombre: "Otras Zonas",
+                          avaluoMinimo: 800000,
+                          descripcion: "Zonas residenciales periféricas",
+                        },
+                      ].map((zona) => (
+                        <button
+                          key={zona.id}
+                          onClick={() => {
+                            console.log("Seleccionando zona:", zona.id);
+                            setZonaInmueble(zona.id);
+                            // Guardar inmediatamente en localStorage para persistir
+                            const datosExistentes = JSON.parse(
+                              localStorage.getItem("arancelesCalculados") ||
+                                "[]"
+                            );
+                            // Buscar si ya existe un cálculo para este trámite
+                            const indiceExistente = datosExistentes.findIndex(
+                              (item: any) => item.tramite === selectedTramiteId
+                            );
+                            if (indiceExistente >= 0) {
+                              datosExistentes[indiceExistente].zonaInmueble =
+                                zona.id;
+                            } else {
+                              // Crear un objeto temporal si no existe
+                              datosExistentes.push({
+                                tramite: selectedTramiteId,
+                                zonaInmueble: zona.id,
+                                estadoCivil: estadoCivil,
+                                usarCredito: usarCredito,
+                                valorInmueble: valorInmueble,
+                                fechaCalculo: new Date().toISOString(),
+                                id: `temp-${Date.now()}`,
+                              });
+                            }
+                            localStorage.setItem(
+                              "arancelesCalculados",
+                              JSON.stringify(datosExistentes)
+                            );
+                            console.log(
+                              "Zona guardada inmediatamente:",
+                              zona.id
+                            );
+                          }}
+                          className={`p-3 rounded-lg border-2 text-left transition-all ${
+                            zonaInmueble === zona.id
+                              ? "border-blue-500 bg-blue-50 text-blue-900"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-25"
+                          }`}
+                        >
+                          <div className="font-medium text-base">
+                            {zona.nombre}
+                          </div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            {zona.descripcion}
+                          </div>
+                          <div className="text-sm font-semibold text-green-600 mt-1">
+                            Avalúo mínimo: $
+                            {zona.avaluoMinimo.toLocaleString("es-MX")}
+                          </div>
+                        </button>
+                      ))}
                     </div>
 
+                    {zonaInmueble && (
+                      <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm text-green-800">
+                          ✅ Zona seleccionada: <strong>{zonaInmueble}</strong>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Valor del Inmueble */}
+                  <div className="bg-white p-4 rounded-lg border border-blue-100 mb-4">
+                    <h4 className="text-base font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      Valor del Inmueble
+                    </h4>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-base font-medium text-gray-600 whitespace-nowrap">
+                          Precio de venta:
+                        </label>
+                        <Input
+                          value={valorInmueble}
+                          onChange={(e) => {
+                            setValorInmueble(e.target.value);
+                            // Guardar inmediatamente en localStorage
+                            const datosExistentes = JSON.parse(
+                              localStorage.getItem("arancelesCalculados") ||
+                                "[]"
+                            );
+                            const indiceExistente = datosExistentes.findIndex(
+                              (item: any) => item.tramite === selectedTramiteId
+                            );
+                            if (indiceExistente >= 0) {
+                              datosExistentes[indiceExistente].valorInmueble =
+                                e.target.value;
+                            } else {
+                              datosExistentes.push({
+                                tramite: selectedTramiteId,
+                                zonaInmueble: zonaInmueble,
+                                estadoCivil: estadoCivil,
+                                usarCredito: usarCredito,
+                                valorInmueble: e.target.value,
+                                fechaCalculo: new Date().toISOString(),
+                                id: `temp-${Date.now()}`,
+                              });
+                            }
+                            localStorage.setItem(
+                              "arancelesCalculados",
+                              JSON.stringify(datosExistentes)
+                            );
+                            console.log(
+                              "Valor inmueble guardado inmediatamente:",
+                              e.target.value
+                            );
+                          }}
+                          placeholder="Ej: $1,500,000"
+                          className="h-10 text-base flex-1"
+                        />
+                      </div>
+
+                      {zonaInmueble &&
+                        valorInmueble &&
+                        !isNaN(
+                          parseFloat(valorInmueble.replace(/[,$]/g, ""))
+                        ) &&
+                        (() => {
+                          const valor = parseFloat(
+                            valorInmueble.replace(/[,$]/g, "")
+                          );
+                          const zonaSeleccionada = [
+                            { id: "centro", avaluoMinimo: 1200000 },
+                            { id: "zona-rio", avaluoMinimo: 1800000 },
+                            { id: "otras-zonas", avaluoMinimo: 800000 },
+                          ].find((z) => z.id === zonaInmueble);
+
+                          const avaluoMinimo =
+                            zonaSeleccionada?.avaluoMinimo || 0;
+                          const valorMinimoPermitido = avaluoMinimo * 0.9; // 90% del avalúo mínimo
+                          const cumpleRequisito = valor >= valorMinimoPermitido;
+
+                          return (
+                            <div
+                              className={`p-3 rounded-lg border ${
+                                cumpleRequisito
+                                  ? "bg-green-50 border-green-200"
+                                  : "bg-red-50 border-red-200"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    cumpleRequisito
+                                      ? "bg-green-500"
+                                      : "bg-red-500"
+                                  }`}
+                                ></div>
+                                <span
+                                  className={`text-base font-medium ${
+                                    cumpleRequisito
+                                      ? "text-green-800"
+                                      : "text-red-800"
+                                  }`}
+                                >
+                                  {cumpleRequisito
+                                    ? "✅ Valor válido"
+                                    : "⚠️ Valor muy bajo"}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600 space-y-1">
+                                <div>
+                                  • Avalúo mínimo zona:{" "}
+                                  <strong>
+                                    ${avaluoMinimo.toLocaleString("es-MX")}
+                                  </strong>
+                                </div>
+                                <div>
+                                  • Valor mínimo permitido:{" "}
+                                  <strong>
+                                    $
+                                    {valorMinimoPermitido.toLocaleString(
+                                      "es-MX"
+                                    )}
+                                  </strong>
+                                </div>
+                                <div>
+                                  • Tu valor:{" "}
+                                  <strong>
+                                    ${valor.toLocaleString("es-MX")}
+                                  </strong>
+                                </div>
+                              </div>
+                              {!cumpleRequisito && (
+                                <div className="mt-2 text-xs text-red-700 font-medium">
+                                  💡 El valor debe ser al menos el 90% del
+                                  avalúo mínimo de la zona
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
                     {valorInmueble &&
                       !isNaN(
                         parseFloat(valorInmueble.replace(/[$,]/g, ""))
@@ -821,17 +1181,17 @@ export function TramiteAdviceModal({
             ) : (
               <Card className="bg-gray-50">
                 <CardHeader className="pb-1">
-                  <CardTitle className="text-xs flex items-center gap-2 text-gray-700">
-                    <DollarSign className="h-3 w-3 text-gray-500" />
+                  <CardTitle className="text-base flex items-center gap-2 text-gray-700">
+                    <DollarSign className="h-4 w-4 text-gray-500" />
                     Costo Aproximado
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                    <p className="text-lg font-semibold text-gray-700 mb-1">
                       {tramite.estimatedCost}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-base text-gray-500">
                       * Rango aproximado, puede variar según el caso específico
                     </p>
                   </div>
@@ -841,7 +1201,7 @@ export function TramiteAdviceModal({
 
             {/* Acciones */}
             <div className="space-y-1">
-              <h3 className="text-xs font-semibold">
+              <h3 className="text-base font-semibold">
                 ¿Cómo quieres continuar?
               </h3>
 
@@ -852,7 +1212,7 @@ export function TramiteAdviceModal({
                   size="sm"
                 >
                   <FileText className="h-3 w-3 flex-shrink-0" />
-                  <span className="text-xs font-semibold">
+                  <span className="text-base font-semibold">
                     Iniciar Expediente
                   </span>
                 </Button>
@@ -864,7 +1224,7 @@ export function TramiteAdviceModal({
                   size="sm"
                 >
                   <Calendar className="h-3 w-3 text-slate-600 flex-shrink-0" />
-                  <span className="text-xs font-semibold text-slate-700">
+                  <span className="text-base font-semibold text-slate-700">
                     Agendar Cita
                   </span>
                 </Button>
@@ -878,7 +1238,7 @@ export function TramiteAdviceModal({
                   size="sm"
                 >
                   <MessageCircle className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                  <span className="text-xs text-blue-700">WhatsApp</span>
+                  <span className="text-base text-blue-700">WhatsApp</span>
                 </Button>
 
                 <Button
@@ -888,18 +1248,18 @@ export function TramiteAdviceModal({
                   size="sm"
                 >
                   <Mail className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                  <span className="text-xs text-blue-700">Email</span>
+                  <span className="text-base text-blue-700">Email</span>
                 </Button>
               </div>
             </div>
 
             <div className="flex justify-between items-center pt-1 mt-1 border-t border-gray-200">
-              <div className="text-xs text-gray-500">
+              <div className="text-base text-gray-500">
                 ¿Necesitas más información? Contáctanos
               </div>
               <Button
                 onClick={onClose}
-                className="bg-blue-600 hover:bg-blue-700 text-xs px-2 py-1"
+                className="bg-blue-600 hover:bg-blue-700 text-base px-3 py-1"
                 size="sm"
               >
                 Cerrar
