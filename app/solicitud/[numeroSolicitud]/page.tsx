@@ -76,6 +76,159 @@ export default function SolicitudStatusPage() {
       // Esperar a que termine la autenticación
       if (authLoading) return;
 
+      // Solicitud especial de demostración - no requiere autenticación
+      if (numeroSolicitud === "NT3-2025-00123") {
+        try {
+          setIsLoading(true);
+          // Crear solicitud simulada para demostración
+          const solicitudDemo: Solicitud = {
+            numeroSolicitud: "NT3-2025-00123",
+            tipoTramite: "Compraventa de Inmuebles",
+            costoTotal: 25000,
+            saldoPendiente: 0,
+            pagosRealizados: 25000,
+            estatusActual: "EN_REVISION_INTERNA",
+            documentosRequeridos: [
+              {
+                nombre: "Identificación oficial",
+                descripcion: "INE vigente",
+                subido: true,
+                archivo: {
+                  name: "INE.pdf",
+                  url: "/sample-documents/identificacion.pdf",
+                },
+                extractedData: {
+                  documentType: "INE",
+                  data: { nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN" },
+                },
+                validado: true,
+              },
+              {
+                nombre: "CURP",
+                descripcion: "Clave Única de Registro de Población",
+                subido: true,
+                archivo: {
+                  name: "CURP.pdf",
+                  url: "/sample-documents/identificacion.pdf",
+                },
+                extractedData: {
+                  documentType: "CURP",
+                  data: { curp: "HEGR850315HBCNNS01" },
+                },
+                validado: true,
+              },
+              {
+                nombre: "Comprobante de domicilio",
+                descripcion: "No mayor a 3 meses",
+                subido: true,
+                archivo: {
+                  name: "Comprobante_Domicilio.pdf",
+                  url: "/sample-documents/comprobante_domicilio.pdf",
+                },
+                extractedData: {
+                  documentType: "DOMICILIO",
+                  data: { direccion: "Av. Revolución 1234, Centro, Tijuana" },
+                },
+                validado: true,
+              },
+              {
+                nombre: "Acta de nacimiento",
+                descripcion: "Certificada",
+                subido: true,
+                archivo: {
+                  name: "Acta_Nacimiento.pdf",
+                  url: "/sample-documents/acta_nacimiento.pdf",
+                },
+                extractedData: {
+                  documentType: "ACTA_NACIMIENTO",
+                  data: { fechaNacimiento: "15/03/1985" },
+                },
+                validado: true,
+              },
+              {
+                nombre: "RFC y Constancia de Situación Fiscal (CSF)",
+                descripcion: "Del SAT",
+                subido: true,
+                archivo: {
+                  name: "RFC_CSF.pdf",
+                  url: "/sample-documents/identificacion.pdf",
+                },
+                extractedData: {
+                  documentType: "RFC",
+                  data: { rfc: "HEGR850315ABC" },
+                },
+                validado: true,
+              },
+              {
+                nombre: "Datos bancarios",
+                descripcion: "Estado de cuenta o comprobante",
+                subido: true,
+                archivo: {
+                  name: "Datos_Bancarios.pdf",
+                  url: "/sample-documents/identificacion.pdf",
+                },
+                extractedData: {
+                  documentType: "DATOS_BANCARIOS",
+                  data: { banco: "BBVA", cuenta: "1234567890" },
+                },
+                validado: true,
+              },
+            ],
+            historial: [
+              {
+                estatus: "ARMANDO_EXPEDIENTE",
+                fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split("T")[0],
+                descripcion: "Trámite iniciado. Pendiente de subir documentos.",
+                usuario: "Sistema",
+              },
+              {
+                estatus: "PAGO_PENDIENTE",
+                fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split("T")[0],
+                descripcion:
+                  "Todos los documentos han sido subidos y validados. Pago realizado exitosamente.",
+                usuario: "Sistema",
+              },
+              {
+                estatus: "EN_REVISION_INTERNA",
+                fecha: new Date().toISOString().split("T")[0],
+                descripcion:
+                  "Solicitud enviada a revisión interna. Licenciado asignado revisando documentos.",
+                usuario: "Sistema",
+              },
+            ],
+            fechaCreacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0],
+            fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+            cliente: {
+              id: "user-hardcoded",
+              nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
+              email: "juan.perez@email.com",
+              telefono: "+52 664 123 4567",
+            },
+            notario: {
+              id: "notario-1",
+              nombre: "Dra. María Elena Rodríguez",
+              email: "maria.rodriguez@notaria3tijuana.com",
+              telefono: "+52 664 987 6543",
+            },
+          };
+
+          setSolicitud(solicitudDemo);
+          setIsLoading(false);
+          return;
+        } catch (error) {
+          console.error("Error cargando solicitud demo:", error);
+          setError("Error al cargar la solicitud de demostración");
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // Si no está autenticado, redirigir al login
       if (!isAuthenticated) {
         router.push(

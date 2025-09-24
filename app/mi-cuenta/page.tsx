@@ -55,62 +55,113 @@ export default function MiCuentaPage() {
     costoTotal: 25000,
     saldoPendiente: 0,
     pagosRealizados: 25000,
-    estatusActual: "ARMANDO_EXPEDIENTE" as const,
+    estatusActual: "EN_REVISION_INTERNA" as const,
     documentosRequeridos: [
       {
         nombre: "Identificación oficial",
         descripcion: "INE vigente",
-        subido: false,
-        archivo: null,
-        extractedData: null,
-        validado: false,
+        subido: true,
+        archivo: {
+          name: "INE.pdf",
+          url: "/sample-documents/identificacion.pdf",
+        },
+        extractedData: {
+          documentType: "INE",
+          data: { nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN" },
+        },
+        validado: true,
       },
       {
         nombre: "CURP",
         descripcion: "Clave Única de Registro de Población",
-        subido: false,
-        archivo: null,
-        extractedData: null,
-        validado: false,
+        subido: true,
+        archivo: {
+          name: "CURP.pdf",
+          url: "/sample-documents/identificacion.pdf",
+        },
+        extractedData: {
+          documentType: "CURP",
+          data: { curp: "HEGR850315HBCNNS01" },
+        },
+        validado: true,
       },
       {
         nombre: "Comprobante de domicilio",
         descripcion: "No mayor a 3 meses",
-        subido: false,
-        archivo: null,
-        extractedData: null,
-        validado: false,
+        subido: true,
+        archivo: {
+          name: "Comprobante_Domicilio.pdf",
+          url: "/sample-documents/comprobante_domicilio.pdf",
+        },
+        extractedData: {
+          documentType: "DOMICILIO",
+          data: { direccion: "Av. Revolución 1234, Centro, Tijuana" },
+        },
+        validado: true,
       },
       {
         nombre: "Acta de nacimiento",
         descripcion: "Certificada",
-        subido: false,
-        archivo: null,
-        extractedData: null,
-        validado: false,
+        subido: true,
+        archivo: {
+          name: "Acta_Nacimiento.pdf",
+          url: "/sample-documents/acta_nacimiento.pdf",
+        },
+        extractedData: {
+          documentType: "ACTA_NACIMIENTO",
+          data: { fechaNacimiento: "15/03/1985" },
+        },
+        validado: true,
       },
       {
         nombre: "RFC y Constancia de Situación Fiscal (CSF)",
         descripcion: "Del SAT",
-        subido: false,
-        archivo: null,
-        extractedData: null,
-        validado: false,
+        subido: true,
+        archivo: {
+          name: "RFC_CSF.pdf",
+          url: "/sample-documents/identificacion.pdf",
+        },
+        extractedData: { documentType: "RFC", data: { rfc: "HEGR850315ABC" } },
+        validado: true,
       },
       {
         nombre: "Datos bancarios",
         descripcion: "Estado de cuenta o comprobante",
-        subido: false,
-        archivo: null,
-        extractedData: null,
-        validado: false,
+        subido: true,
+        archivo: {
+          name: "Datos_Bancarios.pdf",
+          url: "/sample-documents/identificacion.pdf",
+        },
+        extractedData: {
+          documentType: "DATOS_BANCARIOS",
+          data: { banco: "BBVA", cuenta: "1234567890" },
+        },
+        validado: true,
       },
     ],
     historial: [
       {
         estatus: "ARMANDO_EXPEDIENTE",
-        fecha: new Date().toISOString().split("T")[0],
+        fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
         descripcion: "Trámite iniciado. Pendiente de subir documentos.",
+        usuario: "Sistema",
+      },
+      {
+        estatus: "PAGO_PENDIENTE",
+        fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        descripcion:
+          "Todos los documentos han sido subidos y validados. Pago realizado exitosamente.",
+        usuario: "Sistema",
+      },
+      {
+        estatus: "EN_REVISION_INTERNA",
+        fecha: new Date().toISOString().split("T")[0],
+        descripcion:
+          "Solicitud enviada a revisión interna. Licenciado asignado revisando documentos.",
         usuario: "Sistema",
       },
     ],
@@ -140,13 +191,13 @@ export default function MiCuentaPage() {
       const nuevaNotificacion = {
         id: "demo-notif-hardcoded",
         tipo: "revision_expediente",
-        titulo: "Trámite en Progreso",
+        titulo: "Solicitud en Revisión Interna",
         mensaje:
-          "Tu solicitud de compraventa está lista para subir documentos. Continúa con el proceso.",
+          "Tu solicitud de compraventa está siendo validada por un licenciado. Te mantendremos informado del progreso.",
         fecha: new Date().toISOString(),
         leida: false,
         solicitudId: solicitudHardcodeada.numeroSolicitud,
-        acciones: [{ texto: "Continuar Trámite", accion: "ver_documento" }],
+        acciones: [{ texto: "Ver Detalles", accion: "ver_documento" }],
       };
       setNotifications([nuevaNotificacion]);
       setHasNewNotification(true);
@@ -232,7 +283,11 @@ export default function MiCuentaPage() {
   const handleNotificationAction = (notification: any, action: string) => {
     switch (action) {
       case "ver_documento":
-        router.push(`/solicitud/${solicitudHardcodeada.numeroSolicitud}`);
+        console.log(
+          "Navegando a seguimiento desde notificación:",
+          solicitudHardcodeada.numeroSolicitud
+        );
+        window.location.href = `/solicitud/${solicitudHardcodeada.numeroSolicitud}/seguimiento`;
         break;
       case "contactar_abogado":
         console.log("Contactar abogado");
@@ -357,22 +412,19 @@ export default function MiCuentaPage() {
                           <Calendar className="h-4 w-4" />
                           <span>Fecha: {solicitud.fechaCreacion}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <DollarSign className="h-4 w-4" />
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <CheckCircle className="h-4 w-4" />
                           <span>
-                            Costo: $
-                            {solicitud.costoTotal.toLocaleString("es-MX")}
+                            Pago liquidado: $
+                            {solicitud.pagosRealizados.toLocaleString("es-MX")}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <FileText className="h-4 w-4" />
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <CheckCircle className="h-4 w-4" />
                           <span>
-                            {
-                              solicitud.documentosRequeridos.filter(
-                                (doc) => doc.subido
-                              ).length
-                            }
-                            /{solicitud.documentosRequeridos.length} documentos
+                            Todos los documentos completados (
+                            {solicitud.documentosRequeridos.length}/
+                            {solicitud.documentosRequeridos.length})
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
@@ -394,19 +446,24 @@ export default function MiCuentaPage() {
                             Última actualización:{" "}
                             {solicitud.fechaUltimaActualizacion}
                           </p>
-                          {solicitud.saldoPendiente > 0 && (
-                            <p className="text-orange-600 font-medium">
-                              Saldo pendiente: $
-                              {solicitud.saldoPendiente.toLocaleString("es-MX")}
-                            </p>
-                          )}
+                          <p className="text-green-600 font-medium">
+                            ✓ Pago completamente liquidado
+                          </p>
                         </div>
-                        <Link href={`/solicitud/${solicitud.numeroSolicitud}`}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Detalles
-                          </Button>
-                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            console.log(
+                              "Navegando a seguimiento:",
+                              solicitud.numeroSolicitud
+                            );
+                            window.location.href = `/solicitud/${solicitud.numeroSolicitud}/seguimiento`;
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver Detalles
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
