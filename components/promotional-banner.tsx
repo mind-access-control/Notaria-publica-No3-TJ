@@ -71,62 +71,51 @@ export function PromotionalBanner({
   return (
     <div className="relative overflow-hidden">
       <Card
-        className={`${campaign.color} ${campaign.textColor} border-0 shadow-lg animate-in slide-in-from-top duration-500`}
+        className={`${campaign.color} ${campaign.textColor} border-0 shadow-sm animate-in slide-in-from-top duration-500`}
       >
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1">
+        <CardContent className="px-1 py-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <IconComponent className="h-6 w-6" />
+                <div className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center">
+                  <IconComponent className="h-2 w-2" />
                 </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <Badge className={`${campaign.badgeColor} text-xs font-bold`}>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    className={`${campaign.badgeColor} text-xs font-bold px-1 py-0`}
+                  >
                     {campaign.badge}
                   </Badge>
-                  <h3 className="text-lg font-bold truncate">
+                  <span className="text-xs font-semibold truncate">
                     {campaign.title}
-                  </h3>
-                </div>
-
-                <p className="text-sm opacity-90 mb-2 line-clamp-2">
-                  {campaign.description}
-                </p>
-
-                <div className="flex items-center gap-4 text-xs opacity-80">
-                  <span>Válido hasta: {campaign.validUntil}</span>
-                  <div className="flex items-center gap-1">
-                    {campaign.features.slice(0, 2).map((feature, index) => (
-                      <span key={index} className="flex items-center gap-1">
-                        <div className="w-1 h-1 bg-white rounded-full"></div>
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
+                  </span>
+                  <span className="text-xs opacity-90 truncate">
+                    - {campaign.description}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <Button
                 onClick={handleCtaClick}
                 size="sm"
-                className="bg-white text-gray-900 hover:bg-gray-100 font-semibold"
+                className="bg-white text-gray-900 hover:bg-gray-100 font-medium text-xs px-1.5 py-0 h-4"
               >
                 {campaign.cta}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-1 h-2 w-2" />
               </Button>
 
               <Button
                 onClick={handleClose}
                 size="sm"
                 variant="ghost"
-                className="text-white hover:bg-white/20 p-1"
+                className="text-white hover:bg-white/20 p-0 h-4 w-4"
               >
-                <X className="h-4 w-4" />
+                <X className="h-2 w-2" />
               </Button>
             </div>
           </div>
