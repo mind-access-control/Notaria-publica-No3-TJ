@@ -289,6 +289,13 @@ export default function MiCuentaPage() {
         );
         window.location.href = `/solicitud/${solicitudHardcodeada.numeroSolicitud}/seguimiento`;
         break;
+      case "ver_revision_borrador":
+        console.log(
+          "Navegando a revisión de borrador desde notificación:",
+          solicitudHardcodeada.numeroSolicitud
+        );
+        window.location.href = `/solicitud/${solicitudHardcodeada.numeroSolicitud}/revision-borrador`;
+        break;
       case "contactar_abogado":
         console.log("Contactar abogado");
         break;
@@ -371,7 +378,36 @@ export default function MiCuentaPage() {
             {/* Tab: Mis Solicitudes */}
             <TabsContent value="solicitudes" className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2
+                  className="text-2xl font-semibold text-gray-900"
+                  onClick={() => {
+                    console.log(
+                      "Simulando notificación de escritura lista para revisión"
+                    );
+                    const nuevaNotificacion = {
+                      id: `escritura-revision-${Date.now()}`,
+                      tipo: "revision_borrador",
+                      titulo: "Documento de Escritura Listo para Revisión",
+                      mensaje:
+                        "Tu documento de escritura está listo para revisión. Por favor, revisa los detalles y confirma la información.",
+                      fecha: new Date().toISOString(),
+                      leida: false,
+                      solicitudId: solicitudHardcodeada.numeroSolicitud,
+                      acciones: [
+                        {
+                          texto: "Ver Detalles",
+                          accion: "ver_revision_borrador",
+                        },
+                      ],
+                    };
+                    setNotifications((prev) => [nuevaNotificacion, ...prev]);
+                    setHasNewNotification(true);
+                    setShowFloatingNotification(true);
+                    setTimeout(() => {
+                      setShowFloatingNotification(false);
+                    }, 5000);
+                  }}
+                >
                   Mis Solicitudes
                 </h2>
                 <p className="text-sm text-gray-600">
