@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 // Usar los datos compartidos de trámites
-const TRAMITES_DISPONIBLES = getAllTramites().map(tramite => ({
+const TRAMITES_DISPONIBLES = getAllTramites().map((tramite) => ({
   id: tramite.id,
   nombre: tramite.name,
   descripcion: tramite.description,
@@ -68,7 +68,9 @@ export default function IniciarTramitePage() {
   useEffect(() => {
     const cargarAranceles = () => {
       try {
-        const datos = JSON.parse(localStorage.getItem("arancelesCalculados") || "[]");
+        const datos = JSON.parse(
+          localStorage.getItem("arancelesCalculados") || "[]"
+        );
         console.log("Cargando aranceles desde localStorage:", datos);
         setArancelesCalculados(datos);
       } catch (error) {
@@ -251,46 +253,96 @@ export default function IniciarTramitePage() {
                     {/* Mostrar datos calculados si existen */}
                     {(() => {
                       const arancelCalculado = arancelesCalculados.find(
-                        arancel => arancel.tramite === tramiteSeleccionado
+                        (arancel) => arancel.tramite === tramiteSeleccionado
                       );
-                      
-                      if (arancelCalculado && arancelCalculado.costosCalculados) {
+
+                      if (
+                        arancelCalculado &&
+                        arancelCalculado.costosCalculados
+                      ) {
                         return (
                           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                             <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
                               <DollarSign className="h-5 w-5" />
                               Aranceles Calculados
                             </h3>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                               <div className="bg-white p-3 rounded border border-blue-100">
-                                <h4 className="font-medium text-blue-900 mb-2">Información del Inmueble</h4>
+                                <h4 className="font-medium text-blue-900 mb-2">
+                                  Información del Inmueble
+                                </h4>
                                 <div className="text-sm space-y-1 text-gray-700">
-                                  <div><span className="font-medium">Valor:</span> ${arancelCalculado.valorInmueble}</div>
-                                  <div><span className="font-medium">Zona:</span> {arancelCalculado.zonaInmueble}</div>
-                                  <div><span className="font-medium">Estado civil:</span> {arancelCalculado.estadoCivil}</div>
-                                  <div><span className="font-medium">Crédito bancario:</span> {arancelCalculado.usarCredito ? 'Sí' : 'No'}</div>
+                                  <div>
+                                    <span className="font-medium">Valor:</span>{" "}
+                                    ${arancelCalculado.valorInmueble}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Zona:</span>{" "}
+                                    {arancelCalculado.zonaInmueble}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">
+                                      Estado civil:
+                                    </span>{" "}
+                                    {arancelCalculado.estadoCivil}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">
+                                      Crédito bancario:
+                                    </span>{" "}
+                                    {arancelCalculado.usarCredito ? "Sí" : "No"}
+                                  </div>
                                 </div>
                               </div>
-                              
+
                               <div className="bg-white p-3 rounded border border-blue-100">
-                                <h4 className="font-medium text-blue-900 mb-2">Desglose de Aranceles</h4>
+                                <h4 className="font-medium text-blue-900 mb-2">
+                                  Desglose de Aranceles
+                                </h4>
                                 <div className="text-sm space-y-1 text-gray-700">
                                   <div className="flex justify-between">
                                     <span>ISAI:</span>
-                                    <span className="font-medium">${arancelCalculado.costosCalculados.isai.total.toLocaleString("es-MX")}</span>
+                                    <span className="font-medium">
+                                      $
+                                      {arancelCalculado.costosCalculados.isai.total.toLocaleString(
+                                        "es-MX"
+                                      )}
+                                    </span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span>Honorarios:</span>
-                                    <span className="font-medium">${arancelCalculado.costosCalculados.honorarios.total.toLocaleString("es-MX")}</span>
+                                    <span className="font-medium">
+                                      $
+                                      {arancelCalculado.costosCalculados.honorarios.total.toLocaleString(
+                                        "es-MX"
+                                      )}
+                                    </span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span>RPPC:</span>
-                                    <span className="font-medium">${(arancelCalculado.costosCalculados.rppc.inscripcionCompraventa + (arancelCalculado.usarCredito ? arancelCalculado.costosCalculados.rppc.inscripcionHipoteca : 0)).toLocaleString("es-MX")}</span>
+                                    <span className="font-medium">
+                                      $
+                                      {(
+                                        arancelCalculado.costosCalculados.rppc
+                                          .inscripcionCompraventa +
+                                        (arancelCalculado.usarCredito
+                                          ? arancelCalculado.costosCalculados
+                                              .rppc.inscripcionHipoteca
+                                          : 0)
+                                      ).toLocaleString("es-MX")}
+                                    </span>
                                   </div>
                                   <div className="flex justify-between border-t pt-1 font-bold text-lg">
-                                    <span className="text-blue-900">Total:</span>
-                                    <span className="text-blue-600">${arancelCalculado.costosCalculados.total.toLocaleString("es-MX")}</span>
+                                    <span className="text-blue-900">
+                                      Total:
+                                    </span>
+                                    <span className="text-blue-600">
+                                      $
+                                      {arancelCalculado.costosCalculados.total.toLocaleString(
+                                        "es-MX"
+                                      )}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -312,15 +364,27 @@ export default function IniciarTramitePage() {
                             Proceso Multi-Partes
                           </h4>
                           <p className="text-sm text-amber-800 mb-2">
-                            Este trámite de compraventa involucra tres partes principales:
+                            Este trámite de compraventa involucra tres partes
+                            principales:
                           </p>
                           <ul className="text-sm text-amber-800 space-y-1 ml-4">
-                            <li>• <strong>Comprador:</strong> Usted (proceso actual)</li>
-                            <li>• <strong>Vendedor:</strong> Deberá validar y subir sus documentos</li>
-                            <li>• <strong>Notaría:</strong> Revisará y validará toda la información</li>
+                            <li>
+                              • <strong>Comprador:</strong> Usted (proceso
+                              actual)
+                            </li>
+                            <li>
+                              • <strong>Vendedor:</strong> Deberá validar y
+                              subir sus documentos
+                            </li>
+                            <li>
+                              • <strong>Notaría:</strong> Revisará y validará
+                              toda la información
+                            </li>
                           </ul>
                           <p className="text-sm text-amber-800 mt-2 font-medium">
-                            ⚠️ Recuerda que será necesario que el vendedor suba sus documentos y valide esta información antes de completar el pago.
+                            ⚠️ Recuerda que será necesario que el vendedor suba
+                            sus documentos y valide esta información antes de
+                            completar el pago.
                           </p>
                         </div>
                       </div>
@@ -331,9 +395,10 @@ export default function IniciarTramitePage() {
                       <Alert className="mb-4">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Al crear la solicitud, se generará un trámite único que
-                          solo podrán acceder las partes involucradas: comprador,
-                          vendedor y notaría con sus respectivas credenciales.
+                          Al crear la solicitud, se generará un trámite único
+                          que solo podrán acceder las partes involucradas:
+                          comprador, vendedor y notaría con sus respectivas
+                          credenciales.
                         </AlertDescription>
                       </Alert>
 
@@ -377,13 +442,15 @@ export default function IniciarTramitePage() {
       </div>
       <Footer />
 
-      {/* Modal de selección de trámites */}
-      <TramiteModal
-        isOpen={showTramiteModal}
-        onClose={handleTramiteModalClose}
-        preselectedTramite={undefined}
-        onTramiteSelect={handleTramiteSelect}
-      />
+      {/* Modal de selección de trámites - Solo renderizar cuando sea necesario */}
+      {showTramiteModal && (
+        <TramiteModal
+          isOpen={showTramiteModal}
+          onClose={handleTramiteModalClose}
+          preselectedTramite={undefined}
+          onTramiteSelect={handleTramiteSelect}
+        />
+      )}
     </div>
   );
 }

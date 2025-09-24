@@ -46,6 +46,10 @@ export function TramiteModal({
         setShowSelectionModal(true);
         setShowAdviceModal(false);
       }
+    } else {
+      // Cuando se cierra el modal, ocultar ambos sub-modales
+      setShowSelectionModal(false);
+      setShowAdviceModal(false);
     }
   }, [isOpen, preselectedTramite]);
 

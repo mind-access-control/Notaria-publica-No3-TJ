@@ -138,7 +138,7 @@ export function TramiteAdviceModal({
       const loginUrl = `/login?tramite=${selectedTramiteId}&redirect=${encodeURIComponent(
         "/iniciar-tramite"
       )}`;
-      window.open(loginUrl, "_blank");
+      window.location.href = loginUrl;
     }
   };
 
@@ -301,12 +301,18 @@ export function TramiteAdviceModal({
     }
 
     const documentosBase = [
-      "Identificación oficial: INE o pasaporte vigente",
-      "CURP",
-      "RFC y Constancia de Situación Fiscal (CSF)",
-      "Acta de nacimiento (reciente o legible)",
-      "Comprobante de domicilio (agua/luz/estado de cuenta, no mayor a 3 meses)",
-      "Datos bancarios (CLABE y banco) para dispersión y comprobación de fondos",
+      { texto: "Identificación oficial", tooltip: "INE o pasaporte vigente" },
+      { texto: "CURP", tooltip: "" },
+      { texto: "RFC y CSF", tooltip: "Constancia de Situación Fiscal" },
+      { texto: "Acta de nacimiento", tooltip: "Reciente o legible" },
+      {
+        texto: "Comprobante de domicilio",
+        tooltip: "Agua/luz/estado de cuenta, no mayor a 3 meses",
+      },
+      {
+        texto: "Datos bancarios",
+        tooltip: "CLABE y banco para dispersión y comprobación de fondos",
+      },
     ];
 
     const documentosAdicionales = [];
@@ -314,21 +320,36 @@ export function TramiteAdviceModal({
     // Agregar comprobante de estado civil si no es soltero
     if (estadoCivil && estadoCivil !== "soltero") {
       if (estadoCivil === "casado") {
-        documentosAdicionales.push("Acta de matrimonio");
+        documentosAdicionales.push({
+          texto: "Acta de matrimonio",
+          tooltip: "",
+        });
       } else if (estadoCivil === "divorciado") {
-        documentosAdicionales.push("Acta de divorcio");
+        documentosAdicionales.push({ texto: "Acta de divorcio", tooltip: "" });
       } else if (estadoCivil === "viudo") {
-        documentosAdicionales.push("Acta de defunción del cónyuge");
+        documentosAdicionales.push({
+          texto: "Acta de defunción",
+          tooltip: "Del cónyuge",
+        });
       }
     }
 
     // Agregar documentos de crédito bancario si aplica
     if (usarCredito) {
       documentosAdicionales.push(
-        "Carta oferta / condiciones del banco",
-        "Avalúo bancario (si el banco lo exige; a veces lo gestiona el banco)",
-        "Pólizas requeridas por el crédito (vida/daños), si aplican",
-        "Instrucciones de dispersión del banco y datos del representante que firmará la hipoteca"
+        { texto: "Carta oferta bancaria", tooltip: "Condiciones del banco" },
+        {
+          texto: "Avalúo bancario",
+          tooltip: "Si el banco lo exige; a veces lo gestiona el banco",
+        },
+        {
+          texto: "Pólizas de seguro",
+          tooltip: "Vida/daños requeridas por el crédito",
+        },
+        {
+          texto: "Instrucciones de dispersión",
+          tooltip: "Datos del representante que firmará la hipoteca",
+        }
       );
     }
 
@@ -343,13 +364,13 @@ export function TramiteAdviceModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         id="tramite-advice-modal-container"
-        className="max-w-4xl max-h-[90vh] p-0 overflow-hidden"
+        className="!w-[70vw] !max-w-none max-h-[90vh] p-0 overflow-hidden"
       >
         {/* Header fijo */}
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-1">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <DialogTitle className="text-base font-semibold text-center">
+              <DialogTitle className="text-sm font-semibold text-center">
                 Asesoría para {tramite.name}
               </DialogTitle>
               <DialogDescription className="text-center text-xs">
@@ -360,75 +381,79 @@ export function TramiteAdviceModal({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-8 w-8 p-0 hover:bg-gray-100 ml-4"
+              className="h-6 w-6 p-0 hover:bg-gray-100 ml-2"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
 
         {/* Contenido scrolleable */}
-        <div className="overflow-y-auto max-h-[calc(85vh-50px)] p-2 pb-3">
-          <div className="space-y-3 mt-1 mb-2">
+        <div className="overflow-y-auto max-h-[calc(85vh-40px)] pt-1 pb-2">
+          <div className="space-y-3 mb-1">
             {/* Información del trámite */}
             <Card className="border border-blue-200 bg-blue-50">
-              <CardHeader className="pb-1 pt-3">
-                <div>
-                  <CardTitle className="text-base">{tramite.name}</CardTitle>
-                  <CardDescription className="text-xs mb-1">
+              <CardContent className="px-3 py-1">
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-semibold text-blue-800">
+                    {tramite.name}
+                  </div>
+                  <div className="text-gray-400">•</div>
+                  <div className="text-sm text-gray-600">
                     {tramite.description}
-                  </CardDescription>
-                  <p className="text-gray-700 text-xs leading-relaxed">
-                    {tramite.id === "testamento" &&
-                      "Proteger el futuro de tu familia es uno de los actos más importantes que puedes realizar. Un testamento bien estructurado garantiza que tus seres queridos estén protegidos y tus bienes se distribuyan según tus deseos."}
+                  </div>
+                  <div className="text-gray-400">•</div>
+                  <div className="text-sm text-gray-600">
                     {tramite.id === "compraventa" &&
-                      "La compraventa de inmuebles es una de las transacciones más importantes en la vida. Nuestro servicio garantiza que tu inversión esté protegida con todos los documentos legales necesarios."}
+                      "Servicio especializado en escrituración segura de propiedades"}
+                    {tramite.id === "testamento" &&
+                      "Protección legal para el futuro de tu familia"}
                     {tramite.id === "donacion" &&
-                      "Las donaciones son una forma noble de transferir bienes a tus seres queridos. Te ayudamos a realizar este proceso de manera legal y segura, protegiendo tanto al donante como al donatario."}
+                      "Transferencia legal y segura de bienes"}
                     {tramite.id === "permuta" &&
-                      "El intercambio de propiedades puede ser una excelente alternativa a la compraventa tradicional. Te asesoramos para que ambas partes obtengan el mejor beneficio de esta transacción."}
+                      "Intercambio equitativo de propiedades"}
                     {tramite.id === "credito-hipotecario" &&
-                      "Obtener un crédito hipotecario es el primer paso hacia la casa de tus sueños. Te acompañamos en todo el proceso para que tu financiamiento sea aprobado sin complicaciones."}
-                    {tramite.id === "contrato-mutuo" &&
-                      "Los contratos de mutuo son una forma segura de prestar o recibir dinero con garantías legales. Te ayudamos a estructurar el acuerdo más conveniente para todas las partes."}
-                    {tramite.id === "reconocimiento-adeudo" &&
-                      "Reconocer una deuda formalmente es el primer paso para resolver cualquier situación financiera. Te asesoramos para que este proceso sea transparente y legal."}
-                    {tramite.id === "adjudicacion-hereditaria" &&
-                      "Las adjudicaciones hereditarias permiten transferir legalmente los bienes de una herencia. Te guiamos a través de todo el proceso sucesorio para que recibas lo que te corresponde."}
+                      "Financiamiento seguro para tu hogar"}
                     {tramite.id === "sociedad" &&
-                      "Constituir una sociedad es el primer paso para formalizar tu empresa. Te ayudamos a elegir el tipo de sociedad más conveniente y a cumplir con todos los requisitos legales."}
-                    {tramite.id === "liquidacion-copropiedad" &&
-                      "La liquidación de copropiedad permite dividir equitativamente una propiedad en común. Te asesoramos para que este proceso sea justo y legal para todos los copropietarios."}
-                    {tramite.id === "cesion-derechos" &&
-                      "La cesión de derechos patrimoniales es una herramienta legal muy útil. Te ayudamos a transferir tus derechos de manera segura y legal."}
-                    {tramite.id === "servidumbre" &&
-                      "Las servidumbres son derechos de uso sobre propiedades ajenas que pueden ser muy valiosos. Te asesoramos para constituir o modificar estos derechos de manera legal."}
-                    {tramite.id === "convenios-modificatorios" &&
-                      "Los convenios modificatorios permiten actualizar contratos existentes según las nuevas necesidades. Te ayudamos a modificar tus acuerdos de manera legal y efectiva."}
-                    {tramite.id === "elevacion-judicial" &&
-                      "La elevación judicial a escritura pública convierte una sentencia en un documento notarial. Te acompañamos en este proceso para que tu sentencia tenga plena validez legal."}
-                    {tramite.id === "dacion-pago" &&
-                      "La dación en pago es una alternativa legal para saldar deudas con bienes. Te asesoramos para que esta transacción sea beneficiosa para todas las partes involucradas."}
-                    {tramite.id === "formalizacion-contrato" &&
-                      "Elevar un contrato privado a escritura pública le da mayor validez legal. Te ayudamos a formalizar tus acuerdos para que tengan plena seguridad jurídica."}
+                      "Constitución legal de empresas"}
                     {tramite.id === "fideicomiso" &&
-                      "Los fideicomisos son una herramienta poderosa para la administración y transmisión de bienes. Te asesoramos para estructurar el fideicomiso más conveniente para tus necesidades."}
+                      "Administración profesional de bienes"}
+                    {tramite.id === "adjudicacion-hereditaria" &&
+                      "Transferencia legal de herencias"}
+                    {tramite.id === "liquidacion-copropiedad" &&
+                      "División equitativa de propiedades"}
+                    {tramite.id === "elevacion-judicial" &&
+                      "Conversión de sentencias a escrituras"}
                     {tramite.id === "inicio-sucesion" &&
-                      "Iniciar una sucesión es el primer paso para recibir una herencia. Te guiamos a través de todo el proceso para que obtengas lo que te corresponde de manera legal."}
+                      "Proceso legal de herencias"}
+                    {tramite.id === "contrato-mutuo" &&
+                      "Contratos de préstamo seguros"}
+                    {tramite.id === "reconocimiento-adeudo" &&
+                      "Reconocimiento formal de deudas"}
+                    {tramite.id === "cesion-derechos" &&
+                      "Transferencia de derechos patrimoniales"}
+                    {tramite.id === "servidumbre" &&
+                      "Constitución de derechos de uso"}
+                    {tramite.id === "convenios-modificatorios" &&
+                      "Modificación de contratos existentes"}
+                    {tramite.id === "dacion-pago" &&
+                      "Pago con bienes en lugar de dinero"}
+                    {tramite.id === "formalizacion-contrato" &&
+                      "Elevación de contratos privados"}
                     {tramite.id === "cancelacion-hipoteca" &&
-                      "Cancelar una hipoteca es el último paso para ser completamente dueño de tu propiedad. Te ayudamos a completar este proceso de manera eficiente."}
+                      "Liberación de gravámenes hipotecarios"}
                     {tramite.id === "protocolizacion-acta" &&
-                      "La protocolización de actas de asamblea da validez legal a las decisiones de tu empresa. Te asesoramos para que tus actas cumplan con todos los requisitos legales."}
+                      "Validación legal de actas empresariales"}
                     {tramite.id === "cambio-regimen-matrimonial" &&
-                      "Cambiar el régimen matrimonial puede ser necesario según las circunstancias de vida. Te asesoramos para que esta modificación sea beneficiosa para ambos cónyuges."}
+                      "Modificación del régimen matrimonial"}
                     {tramite.id === "cotejos" &&
-                      "Los cotejos son una herramienta legal para verificar la autenticidad de documentos. Te ayudamos a comparar y validar tus documentos de manera oficial."}
+                      "Verificación de autenticidad de documentos"}
                     {tramite.id === "fe-hechos" &&
-                      "Las fe de hechos son constancias notariales que dan validez legal a eventos importantes. Te asesoramos para que tus hechos queden debidamente documentados."}
+                      "Constancias notariales de eventos"}
                     {tramite.id === "poderes" &&
-                      "Los poderes son una herramienta legal muy útil para delegar facultades. Te ayudamos a redactar el poder más conveniente para tus necesidades específicas."}
+                      "Delegación de facultades legales"}
                     {tramite.id === "rectificacion-escrituras" &&
-                      "Rectificar escrituras es necesario cuando hay errores que deben corregirse. Te asesoramos para que tus documentos queden perfectos y sin errores."}
+                      "Corrección de errores en documentos"}
                     {![
                       "testamento",
                       "compraventa",
@@ -456,108 +481,134 @@ export function TramiteAdviceModal({
                       "poderes",
                       "rectificacion-escrituras",
                     ].includes(tramite.id) &&
-                      "Este trámite es fundamental para proteger tus intereses legales. Te brindamos la asesoría especializada que necesitas para completarlo de manera exitosa y segura."}
-                  </p>
+                      "Servicio especializado en trámites legales"}
+                  </div>
                 </div>
-              </CardHeader>
+              </CardContent>
             </Card>
 
-            {/* Preguntas dinámicas para compraventa */}
-            {tramite.id === "compraventa" && (
-              <Card>
-                <CardHeader className="pb-1 pt-2">
-                  <CardTitle className="text-xs flex items-center gap-2">
-                    <Users className="h-3 w-3 text-blue-600" />
-                    Información Adicional
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Para personalizar la lista de documentos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-0">
-                  {/* Pregunta de estado civil */}
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1 block">
-                      ¿Cuál es tu estado civil?
-                    </label>
-                    <div className="grid grid-cols-2 gap-1">
-                      {["soltero", "casado", "divorciado", "viudo"].map(
-                        (estado) => (
+            {/* Información adicional y documentos en dos columnas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {/* Columna izquierda - Información adicional */}
+              <div className="space-y-2 flex flex-col">
+                {/* Preguntas dinámicas para compraventa */}
+                {tramite.id === "compraventa" && (
+                  <Card className="flex-1">
+                    <CardHeader className="pb-1 pt-2">
+                      <CardTitle className="text-xs flex items-center gap-2">
+                        <Users className="h-3 w-3 text-blue-600" />
+                        Información Adicional
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Para personalizar documentos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pt-0">
+                      {/* Pregunta de estado civil */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">
+                          ¿Estado civil?
+                        </label>
+                        <div className="grid grid-cols-2 gap-1">
+                          {["soltero", "casado", "divorciado", "viudo"].map(
+                            (estado) => (
+                              <button
+                                key={estado}
+                                onClick={() => setEstadoCivil(estado)}
+                                className={`px-1 py-1 text-xs rounded-md border transition-colors ${
+                                  estadoCivil === estado
+                                    ? "bg-blue-100 border-blue-300 text-blue-700"
+                                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {estado.charAt(0).toUpperCase() +
+                                  estado.slice(1)}
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Pregunta de crédito bancario */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">
+                          ¿Crédito bancario?
+                        </label>
+                        <div className="flex gap-1">
                           <button
-                            key={estado}
-                            onClick={() => setEstadoCivil(estado)}
-                            className={`px-2 py-1 text-xs rounded-md border transition-colors ${
-                              estadoCivil === estado
+                            onClick={() => setUsarCredito(true)}
+                            className={`flex-1 px-1 py-1 text-xs rounded-md border transition-colors ${
+                              usarCredito
                                 ? "bg-blue-100 border-blue-300 text-blue-700"
                                 : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
                             }`}
                           >
-                            {estado.charAt(0).toUpperCase() + estado.slice(1)}
+                            Sí
                           </button>
-                        )
-                      )}
-                    </div>
-                  </div>
+                          <button
+                            onClick={() => setUsarCredito(false)}
+                            className={`flex-1 px-1 py-1 text-xs rounded-md border transition-colors ${
+                              !usarCredito
+                                ? "bg-blue-100 border-blue-300 text-blue-700"
+                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            No
+                          </button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
 
-                  {/* Pregunta de crédito bancario */}
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1 block">
-                      ¿Utilizarás crédito bancario para la compra?
-                    </label>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => setUsarCredito(true)}
-                        className={`flex-1 px-2 py-1 text-xs rounded-md border transition-colors ${
-                          usarCredito
-                            ? "bg-blue-100 border-blue-300 text-blue-700"
-                            : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Sí
-                      </button>
-                      <button
-                        onClick={() => setUsarCredito(false)}
-                        className={`flex-1 px-2 py-1 text-xs rounded-md border transition-colors ${
-                          !usarCredito
-                            ? "bg-blue-100 border-blue-300 text-blue-700"
-                            : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        No
-                      </button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Requisitos */}
-            <Card>
-              <CardHeader className="pb-1 pt-2">
-                <CardTitle className="text-xs flex items-center gap-2">
-                  <FileText className="h-3 w-3 text-blue-600" />
-                  Documentos Requeridos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ul className="space-y-0.5">
-                  {(tramite.id === "compraventa"
-                    ? obtenerDocumentosDinamicos(tramite.id)
-                    : tramite.requirements
-                  ).map((req, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-2.5 w-2.5 text-blue-500 flex-shrink-0" />
-                      <span className="text-xs">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+              {/* Columna derecha - Documentos requeridos */}
+              <div className="flex flex-col">
+                <Card className="flex-1">
+                  <CardHeader className="pb-1 pt-2">
+                    <CardTitle className="text-xs flex items-center gap-2">
+                      <FileText className="h-3 w-3 text-blue-600" />
+                      Documentos Requeridos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <ul className="space-y-0.5">
+                      {(tramite.id === "compraventa"
+                        ? obtenerDocumentosDinamicos(tramite.id)
+                        : tramite.requirements.map((req) => ({
+                            texto: req,
+                            tooltip: "",
+                          }))
+                      ).map((req, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <CheckCircle className="h-2.5 w-2.5 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs leading-relaxed">
+                              {req.texto}
+                            </span>
+                            {req.tooltip && (
+                              <div className="group relative">
+                                <div className="w-3 h-3 rounded-full bg-blue-200 text-blue-600 text-xs flex items-center justify-center cursor-help">
+                                  ?
+                                </div>
+                                <div className="absolute left-0 top-4 z-10 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                  {req.tooltip}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Calculadora de Aranceles - Solo para compraventa */}
             {tramite.id === "compraventa" ? (
               <Card className="bg-gray-50">
-                <CardHeader className="pb-1 pt-2">
+                <CardHeader className="pb-1 pt-1">
                   <CardTitle className="text-xs flex items-center gap-2 text-gray-700">
                     <Calculator className="h-3 w-3 text-gray-500" />
                     Calculadora de Aranceles
@@ -565,15 +616,15 @@ export function TramiteAdviceModal({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-1">
-                    <div>
-                      <label className="text-xs font-medium text-gray-600">
-                        Valor del inmueble
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
+                        Valor del inmueble:
                       </label>
                       <Input
                         value={valorInmueble}
                         onChange={(e) => setValorInmueble(e.target.value)}
                         placeholder="Ej: $500,000"
-                        className="mt-1 h-6 text-xs"
+                        className="h-6 text-xs flex-1"
                       />
                     </div>
 
@@ -581,7 +632,7 @@ export function TramiteAdviceModal({
                       !isNaN(
                         parseFloat(valorInmueble.replace(/[$,]/g, ""))
                       ) && (
-                        <div className="bg-white p-2 rounded border border-gray-200 space-y-1">
+                        <div className="bg-white p-1 rounded border border-gray-200 space-y-1">
                           {(() => {
                             const valor = parseFloat(
                               valorInmueble.replace(/[$,]/g, "")
@@ -600,21 +651,16 @@ export function TramiteAdviceModal({
                               (usarCredito ? rppc.inscripcionHipoteca : 0);
 
                             return (
-                              <>
-                                <div className="text-xs font-semibold text-gray-700 mb-2">
-                                  Desglose de Aranceles
-                                </div>
-
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
                                 {/* ISAI */}
                                 <div className="space-y-1">
                                   <div className="text-xs font-medium text-gray-600">
-                                    ISAI (Impuesto Sobre Adquisición de
-                                    Inmuebles)
+                                    ISAI
                                   </div>
-                                  <div className="text-xs space-y-0.5 ml-2">
+                                  <div className="text-xs space-y-0.5">
                                     <div className="flex justify-between">
                                       <span className="text-gray-500">
-                                        ISAI por tramos:
+                                        Por tramos:
                                       </span>
                                       <span className="font-medium">
                                         ${isai.isai.toLocaleString()}
@@ -630,7 +676,7 @@ export function TramiteAdviceModal({
                                     </div>
                                     <div className="flex justify-between border-t pt-1 font-semibold">
                                       <span className="text-gray-700">
-                                        Subtotal ISAI:
+                                        Subtotal:
                                       </span>
                                       <span className="text-gray-900">
                                         ${isai.total.toLocaleString()}
@@ -642,9 +688,9 @@ export function TramiteAdviceModal({
                                 {/* Honorarios Notariales */}
                                 <div className="space-y-1">
                                   <div className="text-xs font-medium text-gray-600">
-                                    Honorarios Notariales
+                                    Honorarios
                                   </div>
-                                  <div className="text-xs space-y-0.5 ml-2">
+                                  <div className="text-xs space-y-0.5">
                                     <div className="flex justify-between">
                                       <span className="text-gray-500">
                                         Compraventa (1.0%):
@@ -667,14 +713,6 @@ export function TramiteAdviceModal({
                                     )}
                                     <div className="flex justify-between">
                                       <span className="text-gray-500">
-                                        Subtotal:
-                                      </span>
-                                      <span className="font-medium">
-                                        ${honorarios.subtotal.toLocaleString()}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
                                         IVA (16%):
                                       </span>
                                       <span className="font-medium">
@@ -683,7 +721,7 @@ export function TramiteAdviceModal({
                                     </div>
                                     <div className="flex justify-between border-t pt-1 font-semibold">
                                       <span className="text-gray-700">
-                                        Total Honorarios:
+                                        Total:
                                       </span>
                                       <span className="text-gray-900">
                                         ${honorarios.total.toLocaleString()}
@@ -695,12 +733,12 @@ export function TramiteAdviceModal({
                                 {/* RPPC */}
                                 <div className="space-y-1">
                                   <div className="text-xs font-medium text-gray-600">
-                                    RPPC (Registro Público)
+                                    RPPC
                                   </div>
-                                  <div className="text-xs space-y-0.5 ml-2">
+                                  <div className="text-xs space-y-0.5">
                                     <div className="flex justify-between">
                                       <span className="text-gray-500">
-                                        Análisis documento:
+                                        Análisis:
                                       </span>
                                       <span className="font-medium">
                                         ${rppc.analisis.toLocaleString()}
@@ -708,7 +746,7 @@ export function TramiteAdviceModal({
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-500">
-                                        Inscripción compraventa:
+                                        Inscripción:
                                       </span>
                                       <span className="font-medium">
                                         $
@@ -718,7 +756,7 @@ export function TramiteAdviceModal({
                                     {usarCredito && (
                                       <div className="flex justify-between">
                                         <span className="text-gray-500">
-                                          Inscripción hipoteca:
+                                          Hipoteca:
                                         </span>
                                         <span className="font-medium">
                                           $
@@ -728,7 +766,7 @@ export function TramiteAdviceModal({
                                     )}
                                     <div className="flex justify-between">
                                       <span className="text-gray-500">
-                                        Certificados varios:
+                                        Certificados:
                                       </span>
                                       <span className="font-medium">
                                         $
@@ -742,21 +780,39 @@ export function TramiteAdviceModal({
                                     </div>
                                   </div>
                                 </div>
-
-                                {/* Total */}
-                                <div className="border-t pt-2 mt-2">
-                                  <div className="flex justify-between text-sm font-bold">
-                                    <span className="text-gray-800">
-                                      TOTAL ARANCELES:
-                                    </span>
-                                    <span className="text-blue-600">
-                                      ${totalAranceles.toLocaleString()}
-                                    </span>
-                                  </div>
-                                </div>
-                              </>
+                              </div>
                             );
                           })()}
+
+                          {/* Total */}
+                          <div className="border-t pt-2 mt-2">
+                            <div className="flex justify-between text-sm font-bold">
+                              <span className="text-gray-800">
+                                TOTAL ARANCELES:
+                              </span>
+                              <span className="text-blue-600">
+                                $
+                                {(() => {
+                                  const valor = parseFloat(
+                                    valorInmueble.replace(/[$,]/g, "")
+                                  );
+                                  const isai = calcularISAI(valor);
+                                  const honorarios =
+                                    calcularHonorariosNotariales(
+                                      valor,
+                                      usarCredito
+                                    );
+                                  const rppc = calcularCostosRPPC();
+                                  return (
+                                    isai.total +
+                                    honorarios.total +
+                                    rppc.inscripcionCompraventa +
+                                    (usarCredito ? rppc.inscripcionHipoteca : 0)
+                                  ).toLocaleString();
+                                })()}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       )}
                   </div>
@@ -784,88 +840,67 @@ export function TramiteAdviceModal({
             )}
 
             {/* Acciones */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <h3 className="text-xs font-semibold">
                 ¿Cómo quieres continuar?
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <Button
                   onClick={handleIniciarTramite}
-                  className="h-20 p-2 flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-                  size="lg"
+                  className="h-10 px-2 flex items-center gap-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  size="sm"
                 >
-                  <FileText className="h-4 w-4 flex-shrink-0" />
-                  <div className="text-center space-y-1">
-                    <div className="font-bold text-xs leading-tight">
-                      Iniciar Expediente Digital
-                    </div>
-                    <div className="text-xs opacity-90 leading-tight px-1">
-                      Completa tu trámite paso a paso
-                    </div>
-                  </div>
+                  <FileText className="h-3 w-3 flex-shrink-0" />
+                  <span className="text-xs font-semibold">
+                    Iniciar Expediente
+                  </span>
                 </Button>
 
                 <Button
                   onClick={() => window.open("/citas", "_blank")}
                   variant="outline"
-                  className="h-20 p-2 flex flex-col items-center justify-center gap-1 border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50"
-                  size="lg"
+                  className="h-10 px-2 flex items-center gap-1 border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50"
+                  size="sm"
                 >
-                  <Calendar className="h-4 w-4 text-slate-600 flex-shrink-0" />
-                  <div className="text-center space-y-1">
-                    <div className="font-bold text-xs leading-tight text-slate-700">
-                      Agendar Cita
-                    </div>
-                    <div className="text-xs text-slate-600 leading-tight px-1">
-                      Ven a la notaría para asesoría personal
-                    </div>
-                  </div>
+                  <Calendar className="h-3 w-3 text-slate-600 flex-shrink-0" />
+                  <span className="text-xs font-semibold text-slate-700">
+                    Agendar Cita
+                  </span>
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <Button
                   onClick={handleWhatsApp}
                   variant="outline"
-                  className="h-14 p-2 flex items-center gap-2 border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                  className="h-8 px-2 flex items-center gap-1 border border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                  size="sm"
                 >
                   <MessageCircle className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                  <div className="text-left min-w-0 flex-1">
-                    <div className="font-semibold text-blue-700 text-xs leading-tight">
-                      Enviar por WhatsApp
-                    </div>
-                    <div className="text-xs text-blue-600 leading-tight">
-                      Información instantánea
-                    </div>
-                  </div>
+                  <span className="text-xs text-blue-700">WhatsApp</span>
                 </Button>
 
                 <Button
                   onClick={handleEmail}
                   variant="outline"
-                  className="h-14 p-2 flex items-center gap-2 border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                  className="h-8 px-2 flex items-center gap-1 border border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                  size="sm"
                 >
                   <Mail className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                  <div className="text-left min-w-0 flex-1">
-                    <div className="font-semibold text-blue-700 text-xs leading-tight">
-                      Enviar por Email
-                    </div>
-                    <div className="text-xs text-blue-600 leading-tight">
-                      Información detallada
-                    </div>
-                  </div>
+                  <span className="text-xs text-blue-700">Email</span>
                 </Button>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-200">
+            <div className="flex justify-between items-center pt-1 mt-1 border-t border-gray-200">
               <div className="text-xs text-gray-500">
                 ¿Necesitas más información? Contáctanos
               </div>
               <Button
                 onClick={onClose}
                 className="bg-blue-600 hover:bg-blue-700 text-xs px-2 py-1"
+                size="sm"
               >
                 Cerrar
               </Button>
