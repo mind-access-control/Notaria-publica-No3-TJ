@@ -20,55 +20,99 @@ export default function AgendarCitaPage() {
   const params = useParams();
   const numeroSolicitud = params.numeroSolicitud as string;
   const [solicitud, setSolicitud] = useState<any>(null);
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [selectedAppointment, setSelectedAppointment] = useState<string>("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [availableAppointments, setAvailableAppointments] = useState<any[]>([]);
 
-  // Generar fechas disponibles (lunes a viernes, mayores al día actual)
-  const generateAvailableDates = () => {
-    const dates = [];
+  // Generar citas disponibles (fecha + hora combinadas) - distribuidas mejor
+  const generateAvailableAppointments = () => {
+    const appointments = [];
     const today = new Date();
+    const timeSlots = [
+      { value: "09:00", label: "9:00 AM" },
+      { value: "10:00", label: "10:00 AM" },
+      { value: "11:00", label: "11:00 AM" },
+      { value: "12:00", label: "12:00 PM" },
+      { value: "14:00", label: "2:00 PM" },
+      { value: "15:00", label: "3:00 PM" },
+      { value: "16:00", label: "4:00 PM" },
+      { value: "17:00", label: "5:00 PM" },
+    ];
 
-    for (let i = 1; i <= 14; i++) {
-      // Próximas 2 semanas
+    // Generar todas las citas posibles
+    const allAppointments = [];
+    for (let i = 1; i <= 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
 
       // Solo lunes a viernes (1-5)
       if (date.getDay() >= 1 && date.getDay() <= 5) {
-        dates.push({
-          value: date.toISOString().split("T")[0],
-          label: date.toLocaleDateString("es-MX", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }),
+        // Para cada día hábil, agregar algunos horarios aleatorios
+        const availableTimes = timeSlots.filter(() => Math.random() > 0.4); // 60% probabilidad de estar disponible
+
+        availableTimes.forEach((time) => {
+          allAppointments.push({
+            id: `${date.toISOString().split("T")[0]}_${time.value}`,
+            date: date.toISOString().split("T")[0],
+            time: time.value,
+            label: date.toLocaleDateString("es-MX", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            timeLabel: time.label,
+            fullLabel: `${date.toLocaleDateString("es-MX", {
+              weekday: "long",
+              day: "numeric",
+              month: "short",
+            })} - ${time.label}`,
+          });
         });
       }
     }
 
-    return dates;
+    // Seleccionar 3 citas distribuidas (no del mismo día)
+    const selectedAppointments = [];
+    const usedDates = new Set();
+
+    // Mezclar las citas para selección aleatoria
+    const shuffledAppointments = [...allAppointments].sort(
+      () => Math.random() - 0.5
+    );
+
+    for (const appointment of shuffledAppointments) {
+      if (selectedAppointments.length >= 3) break;
+
+      // Solo agregar si no hemos usado esta fecha antes
+      if (!usedDates.has(appointment.date)) {
+        selectedAppointments.push(appointment);
+        usedDates.add(appointment.date);
+      }
+    }
+
+    // Si no tenemos suficientes citas de días diferentes, agregar más
+    if (selectedAppointments.length < 3) {
+      for (const appointment of shuffledAppointments) {
+        if (selectedAppointments.length >= 3) break;
+        if (!selectedAppointments.some((apt) => apt.id === appointment.id)) {
+          selectedAppointments.push(appointment);
+        }
+      }
+    }
+
+    return selectedAppointments;
   };
-
-  const availableDates = generateAvailableDates();
-
-  const timeSlots = [
-    { value: "09:00", label: "9:00 AM" },
-    { value: "10:00", label: "10:00 AM" },
-    { value: "11:00", label: "11:00 AM" },
-    { value: "12:00", label: "12:00 PM" },
-    { value: "14:00", label: "2:00 PM" },
-    { value: "15:00", label: "3:00 PM" },
-    { value: "16:00", label: "4:00 PM" },
-    { value: "17:00", label: "5:00 PM" },
-  ];
 
   useEffect(() => {
     console.log(
       "Cargando página de agendar cita para solicitud:",
       numeroSolicitud
     );
+
+    // Generar citas disponibles (solo 3 inicialmente)
+    const appointments = generateAvailableAppointments().slice(0, 3);
+    setAvailableAppointments(appointments);
 
     // Solicitud especial de demostración
     if (numeroSolicitud === "NT3-2025-00123") {
@@ -235,24 +279,30 @@ export default function AgendarCitaPage() {
     window.location.href = "/";
   };
 
+  const handleCargarMasFechas = () => {
+    // Generar nuevas citas aleatorias (3 más)
+    const nuevasCitas = generateAvailableAppointments().slice(0, 3);
+    setAvailableAppointments(nuevasCitas);
+    setSelectedAppointment(""); // Limpiar selección
+  };
+
   const handleConfirmarCita = () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Por favor selecciona una fecha y hora para tu cita.");
+    if (!selectedAppointment) {
+      alert("Por favor selecciona una cita disponible.");
       return;
     }
 
-    const fechaSeleccionada = availableDates.find(
-      (d) => d.value === selectedDate
+    const appointment = availableAppointments.find(
+      (apt) => apt.id === selectedAppointment
     );
-    const horaSeleccionada = timeSlots.find((t) => t.value === selectedTime);
 
     alert(
-      `¡Cita agendada exitosamente!\n\nFecha: ${fechaSeleccionada?.label}\nHora: ${horaSeleccionada?.label}\n\nTe hemos enviado un correo de confirmación.`
+      `¡Cita agendada exitosamente!\n\nFecha: ${appointment?.label}\nHora: ${appointment?.timeLabel}\n\nTe hemos enviado un correo de confirmación.`
     );
 
-    // Simular agendamiento exitoso y redirigir
+    // Simular agendamiento exitoso y redirigir a Mi Cuenta
     setTimeout(() => {
-      window.location.href = `/solicitud/${numeroSolicitud}/seguimiento`;
+      window.location.href = `/mi-cuenta`;
     }, 2000);
   };
 
@@ -269,7 +319,7 @@ export default function AgendarCitaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -308,9 +358,9 @@ export default function AgendarCitaPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Columna principal */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Información de la cita */}
             <Card>
               <CardHeader>
@@ -330,50 +380,50 @@ export default function AgendarCitaPage() {
                 </Alert>
 
                 <div className="space-y-6">
-                  {/* Selección de fecha */}
+                  {/* Selección de citas disponibles */}
                   <div>
-                    <h3 className="font-semibold mb-3">
-                      Selecciona una fecha:
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {availableDates.slice(0, 6).map((date) => (
+                    <h3 className="font-semibold mb-3">Citas disponibles:</h3>
+                    <div className="space-y-3">
+                      {availableAppointments.map((appointment) => (
                         <Button
-                          key={date.value}
+                          key={appointment.id}
                           variant={
-                            selectedDate === date.value ? "default" : "outline"
+                            selectedAppointment === appointment.id
+                              ? "default"
+                              : "outline"
                           }
-                          onClick={() => setSelectedDate(date.value)}
-                          className="h-12 text-left justify-start"
+                          onClick={() => setSelectedAppointment(appointment.id)}
+                          className="w-full h-14 text-left justify-start"
                         >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {date.label}
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5" />
+                            <div>
+                              <div className="font-medium">
+                                {appointment.label}
+                              </div>
+                              <div className="text-sm opacity-75 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {appointment.timeLabel}
+                              </div>
+                            </div>
+                          </div>
                         </Button>
                       ))}
                     </div>
-                  </div>
 
-                  {/* Selección de hora */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Selecciona una hora:</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {timeSlots.map((time) => (
-                        <Button
-                          key={time.value}
-                          variant={
-                            selectedTime === time.value ? "default" : "outline"
-                          }
-                          onClick={() => setSelectedTime(time.value)}
-                          className="h-10"
-                        >
-                          <Clock className="h-4 w-4 mr-2" />
-                          {time.label}
-                        </Button>
-                      ))}
-                    </div>
+                    {/* Botón para cargar más fechas */}
+                    <Button
+                      variant="outline"
+                      onClick={handleCargarMasFechas}
+                      className="w-full mt-3"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Cargar más fechas disponibles
+                    </Button>
                   </div>
 
                   {/* Resumen de la cita */}
-                  {selectedDate && selectedTime && (
+                  {selectedAppointment && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <h3 className="font-semibold text-blue-900 mb-2">
                         Resumen de tu cita:
@@ -382,15 +432,17 @@ export default function AgendarCitaPage() {
                         <p>
                           <strong>Fecha:</strong>{" "}
                           {
-                            availableDates.find((d) => d.value === selectedDate)
-                              ?.label
+                            availableAppointments.find(
+                              (apt) => apt.id === selectedAppointment
+                            )?.label
                           }
                         </p>
                         <p>
                           <strong>Hora:</strong>{" "}
                           {
-                            timeSlots.find((t) => t.value === selectedTime)
-                              ?.label
+                            availableAppointments.find(
+                              (apt) => apt.id === selectedAppointment
+                            )?.timeLabel
                           }
                         </p>
                         <p>
@@ -407,7 +459,7 @@ export default function AgendarCitaPage() {
                   {/* Botón de confirmación */}
                   <Button
                     onClick={handleConfirmarCita}
-                    disabled={!selectedDate || !selectedTime}
+                    disabled={!selectedAppointment}
                     className="w-full h-12 bg-green-600 hover:bg-green-700 text-white text-lg"
                   >
                     <CheckCircle2 className="h-5 w-5 mr-2" />
@@ -419,7 +471,7 @@ export default function AgendarCitaPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Información del trámite */}
             <Card>
               <CardHeader>
