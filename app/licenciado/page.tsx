@@ -10,13 +10,15 @@ import {
   LogOut,
 } from "lucide-react";
 import { AbogadoKanbanDashboard } from "@/components/abogado-kanban-dashboard";
+import { CitasDashboard } from "@/components/citas-dashboard";
+import { ArchivoDashboard } from "@/components/archivo-dashboard";
 import { NotificationsPanel } from "@/components/notifications-panel";
 import { LicenciadoSidebar } from "@/components/licenciado-sidebar";
 
 export default function LicenciadoDashboard() {
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("kanban");
+  const [activeTab, setActiveTab] = useState("expedientes");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -72,42 +74,19 @@ export default function LicenciadoDashboard() {
 
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-        {/* Header */}
-        <div className="border-b bg-white shadow-sm">
-          <div className="flex h-16 items-center justify-between px-6">
-            <div className="flex items-center space-x-4">
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Dashboard Licenciado
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Bienvenido, {user.nombre}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setNotificationsOpen(true)}
-                className="relative"
-              >
-                <Bell className="h-5 w-5" />
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                >
-                  3
-                </Badge>
-              </Button>
-            </div>
-          </div>
-        </div>
-
         <div className="p-6">
-          {/* Kanban Dashboard */}
-          <AbogadoKanbanDashboard licenciadoId={user.id} />
+          {/* Contenido dinámico según el tab seleccionado */}
+          {activeTab === "expedientes" && (
+            <AbogadoKanbanDashboard licenciadoId={user.id} />
+          )}
+          
+          {activeTab === "citas" && (
+            <CitasDashboard />
+          )}
+          
+          {activeTab === "archivo" && (
+            <ArchivoDashboard />
+          )}
         </div>
       </div>
 

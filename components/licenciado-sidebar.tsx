@@ -67,7 +67,7 @@ export function LicenciadoSidebar({
 }: LicenciadoSidebarProps) {
   return (
     <div
-      className={`bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 text-white shadow-2xl transition-all duration-300 ${
+      className={`bg-gradient-to-b from-blue-900 via-blue-900 to-blue-800 text-white shadow-2xl transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       } h-screen fixed left-0 top-0 z-40 flex flex-col`}
     >
@@ -81,7 +81,7 @@ export function LicenciadoSidebar({
               </div>
               <div>
                 <h2 className="font-bold text-lg">Notaría #3</h2>
-                <p className="text-xs text-blue-100">Sistema Legal</p>
+                <p className="text-xs text-blue-100">Xavier Ibañez Veramendi</p>
               </div>
             </div>
           )}
@@ -187,7 +187,7 @@ export function LicenciadoSidebar({
         <Button
           variant="ghost"
           onClick={onLogout}
-          className="w-full justify-start h-auto p-3 text-white hover:bg-red-500/20 hover:text-red-100 transition-all duration-200"
+          className="w-full justify-start h-auto p-3 text-white hover:text-red-500 hover:bg-transparent focus:bg-transparent transition-all duration-200"
         >
           <div className="flex items-center gap-3 w-full">
             <LogOut className="h-5 w-5 flex-shrink-0" />
