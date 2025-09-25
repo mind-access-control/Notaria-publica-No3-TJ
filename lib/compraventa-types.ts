@@ -63,7 +63,7 @@ export interface DocumentoCompraventa {
   nombre: string;
   archivo?: File;
   url?: string;
-  fechaSubida: string;
+  fechaSubida: string | null;
   estado: "pendiente" | "subido" | "validado" | "rechazado";
   datosExtraidos?: DatosExtraidosOCR;
   observaciones?: string;
@@ -83,7 +83,18 @@ export type DocumentoTipo =
   | "acta_nacimiento_comprador"
   | "acta_nacimiento_vendedor"
   | "constancia_predial"
-  | "constancia_agua";
+  | "constancia_agua"
+  | "identificacion_oficial"
+  | "curp"
+  | "rfc_csf"
+  | "acta_nacimiento"
+  | "comprobante_domicilio"
+  | "datos_bancarios"
+  | "acta_matrimonio"
+  | "carta_oferta_banco"
+  | "avaluo_bancario"
+  | "polizas_credito"
+  | "instrucciones_dispersion";
 
 export interface DatosExtraidosOCR {
   tipoDocumento: DocumentoTipo;
@@ -161,8 +172,10 @@ export interface ExpedienteCompraventa {
 export type EstadoExpediente =
   | "RECIBIDO"
   | "EN_VALIDACION"
-  | "EN_PREPARACION"
+  | "EXPEDIENTE_PRELIMINAR"
+  | "PROYECTO_ESCRITURA"
   | "LISTO_PARA_FIRMA"
+  | "POST_FIRMA"
   | "COMPLETADO"
   | "CANCELADO";
 
@@ -257,10 +270,12 @@ export const DOCUMENTOS_COMPRAVENTA: DocumentoTipo[] = [
 // Estados del flujo de trabajo
 export const ESTADOS_FLUJO: { [key in EstadoExpediente]: string } = {
   RECIBIDO: "Recibido",
-  EN_VALIDACION: "En Validación",
-  EN_PREPARACION: "En Preparación",
-  LISTO_PARA_FIRMA: "Listo para Firma",
-  COMPLETADO: "Completado",
+  EN_VALIDACION: "En validación",
+  EXPEDIENTE_PRELIMINAR: "Expediente preliminar",
+  PROYECTO_ESCRITURA: "Proyecto de escritura",
+  LISTO_PARA_FIRMA: "Firma agendada",
+  POST_FIRMA: "Post firma",
+  COMPLETADO: "Post firma",
   CANCELADO: "Cancelado",
 };
 

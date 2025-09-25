@@ -62,13 +62,13 @@ export default function AbogadoDashboard() {
     (exp) => exp.licenciadoAsignado === user?.id
   );
   const expedientesRecibidos = expedientesLicenciado.filter(
-    (exp) => exp.estado === "RECIBIDO"
+    (exp) => exp.estado === "EXPEDIENTE_PRELIMINAR"
   ).length;
   const expedientesEnValidacion = expedientesLicenciado.filter(
-    (exp) => exp.estado === "EN_VALIDACION"
+    (exp) => exp.estado === "EXPEDIENTE_PRELIMINAR"
   ).length;
   const expedientesEnPreparacion = expedientesLicenciado.filter(
-    (exp) => exp.estado === "EN_PREPARACION"
+    (exp) => exp.estado === "PROYECTO_ESCRITURA"
   ).length;
   const expedientesListosFirma = expedientesLicenciado.filter(
     (exp) => exp.estado === "LISTO_PARA_FIRMA"

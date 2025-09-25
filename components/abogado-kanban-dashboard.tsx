@@ -69,6 +69,9 @@ import {
     ArrowLeft,
     ArrowRight,
     FileEdit,
+    Download,
+    Printer,
+    MapPin,
 } from "lucide-react";
 import {
   ExpedienteCompraventa,
@@ -98,26 +101,20 @@ interface KanbanColumn {
 
 const KANBAN_COLUMNS: KanbanColumn[] = [
   {
-    id: "RECIBIDO",
-    title: "Recibido",
+    id: "EXPEDIENTE_PRELIMINAR",
+    title: "Expediente preliminar",
     color: "bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300",
     icon: null,
   },
   {
-    id: "EN_VALIDACION",
-    title: "En validación",
-    color: "bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300",
-    icon: null,
-  },
-  {
-    id: "EN_PREPARACION",
+    id: "PROYECTO_ESCRITURA",
     title: "Proyecto de escritura",
     color: "bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300",
     icon: null,
   },
   {
     id: "LISTO_PARA_FIRMA",
-    title: "Listo para firma",
+    title: "Firma agendada",
     color: "bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300",
     icon: null,
   },
@@ -280,6 +277,7 @@ export function AbogadoKanbanDashboard({
     "general" | "observacion" | "requerimiento"
   >("general");
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showValidatedDocuments, setShowValidatedDocuments] = useState(false);
   const [draggedExpediente, setDraggedExpediente] = useState<string | null>(
     null
   );
@@ -296,9 +294,10 @@ export function AbogadoKanbanDashboard({
   const [validatingExpedientes, setValidatingExpedientes] = useState<
     Set<string>
   >(new Set());
+  const [forceUpdate, setForceUpdate] = useState(0);
   const [showDocumentViewer, setShowDocumentViewer] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
-  const [documentStates, setDocumentStates] = useState<Record<string, string>>({});
+  const [documentStates, setDocumentStates] = useState<Record<string, Record<string, string>>>({});
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const [highlightedText, setHighlightedText] = useState("");
   const [contractApprovals, setContractApprovals] = useState<Record<string, {
@@ -307,10 +306,30 @@ export function AbogadoKanbanDashboard({
     notificacionesEnviadas: boolean;
   }>>({});
   const [tramitePagado, setTramitePagado] = useState<Record<string, boolean>>({});
+  const [fechasFirmaProgramadas, setFechasFirmaProgramadas] = useState<Record<string, {
+    fecha: string;
+    hora: string;
+    lugar: string;
+    sala: string;
+  }>>({
+    // Datos demostrativos para expedientes en LISTO_PARA_FIRMA
+    'exp-001': {
+      fecha: '2024-09-29',
+      hora: '10:00',
+      lugar: 'Notaría #3 - Oficina Principal',
+      sala: 'Sala de Juntas A'
+    }
+  });
   const [pagosPorParte, setPagosPorParte] = useState<Record<string, {
     comprador: boolean;
     vendedor: boolean;
-  }>>({});
+  }>>({
+    // Datos demostrativos: comprador pagado, vendedor pendiente
+    'exp-001': {
+      comprador: true,
+      vendedor: false
+    }
+  });
 
   // Datos reales del contrato para búsqueda y validación
   const contractSearchData = [
@@ -391,6 +410,25 @@ export function AbogadoKanbanDashboard({
   const [revalidatingExpedientes, setRevalidatingExpedientes] = useState<
     Set<string>
   >(new Set());
+  const [contractValidations, setContractValidations] = useState<
+    Record<string, Record<string, { approved: boolean; reason?: string }>>
+  >({});
+  const [isApplyingCorrection, setIsApplyingCorrection] = useState(false);
+  const [isCommunicating, setIsCommunicating] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [selectedAppointmentDate, setSelectedAppointmentDate] = useState("");
+  const [selectedAppointmentTime, setSelectedAppointmentTime] = useState("");
+  const [selectedMeetingRoom, setSelectedMeetingRoom] = useState("");
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  const [rescheduleRoom, setRescheduleRoom] = useState("");
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [showTaxModal, setShowTaxModal] = useState(false);
+  const [showEscrituraModal, setShowEscrituraModal] = useState(false);
+  const [selectedDocumentInfo, setSelectedDocumentInfo] = useState<{title: string, type: string, expediente: string} | null>(null);
+  const [selectedTaxInfo, setSelectedTaxInfo] = useState<{title: string, expediente: string, details: any} | null>(null);
 
   // Lista completa de documentos para compraventa con documentos reales
   const documentosCompraventa = [
@@ -665,7 +703,8 @@ export function AbogadoKanbanDashboard({
     let validated = 0;
 
     documentosCompraventa.forEach(doc => {
-      const documentState = documentStates[doc.id];
+      const expedienteDocumentStates = documentStates[expedienteId] || {};
+      const documentState = expedienteDocumentStates[doc.id];
       
       if (documentState === "aceptado") {
         validated++;
@@ -682,6 +721,89 @@ export function AbogadoKanbanDashboard({
     });
 
     return { pending, rejected, validated, total: pending + rejected };
+  };
+
+  // Función para verificar si todos los documentos están validados
+  const areAllDocumentsValidated = (expedienteId: string) => {
+    const docCount = getDocumentStatusCount(expedienteId);
+    const todosValidados = docCount.validated === documentosCompraventa.length;
+    
+    console.log(`📋 Verificación de documentos para ${expedienteId}:`, {
+      validados: docCount.validated,
+      total: documentosCompraventa.length,
+      todosValidados
+    });
+    
+    return todosValidados;
+  };
+
+  // Función para obtener el estado real del expediente (considerando validación de documentos)
+  const getRealExpedienteStatus = (expediente: ExpedienteCompraventa) => {
+    // Si no todos los documentos están validados, el estado real es EXPEDIENTE_PRELIMINAR
+    if (!areAllDocumentsValidated(expediente.id)) {
+      return "EXPEDIENTE_PRELIMINAR";
+    }
+    
+    // Si todos los documentos están validados y el expediente está en EXPEDIENTE_PRELIMINAR,
+    // mostrar como PROYECTO_ESCRITURA
+    if (expediente.estado === "EXPEDIENTE_PRELIMINAR") {
+      return "PROYECTO_ESCRITURA";
+    }
+    
+    // Si todos los documentos están validados, usar el estado original del expediente
+    return expediente.estado;
+  };
+
+  // Función para verificar y actualizar automáticamente el estado del expediente
+  const checkAndUpdateExpedienteStatus = (expedienteId: string) => {
+    console.log(`🔍 Verificando expediente ${expedienteId} para transición automática`);
+    
+    const expediente = expedientes.find(exp => exp.id === expedienteId);
+    if (!expediente) {
+      console.log(`❌ Expediente ${expedienteId} no encontrado`);
+      return;
+    }
+
+    const todosValidados = areAllDocumentsValidated(expedienteId);
+    
+    console.log(`📊 Expediente ${expedienteId}:`, {
+      estado: expediente.estado,
+      todosValidados,
+      cumpleCondicion: todosValidados && expediente.estado === "EXPEDIENTE_PRELIMINAR"
+    });
+
+    // Si todos los documentos están validados y el expediente está en EXPEDIENTE_PRELIMINAR,
+    // actualizar automáticamente a PROYECTO_ESCRITURA (esto moverá la tarjeta automáticamente)
+    if (todosValidados && expediente.estado === "EXPEDIENTE_PRELIMINAR") {
+      console.log(`✅ TRANSICIÓN AUTOMÁTICA: ${expedienteId} → PROYECTO_ESCRITURA`);
+      console.log(`📊 Estado ANTES de actualizar:`, expediente.estado);
+      
+      // Actualizar el estado del expediente (esto hará que se mueva a la columna correcta)
+      setExpedientes(prev => {
+        const updated = prev.map(exp => 
+          exp.id === expedienteId 
+            ? { ...exp, estado: "PROYECTO_ESCRITURA" as EstadoExpediente }
+            : exp
+        );
+        console.log(`🔄 Expedientes actualizados:`, updated.map(e => `${e.id}: ${e.estado}`));
+        return updated;
+      });
+      
+      // Actualizar también el expediente seleccionado si es el mismo
+      if (selectedExpediente && selectedExpediente.id === expedienteId) {
+        setSelectedExpediente(prev => prev ? { ...prev, estado: "PROYECTO_ESCRITURA" } : null);
+      }
+      
+      // Agregar comentario automático
+      addComentarioExpediente(
+        expedienteId,
+        "TRANSICIÓN AUTOMÁTICA: Todos los documentos han sido validados. El expediente ha pasado a la etapa de Proyecto de Escritura.",
+        "Sistema",
+        "general"
+      );
+    } else {
+      console.log(`⏳ Expediente ${expedienteId} no cumple condiciones para transición automática`);
+    }
   };
 
   // Funciones para navegación en el contrato
@@ -852,21 +974,32 @@ export function AbogadoKanbanDashboard({
 
   // Función para aceptar documento
   const handleAcceptDocument = () => {
-    if (selectedDocument) {
+    if (selectedDocument && selectedExpediente) {
       setDocumentStates(prev => ({
         ...prev,
-        [selectedDocument.id]: "aceptado"
+        [selectedExpediente.id]: {
+          ...prev[selectedExpediente.id],
+          [selectedDocument.id]: "aceptado"
+        }
       }));
       setShowDocumentViewer(false);
+      
+      // Verificar si todos los documentos están validados para transición automática
+      setTimeout(() => {
+        checkAndUpdateExpedienteStatus(selectedExpediente.id);
+      }, 100);
     }
   };
 
   // Función para rechazar documento
   const handleRejectDocument = () => {
-    if (selectedDocument) {
+    if (selectedDocument && selectedExpediente) {
       setDocumentStates(prev => ({
         ...prev,
-        [selectedDocument.id]: "rechazado"
+        [selectedExpediente.id]: {
+          ...prev[selectedExpediente.id],
+          [selectedDocument.id]: "rechazado"
+        }
       }));
       setShowDocumentViewer(false);
     }
@@ -879,18 +1012,26 @@ export function AbogadoKanbanDashboard({
     approved: boolean,
     reason?: string
   ) => {
-    setManualValidations((prev) => ({
+    console.log(
+      `🔍 VALIDACIÓN MANUAL INICIADA: ${expedienteId} - ${documentType} - ${approved ? "APROBADO" : "RECHAZADO"}`
+    );
+
+    setManualValidations((prev) => {
+      const updated = {
       ...prev,
       [expedienteId]: {
         ...prev[expedienteId],
         [documentType]: { approved, reason },
       },
-    }));
+      };
+      console.log(`📝 Validaciones manuales actualizadas para ${expedienteId}:`, updated[expedienteId]);
+      return updated;
+    });
 
     // Agregar comentario sobre la decisión manual
     const accion = approved ? "aprobó" : "rechazó";
     const razonTexto = reason ? ` Razón: ${reason}` : "";
-    const comentario = `👨‍💼 REVISIÓN MANUAL: El Licenciado ${accion} la validación de "${documentType}".${razonTexto}`;
+    const comentario = `REVISIÓN MANUAL: El Licenciado ${accion} la validación de "${documentType}".${razonTexto}`;
 
     addComentarioExpediente(
       expedienteId,
@@ -901,20 +1042,43 @@ export function AbogadoKanbanDashboard({
 
     // Verificar si todas las validaciones están completas
     const report = validationReports[expedienteId];
+    console.log(`📊 Reporte de validación para ${expedienteId}:`, report);
+    
     if (report) {
       const manualDecisions = manualValidations[expedienteId] || {};
+      console.log(`📋 Decisiones manuales para ${expedienteId}:`, manualDecisions);
+      
       const allValidated = report.validations.every(
         (v) => manualDecisions[v.documentType] !== undefined
       );
+      console.log(`✅ Todas las validaciones completas para ${expedienteId}:`, allValidated);
 
       if (allValidated) {
         const allApproved = report.validations.every(
           (v) => manualDecisions[v.documentType]?.approved === true
         );
+        console.log(`🎯 Todas las validaciones aprobadas para ${expedienteId}:`, allApproved);
 
         if (!allApproved) {
-          // Regresar a validación si no está 100% aprobado
-          updateExpedienteEstado(expedienteId, "EN_VALIDACION", "licenciado-1");
+          // Regresar a expediente preliminar si no está 100% aprobado
+          updateExpedienteEstado(expedienteId, "EXPEDIENTE_PRELIMINAR", "licenciado-1");
+          
+          // Actualizar estado local inmediatamente
+          setExpedientes(prev => {
+            const updated = prev.map(exp => 
+              exp.id === expedienteId 
+                ? { ...exp, estado: "EXPEDIENTE_PRELIMINAR" as EstadoExpediente }
+                : exp
+            );
+            console.log(`📋 Regresando ${expedienteId} a EXPEDIENTE_PRELIMINAR:`, updated.find(e => e.id === expedienteId)?.estado);
+            return updated;
+          });
+          
+          // Forzar re-render
+          setForceUpdate(prev => prev + 1);
+          
+          // Cerrar modal para que el usuario pueda ver el movimiento
+          setShowExpedienteModal(false);
 
           // Generar comentario para el cliente
           const problemasRechazados = report.validations
@@ -928,7 +1092,7 @@ export function AbogadoKanbanDashboard({
             )
             .join("\n");
 
-          const comentarioCliente = `📋 CORRECCIONES REQUERIDAS
+          const comentarioCliente = `CORRECCIONES REQUERIDAS
 
 Se requieren las siguientes correcciones antes de continuar:
 
@@ -942,6 +1106,34 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
             "Notaría",
             "requerimiento"
           );
+        } else {
+          // Si todas las validaciones están aprobadas, mover a PROYECTO_ESCRITURA
+          console.log(`🚀 MOVIENDO EXPEDIENTE ${expedienteId} A PROYECTO_ESCRITURA`);
+          
+          // Actualizar estado local PRIMERO
+          setExpedientes(prev => {
+            const updated = prev.map(exp => 
+              exp.id === expedienteId 
+                ? { ...exp, estado: "PROYECTO_ESCRITURA" as EstadoExpediente }
+                : exp
+            );
+            console.log(`📋 Estado actualizado para ${expedienteId}:`, updated.find(e => e.id === expedienteId)?.estado);
+            return updated;
+          });
+          
+          // Luego actualizar en la base de datos
+          updateExpedienteEstado(expedienteId, "PROYECTO_ESCRITURA", "licenciado-1");
+          
+          // Cerrar modal para que el usuario pueda ver el movimiento
+          setShowExpedienteModal(false);
+          
+          // Agregar comentario de aprobación
+          addComentarioExpediente(
+            expedienteId,
+            "✅ Todas las validaciones han sido aprobadas. El expediente ha sido movido a 'Proyecto de Escritura' para continuar con la preparación del documento notarial.",
+            "Licenciado",
+            "general"
+          );
         }
       }
     }
@@ -949,7 +1141,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
   // Función para revalidar expediente
   const handleRevalidation = async (expedienteId: string) => {
-    console.log(`🔄 Iniciando REVALIDACIÓN para expediente ${expedienteId}`);
+    console.log(`Iniciando REVALIDACIÓN para expediente ${expedienteId}`);
 
     // Limpiar validaciones manuales previas
     setManualValidations((prev) => ({
@@ -980,16 +1172,16 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       // Agregar comentario de revalidación exitosa
       addComentarioExpediente(
         expedienteId,
-        "🔄 REVALIDACIÓN COMPLETADA: Todos los documentos han sido corregidos y aprobados exitosamente.",
+        "REVALIDACIÓN COMPLETADA: Todos los documentos han sido corregidos y aprobados exitosamente.",
         "IA Assistant",
         "general"
       );
 
       console.log(
-        `✅ Revalidación completada exitosamente para ${expedienteId}`
+        `Revalidación completada exitosamente para ${expedienteId}`
       );
     } catch (error) {
-      console.error(`❌ Error en revalidación para ${expedienteId}:`, error);
+      console.error(`Error en revalidación para ${expedienteId}:`, error);
     } finally {
       // Remover de listas de validación
       setValidatingExpedientes((prev) => {
@@ -1009,27 +1201,54 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   const pagosDemoExpediente = [
     {
       id: "pago-001",
-      monto: 7500,
+      monto: 12500, // Pago completo del comprador
       metodo: "Transferencia Bancaria",
       referencia: "NP3-COMP-001-2025",
-      tipo: "parcial",
+      tipo: "completo",
       fecha: "2025-01-15T16:45:00Z",
       estado: "confirmado",
-      concepto: "Anticipo de honorarios notariales y derechos registrales",
-      comprobante: "/documentos_legales/Comprobante_Pago_7500.md",
+      concepto: "Pago completo de honorarios notariales y derechos registrales",
+      comprobante: "/documentos_legales/Comprobante_Pago_12500.md",
       banco: "BBVA México",
       autorizacion: "789456123",
+      parte: "comprador"
+    },
+    {
+      id: "pago-002",
+      monto: 12500, // Pago del vendedor (pendiente)
+      metodo: "Pendiente",
+      referencia: "NP3-VEND-001-2025",
+      tipo: "pendiente",
+      fecha: null,
+      estado: "pendiente",
+      concepto: "Pago de honorarios notariales y derechos registrales",
+      comprobante: null,
+      banco: null,
+      autorizacion: null,
+      parte: "vendedor"
     },
   ];
 
   // Calcular totales de pago
   const costoTotalExpediente = 25000; // Costo total del trámite
-  const totalPagado = pagosDemoExpediente.reduce(
-    (sum, pago) => sum + pago.monto,
-    0
-  );
+  const totalPagado = pagosDemoExpediente
+    .filter(pago => pago.estado === "confirmado")
+    .reduce((sum, pago) => sum + pago.monto, 0);
   const saldoPendiente = costoTotalExpediente - totalPagado;
   const porcentajePagado = (totalPagado / costoTotalExpediente) * 100;
+
+  // Calcular montos por parte
+  const montoPorParte = costoTotalExpediente / 2; // Cada parte paga 50%
+  const pagoComprador = pagosDemoExpediente.find(p => p.parte === "comprador");
+  const pagoVendedor = pagosDemoExpediente.find(p => p.parte === "vendedor");
+  
+  // Montos pagados por cada parte
+  const montoPagadoComprador = pagoComprador?.estado === "confirmado" ? pagoComprador.monto : 0;
+  const montoPagadoVendedor = pagoVendedor?.estado === "confirmado" ? pagoVendedor.monto : 0;
+  
+  // Montos pendientes por cada parte
+  const montoPendienteComprador = montoPorParte - montoPagadoComprador;
+  const montoPendienteVendedor = montoPorParte - montoPagadoVendedor;
 
   // Función para obtener el título del trámite según su tipo
   const getTramiteTitle = (expediente: ExpedienteCompraventa) => {
@@ -1071,11 +1290,11 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   const getTramiteIcon = (tipoTramite: string) => {
     switch (tipoTramite) {
       case "compraventa":
-        return <Home className="h-4 w-4 text-blue-600" />;
+        return <Home className="h-4 w-4 text-gray-600" />;
       case "testamento":
-        return <FileText className="h-4 w-4 text-blue-600" />;
+        return <FileText className="h-4 w-4 text-gray-600" />;
       case "donacion":
-        return <Users className="h-4 w-4 text-purple-600" />;
+        return <Users className="h-4 w-4 text-gray-600" />;
       case "poder":
         return <Shield className="h-4 w-4 text-orange-600" />;
       default:
@@ -1087,10 +1306,10 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     // Cargar expedientes del licenciado
     const expedientesLicenciado = getExpedientesByAbogado(licenciadoId || "");
     console.log(
-      `📋 Expedientes cargados para licenciado ${licenciadoId || 'No especificado'}:`,
+      `Expedientes cargados para licenciado ${licenciadoId || 'No especificado'}:`,
       expedientesLicenciado
     );
-    console.log(`📊 Total expedientes: ${expedientesLicenciado.length}`);
+    console.log(`Total expedientes: ${expedientesLicenciado.length}`);
     expedientesLicenciado.forEach((exp) => {
       console.log(
         `  - ${exp.numeroSolicitud}: ${exp.tipoTramite} (${exp.estado}) - Asignado a: ${exp.licenciadoAsignado || 'No asignado'}`
@@ -1098,6 +1317,68 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     });
     setExpedientes(expedientesLicenciado);
     setFilteredExpedientes(expedientesLicenciado);
+    
+    // Cargar validaciones existentes para cada expediente
+    const existingValidations: Record<string, ExpedienteValidationReport> = {};
+    expedientesLicenciado.forEach(expediente => {
+      const validationHistory = aiValidationService.getValidationHistory(expediente.id);
+      if (validationHistory.length > 0) {
+        // Tomar la validación más reciente
+        existingValidations[expediente.id] = validationHistory[validationHistory.length - 1];
+        console.log(`📋 Cargada validación existente para ${expediente.id}:`, existingValidations[expediente.id]);
+      }
+    });
+    setValidationReports(existingValidations);
+    
+    // Para propósitos de prueba, generar validaciones de prueba para algunos expedientes
+    if (Object.keys(existingValidations).length === 0) {
+      console.log(`🧪 Generando validaciones de prueba para demostración...`);
+      const testValidations: Record<string, ExpedienteValidationReport> = {};
+      
+      // Generar validación de prueba para el primer expediente (exp-001)
+      const testExpediente = expedientesLicenciado.find(exp => exp.id === "exp-001");
+      if (testExpediente) {
+        const testReport: ExpedienteValidationReport = {
+          expedienteId: "exp-001",
+          overallScore: 100,
+          status: "passed",
+          validations: [
+            {
+              documentType: "INE vs Escritura",
+              result: { isValid: true, confidence: 95, issues: [] },
+              validatedAt: new Date().toISOString(),
+              validatedBy: "ai"
+            },
+            {
+              documentType: "Avalúo",
+              result: { isValid: true, confidence: 91, issues: [] },
+              validatedAt: new Date().toISOString(),
+              validatedBy: "ai"
+            },
+            {
+              documentType: "Escritura Pública",
+              result: { isValid: true, confidence: 93, issues: [] },
+              validatedAt: new Date().toISOString(),
+              validatedBy: "ai"
+            },
+            {
+              documentType: "CLG",
+              result: { isValid: true, confidence: 96, issues: [] },
+              validatedAt: new Date().toISOString(),
+              validatedBy: "ai"
+            }
+          ],
+          summary: "✅ Validación completada exitosamente. Todos los documentos están en orden.",
+          recommendedActions: ["Proceder a la siguiente etapa del proceso"]
+        };
+        
+        testValidations["exp-001"] = testReport;
+        aiValidationService.saveValidation(testReport);
+        console.log(`🧪 Validación de prueba creada para exp-001`);
+      }
+      
+      setValidationReports(testValidations);
+    }
   }, [licenciadoId || ""]);
 
   useEffect(() => {
@@ -1106,17 +1387,17 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
     // Filtrar por tipo de trámite
     if (!selectedTramiteTypes.includes("todos")) {
-      console.log(`🏷️ Filtrando por tipos: ${selectedTramiteTypes.join(", ")}`);
+      console.log(`Filtrando por tipos: ${selectedTramiteTypes.join(", ")}`);
       console.log(
-        `📋 Expedientes antes del filtro:`,
+        `Expedientes antes del filtro:`,
         expedientes.map((e) => `${e.numeroSolicitud}: ${e.tipoTramite}`)
       );
       filtered = filtered.filter((exp) => {
-        return selectedTramiteTypes.includes(exp.tipoTramite);
+        return exp.tipoTramite && selectedTramiteTypes.includes(exp.tipoTramite);
       });
-      console.log(`📝 Expedientes después del filtro: ${filtered.length}`);
+      console.log(`Expedientes después del filtro: ${filtered.length}`);
       filtered.forEach((exp) => {
-        console.log(`  ✅ ${exp.numeroSolicitud}: ${exp.tipoTramite}`);
+        console.log(`  ${exp.numeroSolicitud}: ${exp.tipoTramite}`);
       });
     }
     // Si es "todos", no filtrar por tipo
@@ -1165,27 +1446,27 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
   // Función para ejecutar validación IA automática
   const executeAIValidation = async (expedienteId: string) => {
-    console.log(`🤖 [INICIO] Validación IA para expediente ${expedienteId}`);
+    console.log(`[INICIO] Validación IA para expediente ${expedienteId}`);
     console.log(
-      `📍 Estado actual del expediente:`,
+      `Estado actual del expediente:`,
       expedientes.find((e) => e.id === expedienteId)
     );
 
     // Agregar a la lista de expedientes en validación
     setValidatingExpedientes((prev) => {
-      console.log(`📝 Agregando ${expedienteId} a lista de validación`);
+      console.log(`Agregando ${expedienteId} a lista de validación`);
       return new Set([...prev, expedienteId]);
     });
 
     try {
-      console.log(`🔄 Ejecutando validación IA para ${expedienteId}...`);
+      console.log(`Ejecutando validación IA para ${expedienteId}...`);
 
       // Ejecutar validación IA
       const validationReport = await aiValidationService.validateExpediente(
         expedienteId
       );
 
-      console.log(`📊 Reporte de validación generado:`, validationReport);
+      console.log(`Reporte de validación generado:`, validationReport);
 
       // Guardar el reporte
       aiValidationService.saveValidation(validationReport);
@@ -1197,16 +1478,16 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       }));
 
       console.log(
-        `✅ Validación IA completada exitosamente para ${expedienteId}`
+        `Validación IA completada exitosamente para ${expedienteId}`
       );
     } catch (error) {
-      console.error(`❌ Error en validación IA para ${expedienteId}:`, error);
-      console.error(`📍 Stack trace:`, error);
+      console.error(`Error en validación IA para ${expedienteId}:`, error);
+      console.error(`Stack trace:`, error);
 
       // NO agregar comentario de error automáticamente
       // El Licenciado debe poder ver que la validación falló y decidir qué hacer
       console.log(
-        `⚠️ Validación IA falló para ${expedienteId}, pero no se agrega comentario automático`
+        `Validación IA falló para ${expedienteId}, pero no se agrega comentario automático`
       );
     } finally {
       // Remover de la lista de validación
@@ -1256,20 +1537,23 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     );
 
     if (success) {
-      // Refrescar expedientes desde el backend para obtener el historial actualizado
-      const expedientesActualizados = getExpedientesByAbogado(licenciadoId || "");
-      setExpedientes(expedientesActualizados);
+      // Actualizar solo el expediente específico en lugar de refrescar toda la lista
+      setExpedientes(prev => prev.map(exp => 
+        exp.id === draggedExpediente 
+          ? { ...exp, estado: nuevoEstado }
+          : exp
+      ));
 
-      // 🤖 VALIDACIÓN IA AUTOMÁTICA: Si se mueve a EN_VALIDACION, ejecutar validación IA
-      if (nuevoEstado === "EN_VALIDACION") {
+      // VALIDACIÓN IA AUTOMÁTICA: Si se mueve a EXPEDIENTE_PRELIMINAR, ejecutar validación IA
+      if (nuevoEstado === "EXPEDIENTE_PRELIMINAR") {
         console.log(
-          `🤖 Tarjeta movida a EN_VALIDACION - Iniciando validación IA automática para ${draggedExpediente}`
+          `Tarjeta movida a EXPEDIENTE_PRELIMINAR - Iniciando validación IA automática para ${draggedExpediente}`
         );
 
         // Ejecutar validación IA de forma asíncrona con un pequeño delay
         setTimeout(() => {
           console.log(
-            `⏰ Ejecutando validación IA después de delay para ${draggedExpediente}`
+            `Ejecutando validación IA después de delay para ${draggedExpediente}`
           );
           executeAIValidation(draggedExpediente);
         }, 1000);
@@ -1282,16 +1566,38 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   const handleExpedienteClick = (expediente: ExpedienteCompraventa) => {
     setSelectedExpediente(expediente);
     setShowExpedienteModal(true);
+    
+    // Si el expediente está en PROYECTO_ESCRITURA, marcar automáticamente todos los documentos como validados
+    if (expediente.estado === "PROYECTO_ESCRITURA") {
+      console.log(`📋 Expediente ${expediente.id} está en PROYECTO_ESCRITURA - Marcando documentos como validados automáticamente`);
+      
+      // Marcar todos los documentos de compraventa como validados
+      const expedienteDocumentStates = documentStates[expediente.id] || {};
+      const updatedDocumentStates = { ...expedienteDocumentStates };
+      
+      // Marcar todos los documentos de compraventa como validados usando los IDs reales
+      documentosCompraventa.forEach(doc => {
+        updatedDocumentStates[doc.id] = "aceptado";
+      });
+      
+      // Actualizar el estado de los documentos
+      setDocumentStates(prev => ({
+        ...prev,
+        [expediente.id]: updatedDocumentStates
+      }));
+      
+      console.log(`✅ Documentos marcados como validados para ${expediente.id}`);
+    }
   };
 
   const handleTramiteTypeToggle = (tramiteType: string) => {
-    console.log("🔄 Toggle tramite type:", tramiteType);
+    console.log("Toggle tramite type:", tramiteType);
     setSelectedTramiteTypes(prev => {
-      console.log("📋 Current selection:", prev);
+      console.log("Current selection:", prev);
       
       // Si se selecciona "todos", limpiar todo y dejar solo "todos"
       if (tramiteType === "todos") {
-        console.log("✅ Selecting 'todos' - clearing all others");
+        console.log("Selecting 'todos' - clearing all others");
         return ["todos"];
       }
       
@@ -1341,9 +1647,196 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   };
 
   const getExpedientesByColumn = (estado: EstadoExpediente) => {
-    return filteredExpedientes.filter(
-      (exp: ExpedienteCompraventa) => exp.estado === estado
+    console.log(`🔄 getExpedientesByColumn llamado para ${estado} - Total expedientes: ${expedientes.length}`);
+    const filtered = expedientes.filter((exp: ExpedienteCompraventa) => {
+      return exp.estado === estado;
+    });
+    console.log(`📋 Resultado para ${estado}:`, filtered.map(e => `${e.id}: ${e.estado}`));
+    return filtered;
+  };
+
+  // Función de prueba para mover expediente manualmente
+  const testMoveExpediente = (expedienteId: string) => {
+    console.log(`🧪 PRUEBA: Moviendo expediente ${expedienteId} a PROYECTO_ESCRITURA`);
+    setExpedientes(prev => {
+      const updated = prev.map(exp => 
+        exp.id === expedienteId 
+          ? { ...exp, estado: "PROYECTO_ESCRITURA" as EstadoExpediente }
+          : exp
+      );
+      console.log(`🧪 Estado actualizado en prueba:`, updated.find(e => e.id === expedienteId)?.estado);
+      return updated;
+    });
+  };
+
+  // Función para manejar validación del contrato
+  const handleContractValidation = (
+    expedienteId: string,
+    fieldId: string,
+    approved: boolean,
+    reason?: string
+  ) => {
+    console.log(`📋 Validación de contrato: ${expedienteId} - ${fieldId} - ${approved ? "APROBADO" : "RECHAZADO"}`);
+
+    setContractValidations(prev => {
+      const updated = {
+        ...prev,
+        [expedienteId]: {
+          ...prev[expedienteId],
+          [fieldId]: { approved, reason },
+        },
+      };
+      console.log(`📝 Validaciones de contrato actualizadas para ${expedienteId}:`, updated[expedienteId]);
+      return updated;
+    });
+
+    // Agregar comentario sobre la decisión
+    const accion = approved ? "aprobó" : "rechazó";
+    const razonTexto = reason ? ` Razón: ${reason}` : "";
+    const comentario = `VALIDACIÓN DE CONTRATO: El Licenciado ${accion} la validación de "${fieldId}".${razonTexto}`;
+
+    addComentarioExpediente(
+      expedienteId,
+      comentario,
+      "Licenciado",
+      approved ? "general" : "requerimiento"
     );
+
+    // Verificar si se han validado todos los campos del contrato
+    const updatedValidations = {
+      ...contractValidations[expedienteId],
+      [fieldId]: { approved, reason },
+    };
+    
+    const totalValidated = Object.values(updatedValidations).length;
+    const allValidated = totalValidated === contractSearchData.length;
+    
+    if (allValidated) {
+      console.log(`🎯 ¡TODAS LAS VALIDACIONES DEL CONTRATO COMPLETADAS! Cerrando automáticamente.`);
+      
+      // Agregar comentario final
+      addComentarioExpediente(
+        expedienteId,
+        "✅ VALIDACIÓN COMPLETA: Todas las 10 partes del contrato han sido validadas exitosamente. El contrato está listo para continuar con el proceso.",
+        "Licenciado",
+        "general"
+      );
+      
+      // Cerrar inmediatamente el modal de validación del contrato
+      setTimeout(() => {
+        setShowDocumentViewer(false);
+        setSelectedDocument(null);
+        setCurrentSearchIndex(0);
+        setHighlightedText("");
+        console.log(`🏠 Modal de validación del contrato cerrado automáticamente`);
+      }, 1000);
+      
+    } else {
+      // Avanzar automáticamente al siguiente campo si no es el último
+      if (currentSearchIndex < contractSearchData.length - 1) {
+        const nextIndex = currentSearchIndex + 1;
+        setCurrentSearchIndex(nextIndex);
+        setHighlightedText(contractSearchData[nextIndex].text);
+        console.log(`🔄 Avanzando automáticamente al siguiente campo: ${contractSearchData[nextIndex].type}`);
+      } else {
+        // Si estamos en el último campo y lo validamos, cerrar automáticamente
+        console.log(`🎯 Último campo validado. Cerrando modal automáticamente.`);
+        
+        // Agregar comentario final
+        addComentarioExpediente(
+          expedienteId,
+          "✅ VALIDACIÓN COMPLETA: Todas las 10 partes del contrato han sido validadas exitosamente. El contrato está listo para continuar con el proceso.",
+          "Licenciado",
+          "general"
+        );
+        
+        // Cerrar inmediatamente el modal
+        setTimeout(() => {
+          setShowDocumentViewer(false);
+          setSelectedDocument(null);
+          setCurrentSearchIndex(0);
+          setHighlightedText("");
+          console.log(`🏠 Modal cerrado automáticamente al validar el último campo`);
+        }, 1000);
+      }
+    }
+  };
+
+  // Función para contar validaciones del contrato
+  const getContractValidationCount = (expedienteId: string) => {
+    const validations = contractValidations[expedienteId] || {};
+    const totalFields = contractSearchData.length;
+    const approvedCount = Object.values(validations).filter(v => v.approved === true).length;
+    const rejectedCount = Object.values(validations).filter(v => v.approved === false).length;
+    const pendingCount = totalFields - approvedCount - rejectedCount;
+
+    return {
+      total: totalFields,
+      approved: approvedCount,
+      rejected: rejectedCount,
+      pending: pendingCount
+    };
+  };
+
+  // Función para mover expediente automáticamente (misma lógica que el botón rojo que funcionaba)
+  const handleAutoMoveExpediente = (expedienteId: string) => {
+    console.log(`🚀 MOVIENDO EXPEDIENTE ${expedienteId} A PROYECTO_ESCRITURA`);
+    
+    // Actualizar estado local PRIMERO (igual que el botón rojo)
+    setExpedientes(prev => {
+      const updated = prev.map(exp => 
+        exp.id === expedienteId 
+          ? { ...exp, estado: "PROYECTO_ESCRITURA" as EstadoExpediente }
+          : exp
+      );
+      console.log(`📋 Estado actualizado para ${expedienteId}:`, updated.find(e => e.id === expedienteId)?.estado);
+      return updated;
+    });
+    
+    // Actualizar también el expediente seleccionado en el modal para mantener la sesión activa
+    setSelectedExpediente(prev => prev ? {
+      ...prev,
+      estado: "PROYECTO_ESCRITURA" as EstadoExpediente
+    } : null);
+    
+    // Marcar automáticamente todos los documentos como validados al mover a PROYECTO_ESCRITURA
+    console.log(`📋 Marcando documentos como validados para ${expedienteId} al mover a PROYECTO_ESCRITURA`);
+    
+    const expedienteDocumentStates = documentStates[expedienteId] || {};
+    const updatedDocumentStates = { ...expedienteDocumentStates };
+    
+    // Marcar todos los documentos de compraventa como validados usando los IDs reales
+    documentosCompraventa.forEach(doc => {
+      updatedDocumentStates[doc.id] = "aceptado";
+    });
+    
+    // Actualizar el estado de los documentos
+    setDocumentStates(prev => ({
+      ...prev,
+      [expedienteId]: updatedDocumentStates
+    }));
+    
+    console.log(`✅ Documentos marcados como validados para ${expedienteId}`);
+    
+    // Luego actualizar en la base de datos
+    updateExpedienteEstado(expedienteId, "PROYECTO_ESCRITURA", "licenciado-1");
+    
+    // NO cerrar el modal - mantener la sesión de trabajo activa
+    // setShowExpedienteModal(false);
+    
+    // Agregar comentario de aprobación
+    addComentarioExpediente(
+      expedienteId,
+      "✅ Todas las validaciones han sido aprobadas. El expediente ha sido movido a 'Proyecto de Escritura' para continuar con la preparación del documento notarial.",
+      "Licenciado",
+      "general"
+    );
+    
+    // Mostrar notificación temporal de cambio de estado
+    setTimeout(() => {
+      // La notificación se mostrará automáticamente por el cambio de estado en el modal
+      console.log(`📢 Expediente ${expedienteId} movido a PROYECTO_ESCRITURA - Modal actualizado`);
+    }, 100);
   };
 
   const formatCurrency = (amount: number) => {
@@ -1388,6 +1881,19 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     }));
   };
 
+  // Función para simular aprobación automática de ambas partes en Proyecto de escritura
+  const handleAutoApproveBothParties = (expedienteId: string) => {
+    setContractApprovals(prev => ({
+      ...prev,
+      [expedienteId]: {
+        ...prev[expedienteId],
+        comprador: true,
+        vendedor: true
+      }
+    }));
+    console.log(`✅ Aprobaciones automáticas simuladas para ${expedienteId} - Ambas partes han aprobado`);
+  };
+
   // Función para marcar trámite como pagado
   const handleMarkAsPaid = (expedienteId: string) => {
     setTramitePagado(prev => ({
@@ -1395,6 +1901,30 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       [expedienteId]: true
     }));
     console.log(`Trámite ${expedienteId} marcado como pagado`);
+  };
+
+  // Función para verificar y marcar automáticamente como pagado si ambos pagos están completos
+  const checkAndMarkAsPaid = (expedienteId: string) => {
+    // Usar un timeout para asegurar que el estado se haya actualizado
+    setTimeout(() => {
+      setPagosPorParte(prevPagos => {
+        setTramitePagado(prevTramite => {
+          const compradorPagado = prevPagos[expedienteId]?.comprador;
+          const vendedorPagado = prevPagos[expedienteId]?.vendedor;
+          const yaMarcado = prevTramite[expedienteId];
+          
+          if (compradorPagado && vendedorPagado && !yaMarcado) {
+            console.log(`Ambos pagos completados para ${expedienteId}, marcando trámite como pagado automáticamente`);
+            return {
+              ...prevTramite,
+              [expedienteId]: true
+            };
+          }
+          return prevTramite;
+        });
+        return prevPagos;
+      });
+    }, 50);
   };
 
   // Función para marcar pago de una parte específica
@@ -1407,6 +1937,9 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       }
     }));
     console.log(`Pago de ${parte} marcado como completado para expediente ${expedienteId}`);
+    
+    // Verificar si ambos pagos están completos y marcar automáticamente como pagado
+    checkAndMarkAsPaid(expedienteId);
   };
 
   const renderExpedienteCard = (expediente: ExpedienteCompraventa) => {
@@ -1482,8 +2015,8 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
               </div>
             )}
 
-            {/* 🤖 Indicadores de Validación IA - Solo mostrar si NO está en Proyecto de escritura o Listo para firma */}
-            {(isValidating || hasValidation) && expediente.estado !== "EN_PREPARACION" && expediente.estado !== "LISTO_PARA_FIRMA" && (
+            {/* Indicadores de Validación IA - Solo mostrar en EXPEDIENTE_PRELIMINAR */}
+            {(isValidating || hasValidation) && expediente.estado === "EXPEDIENTE_PRELIMINAR" && (
               <div className="pt-2 border-t border-slate-200">
                 {isValidating && (
                   <div className="flex items-center gap-2 text-xs text-slate-600">
@@ -1499,10 +2032,10 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       <div
                         className={`flex items-center gap-1 ${
                           validationReport.status === "passed"
-                            ? "text-blue-600"
+                            ? "text-gray-600"
                             : validationReport.status === "warning"
-                            ? "text-yellow-600"
-                            : "text-red-600"
+                            ? "text-gray-500"
+                            : "text-gray-700"
                         }`}
                       >
                         {validationReport.status === "passed" && (
@@ -1519,10 +2052,10 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         variant="outline"
                         className={`text-xs px-1 py-0 ${
                           validationReport.status === "passed"
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            ? "bg-gray-100 text-gray-700 border-gray-300"
                             : validationReport.status === "warning"
-                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                            : "bg-red-50 text-red-700 border-red-200"
+                            ? "bg-gray-100 text-gray-600 border-gray-300"
+                            : "bg-gray-100 text-gray-800 border-gray-300"
                         }`}
                       >
                         {(() => {
@@ -1530,11 +2063,11 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           const totalDocs = documentosCompraventa.length;
                           
                           if (docCount.validated === totalDocs) {
-                            return "✅ Aprobado";
+                            return "Aprobado";
                           } else if (docCount.rejected > 0) {
-                            return `❌ ${docCount.total} pendientes`;
+                            return `${docCount.total} pendientes`;
                           } else {
-                            return `⚠️ ${docCount.pending} pendientes`;
+                            return `${docCount.pending} pendientes`;
                           }
                         })()}
                       </Badge>
@@ -1567,18 +2100,18 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
             )}
 
             {/* Indicador de estado para Proyecto de escritura */}
-            {expediente.estado === "EN_PREPARACION" && (
+            {expediente.estado === "PROYECTO_ESCRITURA" && (
               <div className="pt-2 border-t border-slate-200">
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="flex items-center gap-1 text-blue-600">
+                  <div className="flex items-center gap-1 text-gray-600">
                     <FileText className="h-3 w-3" />
                   </div>
                   <Badge
                     variant="outline"
                     className={`text-xs px-2 py-1 ${
                       contractApprovals[expediente.id]?.comprador && contractApprovals[expediente.id]?.vendedor
-                        ? "bg-green-50 text-green-700 border-green-200"
-                        : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                          ? "bg-gray-100 text-gray-700 border-gray-300"
+                          : "bg-gray-50 text-gray-600 border-gray-200"
                     }`}
                   >
                     {(() => {
@@ -1598,55 +2131,42 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
               </div>
             )}
 
-            {/* Indicador de estado para Listo para firma */}
+            {/* Indicador de estado para Firma agendada */}
             {expediente.estado === "LISTO_PARA_FIRMA" && (
               <div className="pt-2 border-t border-slate-200">
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="flex items-center gap-1 text-green-600">
+                  <div className="flex items-center gap-1 text-gray-600">
                     <CheckCircle className="h-3 w-3" />
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-xs px-2 py-1 bg-green-50 text-green-700 border-green-200"
+                    className="text-xs px-2 py-1 bg-gray-100 text-gray-700 border-gray-300"
                   >
-                    ✅ Listo para firma
+                    Firma agendada
                   </Badge>
                 </div>
               </div>
             )}
 
-            {/* Botón para proceder a proyecto de escritura cuando todos los documentos estén validados */}
+            {/* Indicador sutil para expedientes listos para proyecto de escritura */}
             {(() => {
               const docCount = getDocumentStatusCount(expediente.id);
               const totalDocs = documentosCompraventa.length;
               const todosDocumentosValidados = docCount.validated === totalDocs && totalDocs > 0;
-              const estaEnValidacion = expediente.estado === "EN_VALIDACION";
+              const estaEnExpedientePreliminar = expediente.estado === "EXPEDIENTE_PRELIMINAR";
               
-              return todosDocumentosValidados && estaEnValidacion && (
-                <div className="pt-2 border-t border-slate-200">
-                  <Button
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-medium"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Mover expediente a EN_PREPARACION (Proyecto de escritura)
-                      const success = updateExpedienteEstado(
-                        expediente.id,
-                        "EN_PREPARACION",
-                        licenciadoId || ""
-                      );
-                      if (success) {
-                        // Refrescar expedientes
-                        const expedientesActualizados = getExpedientesByAbogado(licenciadoId || "");
-                        setExpedientes(expedientesActualizados);
-                      }
-                    }}
-                  >
-                    <FileText className="h-3 w-3 mr-1" />
-                    Proceder a proyecto de escritura
-                  </Button>
-                </div>
-              );
+              // Mostrar un indicador sutil si todos los documentos están validados
+              if (todosDocumentosValidados && estaEnExpedientePreliminar) {
+                return (
+                  <div className="pt-2 border-t border-slate-200">
+                    <div className="flex items-center justify-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                );
+              }
+              
+              return null;
             })()}
           </div>
         </CardContent>
@@ -1660,97 +2180,85 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     return (
       <Dialog open={showExpedienteModal} onOpenChange={setShowExpedienteModal}>
         <DialogContent className="modal-expediente-ancho flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>
+          <DialogHeader className="flex-shrink-0 pb-1 bg-gradient-to-r from-blue-50 to-white border-b border-blue-100 pl-6">
+            <DialogTitle className="text-base text-blue-900">
               Expediente {selectedExpediente.numeroSolicitud}
             </DialogTitle>
-            <DialogDescription>
-              Compraventa de {selectedExpediente.inmueble.tipo} -{" "}
-              {selectedExpediente.inmueble.superficie}m²
+            <DialogDescription className="text-xs text-blue-700">
+              Compraventa de {selectedExpediente.inmueble.tipo} - {selectedExpediente.inmueble.superficie}m²
             </DialogDescription>
+            
+            {/* Indicador compacto de status */}
+            <div className="flex items-center gap-3 mt-2 pt-2 border-t border-blue-100">
+              <span className="text-xs font-medium text-blue-600">Estado:</span>
+              <div className="flex items-center gap-2">
+                {KANBAN_COLUMNS.map((column) => {
+                  const realStatus = getRealExpedienteStatus(selectedExpediente);
+                  const isActive = realStatus === column.id;
+                  return (
+                    <div key={column.id} className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        isActive 
+                          ? column.id === "EXPEDIENTE_PRELIMINAR" 
+                            ? "bg-blue-500"
+                            : column.id === "PROYECTO_ESCRITURA"
+                            ? "bg-yellow-500"
+                            : column.id === "LISTO_PARA_FIRMA"
+                            ? "bg-green-500"
+                            : "bg-purple-500"
+                          : "bg-gray-300"
+                      }`}></div>
+                      <span className={`text-xs ${
+                        isActive ? "font-medium text-blue-800" : "text-gray-500"
+                      }`}>
+                        {column.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1 pr-2">
-            <Tabs defaultValue="informacion" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3 h-12">
-                <TabsTrigger value="informacion" className="text-xs">
+            <Tabs defaultValue="informacion" className="space-y-2">
+                <TabsList className="grid w-full grid-cols-3 h-7 bg-blue-50 border border-blue-200">
+                <TabsTrigger value="informacion" className="text-xs py-0.5 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 text-blue-700">
                     Trámite
                 </TabsTrigger>
-                <TabsTrigger value="pagos" className="text-xs">
+                <TabsTrigger value="pagos" className="text-xs py-0.5 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 text-blue-700">
                   Pagos
                 </TabsTrigger>
-                <TabsTrigger value="historial" className="text-xs">
+                <TabsTrigger value="historial" className="text-xs py-0.5 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900 text-blue-700">
                   Historial
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="informacion" className="space-y-6">
-                {/* Información general */}
-                <Card className="bg-gradient-to-br from-indigo-50 via-purple-50/50 to-pink-50 border-indigo-200/60">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Información General
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TabsContent value="informacion" className="space-y-2">
+                {/* Información general - Sin contenedor */}
+                <div className="grid grid-cols-2 gap-4 text-sm py-3 bg-gradient-to-r from-blue-50 to-white rounded-lg border border-blue-100 px-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">
-                          Comprador
-                        </Label>
-                        <p className="text-sm">
-                          {selectedExpediente.comprador.nombre}{" "}
-                          {selectedExpediente.comprador.apellidoPaterno}
+                        <span className="text-blue-600 text-xs font-medium">Comprador:</span>
+                        <p className="font-medium text-sm text-blue-900">
+                          {selectedExpediente.comprador.nombre} {selectedExpediente.comprador.apellidoPaterno}
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">
-                          Vendedor
-                        </Label>
-                        <p className="text-sm">
-                          {selectedExpediente.vendedor.nombre}{" "}
-                          {selectedExpediente.vendedor.apellidoPaterno}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-gray-600">
-                          Valor de Venta
-                        </Label>
-                        <p className="text-sm font-medium text-blue-600">
-                          {formatCurrency(
-                            selectedExpediente.inmueble.valorVenta
-                          )}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-gray-600">
-                          Costo Total
-                        </Label>
-                        <p className="text-sm font-medium">
-                          {formatCurrency(selectedExpediente.costos.total)}
+                        <span className="text-blue-600 text-xs font-medium">Vendedor:</span>
+                        <p className="font-medium text-sm text-blue-900">
+                          {selectedExpediente.vendedor.nombre} {selectedExpediente.vendedor.apellidoPaterno}
                         </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
 
-                {/* Borrador del Contrato */}
-                <Card className="bg-gradient-to-br from-indigo-50 via-purple-50/50 to-pink-50 border-indigo-200/60">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Borrador del Contrato de Compraventa
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Sección principal del documento */}
-                      <div className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-sm transition-shadow cursor-pointer group"
+                {/* Borrador del Contrato - Solo mostrar si NO está en EXPEDIENTE_PRELIMINAR ni en COMPLETADO */}
+                {selectedExpediente.estado !== "EXPEDIENTE_PRELIMINAR" && selectedExpediente.estado !== "COMPLETADO" && (
+                <div className="flex items-center justify-between py-3 px-4 bg-gradient-to-r from-blue-200 via-blue-50 to-white border border-blue-200 rounded-lg hover:bg-gradient-to-r hover:from-blue-300 hover:via-blue-100 hover:to-blue-50 cursor-pointer transition-all duration-200 shadow-sm"
                            onClick={() => {
-                             // Abrir el PDF del borrador del contrato
                              const documentoContrato = {
                                id: "contrato-borrador",
                                nombre: "Contrato de Compraventa - Borrador",
-                               descripcion: "Documento en validación - Generado automáticamente",
+                             descripcion: "Documento en expediente preliminar - Generado automáticamente",
                                archivo: "http://localhost:3000/documentos_legales/Contrato_Compraventa_Borrador.pdf",
                                estado: "pendiente",
                                requerido: true,
@@ -1758,231 +2266,511 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                              };
                              handleOpenDocument(documentoContrato);
                            }}>
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-20 bg-white border-2 border-gray-200 rounded flex items-center justify-center overflow-hidden">
-                            <Image 
-                              src="/document-preview.svg" 
-                              alt="Vista previa del contrato" 
-                              width={48} 
-                              height={60}
-                              className="object-contain"
-                            />
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-200 to-blue-300 rounded flex items-center justify-center shadow-sm">
+                      <FileText className="h-3 w-3 text-blue-800" />
                           </div>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                            Contrato de Compraventa - Borrador
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Documento en validación - Generado automáticamente
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                              <Clock className="h-3 w-3 mr-1" />
-                              En Validación
+                    <div>
+                      <h4 className="font-medium text-sm text-blue-900">Contrato de Compraventa</h4>
+                      <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 border-blue-300 mt-1 shadow-sm">
+                        <Clock className="h-2 w-2 mr-1" />
+                          {selectedExpediente.estado === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
+                           selectedExpediente.estado === "LISTO_PARA_FIRMA" ? "Firma agendada" : "Expediente preliminar"}
                               </Badge>
-                            <span className="text-xs text-gray-500">
-                              Última actualización: {new Date().toLocaleDateString()}
-                            </span>
                             </div>
                         </div>
-                        <div className="flex-shrink-0">
-                          <Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Eye className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="text-xs h-7 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 border-blue-300 hover:bg-gradient-to-r hover:from-blue-200 hover:to-blue-100 shadow-sm">
+                    <Eye className="h-3 w-3 mr-1" />
+                    Ver
+                          </Button>
+                      </div>
+                )}
+
+                {/* Información de fecha programada para Firma agendada */}
+                {selectedExpediente.estado === "LISTO_PARA_FIRMA" && (
+                  <div className="mt-4 space-y-3">
+                    {/* Información de la cita programada */}
+                    {fechasFirmaProgramadas[selectedExpediente.id] && (
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="h-4 w-4 text-green-600" />
+                          <h4 className="text-sm font-medium text-green-900">Cita de Firma Programada</h4>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-gray-600" />
+                            <span className="text-gray-700">
+                              <strong>Fecha:</strong> {new Date(fechasFirmaProgramadas[selectedExpediente.id].fecha).toLocaleDateString('es-MX', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-gray-600" />
+                            <span className="text-gray-700">
+                              <strong>Hora:</strong> {fechasFirmaProgramadas[selectedExpediente.id].hora}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-gray-600" />
+                            <span className="text-gray-700">
+                              <strong>Lugar:</strong> {fechasFirmaProgramadas[selectedExpediente.id].lugar}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-3 w-3 text-gray-600" />
+                            <span className="text-gray-700">
+                              <strong>Sala:</strong> {fechasFirmaProgramadas[selectedExpediente.id].sala}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => {
+                          console.log(`✅ Firma completada para ${selectedExpediente.numeroSolicitud}`);
+                          addComentarioExpediente(selectedExpediente.id, "✅ FIRMA COMPLETADA: La firma del contrato de compraventa se ha realizado exitosamente. El expediente ha sido completado.", "Licenciado", "general");
+                          
+                          // Mover expediente a "Post firma"
+                          const success = updateExpedienteEstado(selectedExpediente.id, "COMPLETADO", licenciadoId || "");
+                          if (success) {
+                            setExpedientes(prev => prev.map(exp => 
+                              exp.id === selectedExpediente.id 
+                                ? { ...exp, estado: "COMPLETADO" as EstadoExpediente }
+                                : exp
+                            ));
+                            setSelectedExpediente(prev => prev ? { ...prev, estado: "COMPLETADO" as EstadoExpediente } : null);
+                          }
+                        }}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-8"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Firma Completada
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowRescheduleModal(true)}
+                        className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-50 text-sm h-8"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Reprogramar Firma
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sección de Post Firma para expedientes completados */}
+                {selectedExpediente.estado === "COMPLETADO" && (
+                  <div className="mt-4 space-y-4">
+                    {/* Resumen discreto */}
+                    <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                      <span className="font-medium">Documentación Post Firma:</span>
+                      <span>4 Documentos</span>
+                      <span>•</span>
+                      <span>2 Impuestos</span>
+                      <span>•</span>
+                      <span className="text-orange-600">4 Pendientes</span>
+                      <span>•</span>
+                      <span className="text-green-600">0 Completados</span>
+                    </div>
+
+                    {/* Secciones por entidad */}
+                    <div className="space-y-4">
+                      {/* RPPC de B.C. */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-gray-900">RPPC de B.C.</span>
+                            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 text-xs">
+                              Pendiente
+                            </Badge>
+                            </div>
+                            <Button
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"
+                            onClick={async (event) => {
+                              console.log(`📄💰 Procesando documentos e impuestos RPPC para ${selectedExpediente.numeroSolicitud}`);
+                              const button = event?.target as HTMLButtonElement;
+                              const originalText = button.textContent;
+                              button.textContent = 'Procesando...';
+                              button.disabled = true;
+                              await new Promise(resolve => setTimeout(resolve, 3000));
+                              console.log(`✅ Documentos e impuestos RPPC procesados exitosamente para ${selectedExpediente.numeroSolicitud}`);
+                              button.textContent = '✓ Completado';
+                              button.className = 'bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3';
+                              setTimeout(() => {
+                                button.textContent = originalText;
+                                button.disabled = false;
+                                button.className = 'bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3';
+                              }, 2000);
+                            }}
+                          >
+                            <FileEdit className="h-3 w-3 mr-1" />
+                            Procesar Todo
+                          </Button>
+                          </div>
+                        
+                        {/* Tabla compacta */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                            <span className="text-gray-500">Escritura Pública</span>
+                            <Button
+                              size="sm"
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedDocumentInfo({
+                                  title: "Escritura Pública",
+                                  type: "document",
+                                  expediente: selectedExpediente.numeroSolicitud
+                                });
+                                setShowDocumentModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                            <span className="text-gray-500">Certificado de Libertad</span>
+                            <Button 
+                              size="sm"
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedDocumentInfo({
+                                  title: "Certificado de Libertad",
+                                  type: "document",
+                                  expediente: selectedExpediente.numeroSolicitud
+                                });
+                                setShowDocumentModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between text-xs py-1">
+                            <span className="text-gray-500">Impuesto Sobre Adquisición</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedTaxInfo({
+                                  title: "Impuesto Sobre Adquisición",
+                                  expediente: selectedExpediente.numeroSolicitud,
+                                  details: {
+                                    icon: "💰",
+                                    propertyValue: "$1,200,000.00",
+                                    taxRate: "2.5%",
+                                    total: "$30,000.00"
+                                  }
+                                });
+                                setShowTaxModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                          </div>
+
+
+                      {/* SAT */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-gray-900">SAT</span>
+                            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 text-xs">
+                              Pendiente
+                            </Badge>
+                          </div>
+                          <Button
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"
+                            onClick={async (event) => {
+                              console.log(`📄💰 Procesando documentos e impuestos SAT para ${selectedExpediente.numeroSolicitud}`);
+                              const button = event?.target as HTMLButtonElement;
+                              const originalText = button.textContent;
+                              button.textContent = 'Procesando...';
+                              button.disabled = true;
+                              await new Promise(resolve => setTimeout(resolve, 3000));
+                              console.log(`✅ Documentos e impuestos SAT procesados exitosamente para ${selectedExpediente.numeroSolicitud}`);
+                              button.textContent = '✓ Completado';
+                              button.className = 'bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3';
+                              setTimeout(() => {
+                                button.textContent = originalText;
+                                button.disabled = false;
+                                button.className = 'bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3';
+                              }, 2000);
+                            }}
+                          >
+                            <FileEdit className="h-3 w-3 mr-1" />
+                            Procesar Todo
+                          </Button>
+                        </div>
+                        
+                        {/* Tabla compacta */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                            <span className="text-gray-500">Declaración de Venta</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedDocumentInfo({
+                                  title: "Declaración de Venta",
+                                  type: "document",
+                                  expediente: selectedExpediente.numeroSolicitud
+                                });
+                                setShowDocumentModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                            <span className="text-gray-500">Constancia de Situación Fiscal</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedDocumentInfo({
+                                  title: "Constancia de Situación Fiscal",
+                                  type: "document",
+                                  expediente: selectedExpediente.numeroSolicitud
+                                });
+                                setShowDocumentModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between text-xs py-1">
+                            <span className="text-gray-500">ISR por Venta</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedTaxInfo({
+                                  title: "ISR por Venta de Inmueble",
+                                  expediente: selectedExpediente.numeroSolicitud,
+                                  details: {
+                                    icon: "🏛️",
+                                    saleValue: "$1,200,000.00",
+                                    acquisitionCost: "$800,000.00",
+                                    profit: "$400,000.00",
+                                    taxRate: "25%",
+                                    total: "$100,000.00"
+                                  }
+                                });
+                                setShowTaxModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contrato de Compraventa - Al final de Post Firma */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <h5 className="font-semibold text-gray-900">Contrato de Compraventa</h5>
+                        <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                          Firmado
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm text-gray-700">Escritura Final</span>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-6 px-2"
+                            onClick={() => {
+                              console.log(`📄 Abriendo Escritura Final para ${selectedExpediente.numeroSolicitud}`);
+                              setShowEscrituraModal(true);
+                            }}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
                             Ver PDF
                           </Button>
                         </div>
+                        
+                        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-200">
+                          <div className="flex items-center gap-1 mb-1">
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                            <span className="font-medium text-green-700">Estado de la Escritura</span>
+                          </div>
+                          <p>Escritura firmada exitosamente el {new Date().toLocaleDateString('es-MX')}. Documento legalmente válido y registrado.</p>
+                        </div>
                       </div>
+                    </div>
+                  </div>
+                )}
 
                       {/* Funcionalidad adicional para Proyecto de escritura */}
-                      {selectedExpediente.estado === "EN_PREPARACION" && (
+                      {selectedExpediente.estado === "PROYECTO_ESCRITURA" && (
                         <div className="border-t pt-4 space-y-4">
-                          {/* Botón de notificación */}
-                          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <MessageSquare className="h-4 w-4 text-blue-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-blue-900">Notificar a las partes</p>
-                                <p className="text-sm text-blue-700">
-                                  Enviar borrador para revisión y aprobación
-                                </p>
-                              </div>
+                          {/* Estado de comunicación con las partes - Solo mostrar si el contrato está validado pero no todo aprobado */}
+                          {(() => {
+                            const contractCount = getContractValidationCount(selectedExpediente.id);
+                            const approvals = contractApprovals[selectedExpediente.id];
+                            const bothApproved = approvals?.comprador && approvals?.vendedor;
+                            
+                            if (contractCount.approved === contractCount.total && !bothApproved) {
+                              return (
+                                <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-medium text-green-900">
+                                        Borrador enviado a las partes
+                                      </span>
+                                      <span className="text-xs text-green-700 mt-1">
+                                        El draft del contrato ya se hizo llegar a ambas partes. Han sido notificados y estamos esperando la aprobación de ambos lados para programar la cita de firma.
+                                      </span>
                             </div>
+                          </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+
+                          {/* Botón para agendar cita de firma - Mostrar cuando ambas partes están aprobadas */}
+                          {contractApprovals[selectedExpediente.id]?.comprador && contractApprovals[selectedExpediente.id]?.vendedor && (
+                            <div className="mb-4">
                             <Button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleNotifyParties(selectedExpediente.id);
+                                  setShowAppointmentModal(true);
                               }}
-                              disabled={contractApprovals[selectedExpediente.id]?.notificacionesEnviadas}
-                              className="bg-blue-600 hover:bg-blue-700 text-white"
-                            >
-                              {contractApprovals[selectedExpediente.id]?.notificacionesEnviadas ? (
-                                <>
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Notificaciones Enviadas
-                                </>
-                              ) : (
-                                <>
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Enviar Notificaciones
-                                </>
-                              )}
+                              size="sm"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white text-xs"
+                              >
+                                <Calendar className="h-3 w-3 mr-1" />
+                                Agendar cita para firma
                             </Button>
                           </div>
+                          )}
 
-                          {/* Aprobaciones de las partes */}
-                          <div className="space-y-3">
-                            <h4 className="font-medium text-gray-900">Aprobaciones de las partes</h4>
+                          {/* Aprobaciones de las partes - Compacto */}
+                          <div 
+                            className="space-y-2 cursor-pointer hover:bg-blue-50/50 transition-colors duration-200 rounded-lg p-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Solo activar si no están aprobadas ambas partes
+                              if (!contractApprovals[selectedExpediente.id]?.comprador || !contractApprovals[selectedExpediente.id]?.vendedor) {
+                                handleAutoApproveBothParties(selectedExpediente.id);
+                              }
+                            }}
+                            title={(!contractApprovals[selectedExpediente.id]?.comprador || !contractApprovals[selectedExpediente.id]?.vendedor) ? "Click para simular aprobación de ambas partes" : ""}
+                          >
+                            <h4 className="text-sm font-medium text-blue-900 bg-gradient-to-r from-blue-50 to-white px-3 py-2 rounded-lg border border-blue-100">Aprobaciones</h4>
                             
                             {/* Comprador */}
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                  <User className="h-4 w-4 text-green-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium text-gray-900">Comprador</p>
-                                  <p className="text-sm text-gray-600">
-                                    {selectedExpediente.comprador.nombre} {selectedExpediente.comprador.apellidoPaterno}
-                                  </p>
-                                </div>
+                            <div className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-900">Comprador</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 {contractApprovals[selectedExpediente.id]?.comprador ? (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                  <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                                    <CheckCircle className="h-2 w-2 mr-1" />
                                     Aprobado
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                    <Clock className="h-3 w-3 mr-1" />
+                                  <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200 text-xs">
+                                    <Clock className="h-2 w-2 mr-1" />
                                     Pendiente
                                   </Badge>
                                 )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggleApproval(selectedExpediente.id, 'comprador');
-                                  }}
-                                >
-                                  {contractApprovals[selectedExpediente.id]?.comprador ? 'Desmarcar' : 'Marcar'}
-                                </Button>
                               </div>
                             </div>
 
                             {/* Vendedor */}
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                  <User className="h-4 w-4 text-purple-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium text-gray-900">Vendedor</p>
-                                  <p className="text-sm text-gray-600">
-                                    {selectedExpediente.vendedor.nombre} {selectedExpediente.vendedor.apellidoPaterno}
-                                  </p>
-                                </div>
+                            <div className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-900">Vendedor</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 {contractApprovals[selectedExpediente.id]?.vendedor ? (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                  <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                                    <CheckCircle className="h-2 w-2 mr-1" />
                                     Aprobado
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                    <Clock className="h-3 w-3 mr-1" />
+                                  <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200 text-xs">
+                                    <Clock className="h-2 w-2 mr-1" />
                                     Pendiente
                                   </Badge>
                                 )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggleApproval(selectedExpediente.id, 'vendedor');
-                                  }}
-                                >
-                                  {contractApprovals[selectedExpediente.id]?.vendedor ? 'Desmarcar' : 'Marcar'}
-                                </Button>
                               </div>
                             </div>
 
-                            {/* Resumen de aprobaciones */}
+                            {/* Resumen de aprobaciones - Compacto */}
                             {contractApprovals[selectedExpediente.id]?.comprador && contractApprovals[selectedExpediente.id]?.vendedor && (
-                              <div className="space-y-3">
-                                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                              <div className="space-y-2">
+                                <div className="p-2 bg-gradient-to-r from-green-50 to-blue-50 rounded border border-green-200">
                                   <div className="flex items-center gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-600" />
-                                    <p className="font-medium text-green-900">
-                                      ¡Borrador aprobado por ambas partes!
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <p className="text-sm font-medium text-green-900">
+                                      ¡Aprobado por ambas partes!
                                     </p>
                                   </div>
-                                  <p className="text-sm text-green-700 mt-1">
-                                    El contrato está listo para proceder a la siguiente etapa.
-                                  </p>
-                                </div>
-                                
-                                {/* Botón para mover a Listo para firma */}
-                                <div className="flex justify-center">
-                                  <Button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      // Mover expediente a LISTO_PARA_FIRMA
-                                      const success = updateExpedienteEstado(
-                                        selectedExpediente.id,
-                                        "LISTO_PARA_FIRMA",
-                                        licenciadoId || ""
-                                      );
-                                      if (success) {
-                                        // Refrescar expedientes
-                                        const expedientesActualizados = getExpedientesByAbogado(licenciadoId || "");
-                                        setExpedientes(expedientesActualizados);
-                                        // Cerrar el modal
-                                        setShowExpedienteModal(false);
-                                      }
-                                    }}
-                                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium px-6 py-2"
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Documento listo para firma
-                                  </Button>
                                 </div>
                               </div>
                             )}
                           </div>
                         </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Documentos de Compraventa */}
-                <Card className="bg-gradient-to-br from-indigo-50 via-purple-50/50 to-pink-50 border-indigo-200/60">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        Documentos de Compraventa
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="bg-blue-50 text-blue-700"
+                {/* Documentos de Compraventa - Compacto - Solo mostrar si NO está completado */}
+                {selectedExpediente.estado !== "COMPLETADO" && (
+                <div className="py-1 bg-gradient-to-br from-blue-200 via-blue-100 to-blue-50 rounded-lg border border-blue-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-2 px-3 pt-1">
+                    <h3 className="text-base font-semibold text-blue-900 drop-shadow-sm">Documentos de Compraventa</h3>
+                    <div className="flex items-center gap-3">
+                      {/* Botón para mover expediente automáticamente - Solo mostrar si está en EXPEDIENTE_PRELIMINAR */}
+                      {selectedExpediente.estado === "EXPEDIENTE_PRELIMINAR" && (
+                        <button
+                          onClick={() => handleAutoMoveExpediente(selectedExpediente.id)}
+                          className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-colors"
                         >
+                          <span>Validar todos</span>
+                        </button>
+                )}
+                    <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 text-xs shadow-sm">
                           {(() => {
                             const docCount = getDocumentStatusCount(selectedExpediente?.id || "");
                             return `${docCount.validated} de ${documentosCompraventa.length} validados`;
                           })()}
                         </Badge>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
+                      </div>
+                      
+                    <div className="space-y-4">
                       {/* Agrupar por categoría */}
                       {[
                         "Documentos del Comprador",
@@ -1992,128 +2780,161 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         const docsCategoria = documentosCompraventa.filter(
                           (doc) => doc.categoria === categoria
                         );
+                        
+                        // Separar documentos validados de pendientes
+                        const expedienteDocumentStates = documentStates[selectedExpediente.id] || {};
+                        const docsValidados = docsCategoria.filter(doc => 
+                          expedienteDocumentStates[doc.id] === "aceptado" || doc.estado === "validado"
+                        );
+                        const docsPendientes = docsCategoria.filter(doc => 
+                          !(expedienteDocumentStates[doc.id] === "aceptado" || doc.estado === "validado")
+                        );
+                        
                         return (
-                          <div key={categoria} className="space-y-3">
-                            <h3 className="font-semibold text-gray-900 border-b pb-2">
+                          <div key={categoria} className="space-y-2">
+                            <h3 className="font-semibold text-blue-900 border-b border-blue-300 pb-1 bg-gradient-to-r from-blue-200 via-blue-100 to-blue-50 px-3 py-2 rounded-t-lg shadow-sm">
                               {categoria}
                               <Badge
                                 variant="outline"
-                                className="ml-auto text-xs"
+                                className="ml-auto text-xs bg-blue-100 text-blue-700 border-blue-300 shadow-sm"
                               >
-                                {
-                                  docsCategoria.filter(
-                                    (d) => d.estado === "validado"
-                                  ).length
-                                }
-                                /{docsCategoria.length}
+                                {docsValidados.length}/{docsCategoria.length}
                               </Badge>
                               {(categoria === "Documentos del Comprador" || categoria === "Documentos del Vendedor") && (
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => setShowContactModal(true)}
-                                  className="ml-2 text-xs"
+                                  className="ml-2 text-xs bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 shadow-sm"
                                 >
                                   <MessageSquare className="h-3 w-3 mr-1" />
                                   Contactar
                                 </Button>
                               )}
                             </h3>
-                            <div className="grid gap-2">
-                              {docsCategoria.map((doc) => (
+                            
+                            {/* Documentos pendientes (siempre visibles) */}
+                            {docsPendientes.length > 0 && (
+                              <div className="space-y-0.5">
+                                {docsPendientes.map((doc) => (
                                 <div
                                   key={doc.id}
-                                  className="flex items-center justify-between p-3 border rounded-lg hover:shadow-sm transition-shadow cursor-pointer group"
-                                  onClick={() =>
-                                    handleOpenDocument(doc)
-                                  }
-                                >
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <div className="flex items-center gap-2">
+                                    className="flex items-center justify-between py-1.5 px-3 border-b border-blue-100 hover:bg-blue-50 cursor-pointer transition-colors"
+                                    onClick={() => handleOpenDocument(doc)}
+                                  >
+                                    <div className="flex items-center gap-2 flex-1">
                                       {doc.requerido && (
-                                        <span className="text-red-500 text-xs">
-                                          *
-                                        </span>
+                                        <span className="text-red-500 text-xs">*</span>
                                       )}
-                                    </div>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                                          <span className="text-sm font-medium text-blue-900">
                                           {doc.nombre}
                                         </span>
                                         {!doc.requerido && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs bg-gray-50 text-gray-600"
-                                          >
+                                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
                                             Opcional
                                           </Badge>
                                         )}
                                       </div>
-                                      <p className="text-xs text-gray-600 mt-1">
-                                        {doc.descripcion}
-                                      </p>
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        Subido:{" "}
-                                        {new Date(
-                                          doc.fechaSubida
-                                        ).toLocaleDateString("es-MX", {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}
-                                      </p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Badge
-                                      variant="outline"
-                                      className={
-                                        documentStates[doc.id] === "aceptado"
-                                          ? "bg-blue-100 text-blue-800 border-blue-200"
-                                          : documentStates[doc.id] === "rechazado"
-                                          ? "bg-red-100 text-red-800 border-red-200"
-                                          : doc.estado === "validado"
-                                          ? "bg-blue-100 text-blue-800 border-blue-200"
+                                      <Badge variant="outline" className={`text-xs ${
+                                        expedienteDocumentStates[doc.id] === "rechazado"
+                                          ? "bg-red-100 text-red-700 border-red-200"
                                           : doc.estado === "subido"
-                                          ? "bg-blue-100 text-blue-800 border-blue-200"
-                                          : "bg-yellow-100 text-yellow-800 border-yellow-200"
-                                      }
-                                    >
-                                      {documentStates[doc.id] === "aceptado" && (
-                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                      )}
-                                      {documentStates[doc.id] === "rechazado" && (
-                                        <XCircle className="h-3 w-3 mr-1" />
-                                      )}
-                                      {!documentStates[doc.id] && doc.estado === "validado" && (
-                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                      )}
-                                      {!documentStates[doc.id] && doc.estado === "subido" && (
-                                        <Clock className="h-3 w-3 mr-1" />
-                                      )}
-                                      {!documentStates[doc.id] && doc.estado === "pendiente" && (
-                                        <AlertCircle className="h-3 w-3 mr-1" />
-                                      )}
-                                      {documentStates[doc.id] === "aceptado"
-                                        ? "Validado"
-                                        : documentStates[doc.id] === "rechazado"
-                                        ? "Rechazado"
-                                        : doc.estado.charAt(0).toUpperCase() +
-                                        doc.estado.slice(1)}
-                                    </Badge>
+                                          ? "bg-blue-100 text-blue-700 border-blue-200"
+                                          : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                      }`}>
+                                        {expedienteDocumentStates[doc.id] === "rechazado" ? (
+                                          <><XCircle className="h-2 w-2 mr-1" />Rechazado</>
+                                        ) : doc.estado === "subido" ? (
+                                          <><Clock className="h-2 w-2 mr-1" />Subido</>
+                                        ) : (
+                                          <><AlertCircle className="h-2 w-2 mr-1" />Pendiente</>
+                                        )}
+                                      </Badge>
                                   </div>
                                 </div>
                               ))}
                             </div>
+                            )}
+                            
+                            
                           </div>
                         );
                       })}
                     </div>
-                  </CardContent>
-                </Card>
+                </div>
+                )}
+                
+                {/* Sección separada de documentos validados - Solo mostrar si NO está completado */}
+                {selectedExpediente.estado !== "COMPLETADO" && (() => {
+                  const expedienteDocumentStates = documentStates[selectedExpediente.id] || {};
+                  const todosLosDocsValidados = documentosCompraventa.filter(doc => 
+                    expedienteDocumentStates[doc.id] === "aceptado" || doc.estado === "validado"
+                  );
+                  
+                  if (todosLosDocsValidados.length > 0) {
+                    return (
+                      <div className="mt-6 pt-4">
+                        <button
+                          onClick={() => setShowValidatedDocuments(!showValidatedDocuments)}
+                          className="flex items-center justify-between w-full p-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg border border-green-300 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-800">
+                              Documentos validados ({todosLosDocsValidados.length})
+                            </span>
+                          </div>
+                          <ChevronDown className={`h-4 w-4 text-green-600 transition-transform ${
+                            showValidatedDocuments ? 'rotate-180' : ''
+                          }`} />
+                        </button>
+                        
+                        {showValidatedDocuments && (
+                          <div className="mt-3 space-y-1">
+                            {todosLosDocsValidados.map((doc) => (
+                              <div
+                                key={doc.id}
+                                className="flex items-center justify-between py-2 px-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 cursor-pointer transition-colors rounded"
+                                onClick={() => handleOpenDocument(doc)}
+                              >
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div className="w-5 h-5 bg-green-100 rounded flex items-center justify-center">
+                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-green-700">
+                                        {doc.nombre}
+                                      </span>
+                                      <Badge variant="outline" className="text-xs bg-green-100 text-green-600 border-green-300">
+                                        {doc.categoria}
+                                      </Badge>
+                                      {!doc.requerido && (
+                                        <Badge variant="outline" className="text-xs bg-green-50 text-green-500 border-green-200">
+                                          Opcional
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Badge variant="outline" className="text-xs bg-green-100 text-green-600 border-green-300">
+                                  <CheckCircle className="h-2 w-2 mr-1" />
+                                  Validado
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </TabsContent>
 
               <TabsContent value="validaciones" className="space-y-6">
@@ -2170,7 +2991,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                 validationReports[selectedExpediente.id]
                                   .status === "passed"
-                                  ? "bg-blue-100"
+                                  ? "bg-gray-100"
                                   : validationReports[selectedExpediente.id]
                                       .status === "warning"
                                   ? "bg-yellow-100"
@@ -2209,7 +3030,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             className={
                               validationReports[selectedExpediente.id]
                                 .status === "passed"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-gray-100 text-gray-800"
                                 : validationReports[selectedExpediente.id]
                                     .status === "warning"
                                 ? "bg-yellow-100 text-yellow-800"
@@ -2265,7 +3086,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                       <div
                                         className={`w-6 h-6 rounded-full flex items-center justify-center ${
                                           validation.result.isValid
-                                            ? "bg-blue-100"
+                                            ? "bg-gray-100"
                                             : "bg-red-100"
                                         }`}
                                       >
@@ -2279,8 +3100,8 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                             variant="outline"
                                             className={
                                               validation.result.isValid
-                                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                                : "bg-red-50 text-red-700 border-red-200"
+                                                ? "bg-gray-100 text-gray-700 border-gray-300"
+                                                : "bg-gray-100 text-gray-700 border-gray-300"
                                             }
                                           >
                                             {validation.result.isValid
@@ -2300,8 +3121,8 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                         {validation.result.suggestions &&
                                           validation.result.suggestions.length >
                                             0 && (
-                                            <p className="text-xs text-blue-600">
-                                              💡{" "}
+                                            <p className="text-xs text-gray-600">
+                                              {" "}
                                               {validation.result.suggestions[0]}
                                             </p>
                                           )}
@@ -2339,7 +3160,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                                 true
                                               )
                                             }
-                                            className="text-sm bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                            className="text-sm bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-100"
                                           >
                                             <CheckCircle className="h-4 w-4 mr-2" />
                                             Aprobar
@@ -2360,7 +3181,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                                 );
                                               }
                                             }}
-                                            className="text-sm bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                                            className="text-sm bg-gray-100 text-gray-700 border-gray-300 hover:bg-red-100"
                                           >
                                             <AlertCircle className="h-4 w-4 mr-2" />
                                             Rechazar
@@ -2372,15 +3193,15 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                             manualValidations[
                                               selectedExpediente.id
                                             ][validation.documentType].approved
-                                              ? "bg-blue-100 text-blue-800 border-blue-200"
-                                              : "bg-red-100 text-red-800 border-red-200"
+                                              ? "bg-gray-100 text-gray-800 border-gray-300"
+                                              : "bg-gray-100 text-gray-800 border-gray-300"
                                           }
                                         >
                                           {manualValidations[
                                             selectedExpediente.id
                                           ][validation.documentType].approved
-                                            ? "✅ Aprobado"
-                                            : "❌ Rechazado"}
+                                            ? "Aprobado"
+                                            : "Rechazado"}
                                         </Badge>
                                       )}
                                     </div>
@@ -2394,12 +3215,12 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         {/* Acciones recomendadas */}
                         {validationReports[selectedExpediente.id]
                           .recommendedActions.length > 0 && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                          <div className="bg-gray-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                               <TrendingUp className="h-4 w-4" />
                               Acciones Recomendadas
                             </h4>
-                            <ul className="text-sm text-blue-800 space-y-1">
+                            <ul className="text-sm text-gray-800 space-y-1">
                               {validationReports[
                                 selectedExpediente.id
                               ].recommendedActions.map((action, idx) => (
@@ -2418,7 +3239,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           Este expediente aún no ha sido validado por IA
                         </p>
                         <p className="text-sm text-gray-500">
-                          Arrastra la tarjeta a "En Validación" para activar la
+                          Arrastra la tarjeta a "Expediente preliminar" para activar la
                           validación automática
                         </p>
                       </div>
@@ -2457,7 +3278,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         <Button
                           size="sm"
                           onClick={() => setShowComentarioModal(true)}
-                          className="bg-blue-600 hover:bg-blue-700"
+                          className="bg-gray-600 hover:bg-gray-700"
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Agregar
@@ -2549,11 +3370,11 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             {formatCurrency(costoTotalExpediente)}
                           </p>
                         </div>
-                        <div className="text-center p-4 bg-blue-50 rounded-lg">
-                          <Label className="text-sm font-medium text-blue-600">
+                        <div className="text-center p-4 bg-gray-50 rounded-lg">
+                          <Label className="text-sm font-medium text-gray-600">
                             Total Pagado
                           </Label>
-                          <p className="text-xl font-bold text-blue-700 mt-1">
+                          <p className="text-xl font-bold text-gray-700 mt-1">
                             {formatCurrency(totalPagado)}
                           </p>
                         </div>
@@ -2601,7 +3422,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   <div
                                     className={`w-4 h-4 rounded-full mt-1 ${
                                       pago.estado === "confirmado"
-                                        ? "bg-blue-500"
+                                        ? "bg-gray-500"
                                         : pago.estado === "pendiente"
                                         ? "bg-yellow-500"
                                         : "bg-red-500"
@@ -2615,10 +3436,10 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                       <Badge
                                         className={
                                           pago.estado === "confirmado"
-                                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                                            ? "bg-gray-100 text-gray-800 border-gray-300"
                                             : pago.estado === "pendiente"
-                                            ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                                            : "bg-red-100 text-red-800 border-red-200"
+                                            ? "bg-gray-100 text-gray-800 border-gray-300"
+                                            : "bg-gray-100 text-gray-800 border-gray-300"
                                         }
                                       >
                                         {pago.estado === "confirmado" && (
@@ -2639,7 +3460,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                         <span className="font-medium">
                                           Fecha:
                                         </span>{" "}
-                                        {new Date(
+                                        {pago.fecha ? new Date(
                                           pago.fecha
                                         ).toLocaleDateString("es-MX", {
                                           year: "numeric",
@@ -2647,7 +3468,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                           day: "numeric",
                                           hour: "2-digit",
                                           minute: "2-digit",
-                                        })}
+                                        }) : "Pendiente"}
                                       </div>
                                       <div>
                                         <span className="font-medium">
@@ -2712,7 +3533,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                 <p className="text-lg font-bold text-yellow-700">
                                   $7,500.00
                                 </p>
-                                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                                <Badge className="bg-gray-100 text-gray-800 border-gray-300">
                                   <Clock className="h-3 w-3 mr-1" />
                                   Pendiente
                                 </Badge>
@@ -2754,19 +3575,19 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         </Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Comprador */}
-                          <div className="border rounded-lg p-4 bg-green-50 border-green-200">
+                          <div className="border rounded-lg p-4 bg-gray-50 border-green-200">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <User className="h-5 w-5 text-green-600" />
-                                <h4 className="font-semibold text-green-900">Comprador</h4>
+                                <User className="h-4 w-4 text-gray-600" />
+                                <h4 className="font-semibold text-gray-900">Comprador</h4>
                               </div>
                               {pagosPorParte[selectedExpediente.id]?.comprador ? (
-                                <Badge className="bg-green-100 text-green-800 border-green-200">
+                                <Badge className="bg-gray-100 text-gray-800 border-gray-300">
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Pagado
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
                                   <Clock className="h-3 w-3 mr-1" />
                                   Pendiente
                                 </Badge>
@@ -2775,42 +3596,36 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Total asignado:</span>
-                                <span className="font-medium">{formatCurrency(costoTotalExpediente * 0.5)}</span>
+                                <span className="font-medium">{formatCurrency(montoPorParte)}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Pagado:</span>
-                                <span className="font-medium text-green-600">
-                                  {tramitePagado[selectedExpediente.id] 
-                                    ? formatCurrency(costoTotalExpediente * 0.5)
-                                    : formatCurrency(totalPagado * 0.5)
-                                  }
+                                <span className="font-medium text-gray-600">
+                                  {formatCurrency(montoPagadoComprador)}
                                 </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Pendiente:</span>
                                 <span className="font-medium text-red-600">
-                                  {tramitePagado[selectedExpediente.id] 
-                                    ? formatCurrency(0)
-                                    : formatCurrency(saldoPendiente * 0.5)
-                                  }
+                                  {formatCurrency(montoPendienteComprador)}
                                 </span>
                               </div>
                               <div className="mt-3">
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
-                                    className="bg-green-600 h-2 rounded-full transition-all duration-500"
+                                    className="bg-gray-600 h-2 rounded-full transition-all duration-500"
                                     style={{ 
-                                      width: `${tramitePagado[selectedExpediente.id] 
+                                      width: `${pagosPorParte[selectedExpediente.id]?.comprador 
                                         ? 100 
-                                        : (totalPagado / costoTotalExpediente) * 100
+                                        : (montoPagadoComprador / montoPorParte) * 100
                                       }%` 
                                     }}
                                   />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1 text-center">
-                                  {tramitePagado[selectedExpediente.id] 
+                                  {pagosPorParte[selectedExpediente.id]?.comprador 
                                     ? "100.0% completado"
-                                    : `${((totalPagado / costoTotalExpediente) * 100).toFixed(1)}% completado`
+                                    : `${((montoPagadoComprador / montoPorParte) * 100).toFixed(1)}% completado`
                                   }
                                 </p>
                               </div>
@@ -2819,7 +3634,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   <Button
                                     size="sm"
                                     onClick={() => handleMarkParteAsPaid(selectedExpediente.id, 'comprador')}
-                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white"
                                   >
                                     <CheckCircle className="h-3 w-3 mr-1" />
                                     Marcar como Pagado
@@ -2833,16 +3648,16 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           <div className="border rounded-lg p-4 bg-purple-50 border-purple-200">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <User className="h-5 w-5 text-purple-600" />
-                                <h4 className="font-semibold text-purple-900">Vendedor</h4>
+                                <User className="h-4 w-4 text-gray-600" />
+                                <h4 className="font-semibold text-gray-900">Vendedor</h4>
                               </div>
                               {pagosPorParte[selectedExpediente.id]?.vendedor ? (
-                                <Badge className="bg-green-100 text-green-800 border-green-200">
+                                <Badge className="bg-gray-100 text-gray-800 border-gray-300">
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Pagado
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
                                   <Clock className="h-3 w-3 mr-1" />
                                   Pendiente
                                 </Badge>
@@ -2851,42 +3666,36 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Total asignado:</span>
-                                <span className="font-medium">{formatCurrency(costoTotalExpediente * 0.5)}</span>
+                                <span className="font-medium">{formatCurrency(montoPorParte)}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Pagado:</span>
-                                <span className="font-medium text-green-600">
-                                  {tramitePagado[selectedExpediente.id] 
-                                    ? formatCurrency(costoTotalExpediente * 0.5)
-                                    : formatCurrency(totalPagado * 0.5)
-                                  }
+                                <span className="font-medium text-gray-600">
+                                  {formatCurrency(montoPagadoVendedor)}
                                 </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Pendiente:</span>
                                 <span className="font-medium text-red-600">
-                                  {tramitePagado[selectedExpediente.id] 
-                                    ? formatCurrency(0)
-                                    : formatCurrency(saldoPendiente * 0.5)
-                                  }
+                                  {formatCurrency(montoPendienteVendedor)}
                                 </span>
                               </div>
                               <div className="mt-3">
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
-                                    className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                                    className="bg-gray-600 h-2 rounded-full transition-all duration-500"
                                     style={{ 
-                                      width: `${tramitePagado[selectedExpediente.id] 
+                                      width: `${pagosPorParte[selectedExpediente.id]?.vendedor 
                                         ? 100 
-                                        : (totalPagado / costoTotalExpediente) * 100
+                                        : (montoPagadoVendedor / montoPorParte) * 100
                                       }%` 
                                     }}
                                   />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1 text-center">
-                                  {tramitePagado[selectedExpediente.id] 
+                                  {pagosPorParte[selectedExpediente.id]?.vendedor 
                                     ? "100.0% completado"
-                                    : `${((totalPagado / costoTotalExpediente) * 100).toFixed(1)}% completado`
+                                    : `${((montoPagadoVendedor / montoPorParte) * 100).toFixed(1)}% completado`
                                   }
                                 </p>
                               </div>
@@ -2895,7 +3704,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   <Button
                                     size="sm"
                                     onClick={() => handleMarkParteAsPaid(selectedExpediente.id, 'vendedor')}
-                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white"
                                   >
                                     <CheckCircle className="h-3 w-3 mr-1" />
                                     Marcar como Pagado
@@ -2907,38 +3716,25 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         </div>
                       </div>
 
-                      {/* Botón para marcar trámite completo como pagado */}
-                      {!tramitePagado[selectedExpediente.id] && 
-                       pagosPorParte[selectedExpediente.id]?.comprador && 
-                       pagosPorParte[selectedExpediente.id]?.vendedor && (
-                        <div className="flex justify-center">
-                          <Button
-                            onClick={() => handleMarkAsPaid(selectedExpediente.id)}
-                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium px-6 py-2"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Marcar Trámite Completo como Pagado
-                          </Button>
-                        </div>
-                      )}
+                      {/* El trámite se marca automáticamente como pagado cuando ambos pagos están completos */}
 
                       {/* Resumen de estado de pagos */}
                       {pagosPorParte[selectedExpediente.id]?.comprador || pagosPorParte[selectedExpediente.id]?.vendedor ? (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                        <div className="bg-gray-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                             <AlertCircle className="h-4 w-4" />
                             Estado de Pagos por Parte
                           </h4>
-                          <div className="text-sm text-blue-800 space-y-1">
+                          <div className="text-sm text-gray-800 space-y-1">
                             <p>
-                              • Comprador: {pagosPorParte[selectedExpediente.id]?.comprador ? '✅ Pagado' : '⏳ Pendiente'}
+                              • Comprador: {pagosPorParte[selectedExpediente.id]?.comprador ? 'Pagado' : 'Pendiente'}
                             </p>
                             <p>
-                              • Vendedor: {pagosPorParte[selectedExpediente.id]?.vendedor ? '✅ Pagado' : '⏳ Pendiente'}
+                              • Vendedor: {pagosPorParte[selectedExpediente.id]?.vendedor ? 'Pagado' : 'Pendiente'}
                             </p>
                             {pagosPorParte[selectedExpediente.id]?.comprador && pagosPorParte[selectedExpediente.id]?.vendedor && (
-                              <p className="font-medium text-green-700">
-                                🎉 ¡Ambas partes han completado sus pagos!
+                              <p className="font-medium text-gray-700">
+                                ¡Ambas partes han completado sus pagos!
                               </p>
                             )}
                           </div>
@@ -2947,37 +3743,24 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                       {/* Estado de pago completo */}
                       {tramitePagado[selectedExpediente.id] && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="bg-gray-50 border rounded-lg p-3">
                           <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                            <h4 className="font-semibold text-green-900">Trámite Completamente Pagado</h4>
+                            <CheckCircle className="h-4 w-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-900">Trámite Completamente Pagado</span>
                           </div>
-                          <p className="text-sm text-green-700 mt-1">
-                            Todos los pagos han sido confirmados y el trámite está listo para continuar.
-                          </p>
                         </div>
                       )}
 
-                      {/* Notas importantes */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                      {/* Notas importantes - Compacto */}
+                      <div className="bg-gray-50 border rounded-lg p-3">
+                        <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
                           <AlertCircle className="h-4 w-4" />
                           Notas Importantes
                         </h4>
-                        <ul className="text-sm text-blue-800 space-y-1">
-                          <li>
-                            • Los pagos deben realizarse antes de las fechas
-                            límite
-                          </li>
-                          <li>
-                            • El pago final se debe liquidar al momento de la
-                            firma
-                          </li>
-                          <li>
-                            • Todos los comprobantes están disponibles para
-                            descarga
-                          </li>
-                          <li>• Los pagos anticipados no son reembolsables</li>
+                        <ul className="text-xs text-gray-700 space-y-1">
+                          <li>• Pagos antes de fechas límite</li>
+                          <li>• Pago final al momento de firma</li>
+                          <li>• Comprobantes disponibles para descarga</li>
                         </ul>
                       </div>
                     </div>
@@ -3030,7 +3813,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                         .map((evento: any) => (
                           <div key={evento.id} className="flex gap-4">
                             <div className="flex-shrink-0">
-                              <div className="w-3 h-3 bg-blue-500 rounded-full mt-2"></div>
+                              <div className="w-3 h-3 bg-gray-500 rounded-full mt-2"></div>
                             </div>
                             <div className="flex-1 pb-4 border-b border-gray-100 last:border-b-0">
                               <div className="flex items-center justify-between mb-1">
@@ -3105,7 +3888,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
             <div className="flex gap-2">
               <Button
                 onClick={handleAddComentario}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-gray-600 hover:bg-gray-700"
               >
                 <Send className="h-4 w-4 mr-2" />
                 Agregar Comentario
@@ -3128,7 +3911,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-600">
+            <DialogTitle className="flex items-center gap-2 text-gray-600">
               <MessageSquare className="h-5 w-5" />
               Mensajería Interna
             </DialogTitle>
@@ -3207,7 +3990,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                 <SelectContent>
                   <SelectItem value="baja">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
                       Baja
                     </div>
                   </SelectItem>
@@ -3241,7 +4024,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                 alert("Mensaje enviado correctamente al inbox del usuario");
                 setShowContactModal(false);
               }}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-gray-600 hover:bg-gray-700"
             >
               <Send className="h-4 w-4 mr-2" />
               Enviar Mensaje
@@ -3312,7 +4095,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                 setShowPaymentModal(false);
                 // Aquí se podría abrir el módulo de pagos o contactar al cajero
               }}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-gray-600 hover:bg-gray-700"
             >
               Contactar Cajero
             </Button>
@@ -3330,6 +4113,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           {/* Filtro por tipo de trámite - Botones modernos */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium text-slate-600 mr-2">Filtrar:</span>
+            
             {TRAMITE_TYPES.filter(tipo => !tipo.submenu && tipo.id !== "todos").map((tipo) => (
               <button
                 key={tipo.id}
@@ -3351,7 +4135,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                 selectedTramiteTypes.includes("todos")
                   ? "bg-blue-600 text-white shadow-md"
-                  : "bg-white/70 text-slate-600 hover:bg-blue-50 border border-slate-200"
+                  : "bg-white/70 text-slate-600 hover:bg-gray-50 border border-slate-200"
               }`}
             >
               <FileText className="h-4 w-4" />
@@ -3382,14 +4166,14 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-400 to-orange-400 rounded-full blur-3xl"></div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 max-w-6xl mx-auto">
         {KANBAN_COLUMNS.map((column) => {
           const expedientesEnColumna = getExpedientesByColumn(column.id);
 
           return (
             <div
               key={column.id}
-                className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 p-4 min-h-[500px]"
+                className="bg-gradient-to-br from-white/90 via-white/80 to-white/70 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 p-4 min-h-[500px] min-w-[280px]"
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
             >
@@ -3471,20 +4255,55 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       {/* Modal de Visualización de Documentos */}
       <Dialog open={showDocumentViewer} onOpenChange={setShowDocumentViewer}>
         <DialogContent 
-          className="modal-expediente-ancho flex flex-col"
+          className="modal-expediente-ancho flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50"
         >
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle>
-              Visualización de Documento
-            </DialogTitle>
-            <DialogDescription>
-              {selectedDocument?.nombre || "Documento legal para trámite de compraventa"}
-            </DialogDescription>
-          </DialogHeader>
 
           <div className="flex-1 flex overflow-hidden">
               {/* Panel izquierdo - Visualizador de documento */}
               <div className={`${selectedExpediente?.estado === "LISTO_PARA_FIRMA" ? "w-full" : "w-3/5"} flex flex-col pdf-viewer-container relative`}>
+                {/* Barra de herramientas para Firma agendada */}
+                {selectedExpediente?.estado === "LISTO_PARA_FIRMA" && (
+                  <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-gray-900">Contrato de Compraventa</h3>
+                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-xs">
+                        Firma agendada
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7"
+                        onClick={() => {
+                          // Simular descarga del documento
+                          console.log(`📥 Descargando contrato para ${selectedExpediente?.numeroSolicitud}`);
+                          const link = document.createElement('a');
+                          link.href = selectedDocument?.archivo || '';
+                          link.download = `Contrato_Compraventa_${selectedExpediente?.numeroSolicitud}.pdf`;
+                          link.click();
+                        }}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Descargar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7"
+                        onClick={() => {
+                          // Simular impresión del documento
+                          console.log(`🖨️ Imprimiendo contrato para ${selectedExpediente?.numeroSolicitud}`);
+                          window.print();
+                        }}
+                      >
+                        <Printer className="h-3 w-3 mr-1" />
+                        Imprimir
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex-1 overflow-hidden bg-gray-50 relative">
               <iframe
                     src={selectedDocument?.archivo || ""}
@@ -3496,73 +4315,124 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                 {/* Panel derecho - Solo mostrar si NO está en Listo para firma */}
                 {selectedExpediente?.estado !== "LISTO_PARA_FIRMA" && (
-                <div className="w-2/5 bg-white border-l border-gray-200 flex flex-col">
-                  <div className="p-4 border-b border-gray-200">
+                <div className="w-2/5 bg-gradient-to-br from-blue-50 to-white border-l border-blue-200 flex flex-col">
+                  <div className="p-3 border-b border-blue-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="flex items-center gap-3">
+                      <h3 className="text-base font-semibold text-blue-900">
                         {selectedDocument?.id === "contrato-borrador" ? "Validación del Contrato" : "Extracción de Datos con IA"}
                       </h3>
+                        {selectedDocument?.id === "contrato-borrador" && selectedExpediente && (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 text-xs">
+                            {(() => {
+                              const contractCount = getContractValidationCount(selectedExpediente.id);
+                              return `${contractCount.approved} de ${contractCount.total} validados`;
+                            })()}
+                          </Badge>
+                )}
+                      </div>
                       {selectedDocument?.id !== "contrato-borrador" && (
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs"
                             onClick={handleAcceptDocument}
                           >
-                            <FileText className="h-4 w-4 mr-2" />
+                            <CheckCircle className="h-3 w-3 mr-1" />
                             Aceptar
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-red-500 text-red-600 hover:bg-red-50"
+                            className="border-red-500 text-red-600 hover:bg-red-50 text-xs"
                             onClick={handleRejectDocument}
                           >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Rechazar documento
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Rechazar
                           </Button>
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs text-blue-600 mt-1">
                       {selectedDocument?.id === "contrato-borrador" 
                         ? "Validación guiada del borrador del contrato de compraventa"
-                        : "Datos extraídos del Acta de Nacimiento"
+                        : "Datos extraídos del documento"
                       }
                     </p>
           </div>
 
                   {selectedDocument?.id === "contrato-borrador" ? (
                     /* Panel de Validación Guiada para el Contrato */
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                      {/* Botón de validación del contrato */}
+                      {selectedExpediente && (
+                        <Button 
+                          className="bg-green-600 hover:bg-green-700 text-white text-sm w-full h-8"
+                          onClick={() => {
+                            const currentField = contractSearchData[currentSearchIndex];
+                            if (currentField && selectedExpediente) {
+                              handleContractValidation(selectedExpediente.id, currentField.id, true);
+                            }
+                          }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Validar
+                        </Button>
+                )}
+                      
                       {/* Sección de búsqueda */}
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm text-gray-600">Buscar en el documento:</p>
-                          <span className="text-xs text-blue-600 font-medium">
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs text-blue-700">Buscar en el documento:</p>
+                          <span className="text-xs text-blue-800 font-medium">
                             {contractSearchData[currentSearchIndex]?.type}
                           </span>
                         </div>
-                        <div className="bg-yellow-100 border border-yellow-300 rounded p-3">
-                          <p className="text-sm font-semibold text-gray-800">
+                        <div className={`bg-gradient-to-r border rounded p-1.5 ${
+                          (() => {
+                            if (!selectedExpediente) return "from-blue-100 to-blue-200 border-blue-300";
+                            const currentField = contractSearchData[currentSearchIndex];
+                            const validation = contractValidations[selectedExpediente.id]?.[currentField?.id];
+                            if (validation?.approved === true) {
+                              return "from-green-100 to-green-200 border-green-300";
+                            } else if (validation?.approved === false) {
+                              return "from-red-100 to-red-200 border-red-300";
+                            }
+                            return "from-blue-100 to-blue-200 border-blue-300";
+                          })()
+                        }`}>
+                          <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-blue-900">
                             "{highlightedText}"
                           </p>
+                            {(() => {
+                              if (!selectedExpediente) return null;
+                              const currentField = contractSearchData[currentSearchIndex];
+                              const validation = contractValidations[selectedExpediente.id]?.[currentField?.id];
+                              if (validation?.approved === true) {
+                                return <CheckCircle className="h-3 w-3 text-green-600" />;
+                              } else if (validation?.approved === false) {
+                                return <XCircle className="h-3 w-3 text-red-600" />;
+                              }
+                              return null;
+                            })()}
                         </div>
-                        <div className="mt-2">
-                          <p className="text-xs text-gray-500 mb-1">
-                            📍 {contractSearchData[currentSearchIndex]?.location}
+                        </div>
+                        <div className="mt-1">
+                          <p className="text-xs text-blue-600 mb-0.5">
+                            {contractSearchData[currentSearchIndex]?.location}
                           </p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-blue-700">
                             {contractSearchData[currentSearchIndex]?.description}
                           </p>
                         </div>
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="mt-2 text-xs"
+                          className="mt-1 text-xs bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 h-6"
                           onClick={handleGoToText}
                         >
-                          <Eye className="h-3 w-3 mr-1" />
+                          <Eye className="h-2 w-2 mr-1" />
                           Ir al Texto
                         </Button>
                       </div>
@@ -3573,49 +4443,48 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           size="sm" 
                           variant="outline" 
                           disabled={currentSearchIndex === 0}
-                          className="text-xs"
+                          className="text-xs bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 h-6"
                           onClick={handlePreviousSearch}
                         >
-                          <ArrowLeft className="h-3 w-3 mr-1" />
+                          <ArrowLeft className="h-2 w-2 mr-1" />
                           Anterior
                         </Button>
-                        <span className="text-xs text-gray-500">
+                        <div className="flex flex-col items-center">
+                        <span className="text-xs text-blue-600">
                           {currentSearchIndex + 1} de {contractSearchData.length}
                         </span>
+                          {selectedExpediente && (
+                            <span className="text-xs text-green-600 font-medium">
+                              {(() => {
+                                const contractCount = getContractValidationCount(selectedExpediente.id);
+                                return `${contractCount.approved} validados`;
+                              })()}
+                            </span>
+                )}
+                        </div>
                         <Button 
                           size="sm" 
                           variant="outline" 
                           disabled={currentSearchIndex === contractSearchData.length - 1}
-                          className="text-xs"
+                          className="text-xs bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 h-6"
                           onClick={handleNextSearch}
                         >
                           Siguiente
-                          <ArrowRight className="h-3 w-3 ml-1" />
+                          <ArrowRight className="h-2 w-2 ml-1" />
                         </Button>
                       </div>
 
-                      {/* Botones de acción */}
-                      <div className="flex gap-2">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs flex-1">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Marcar como Revisado
-                        </Button>
-                        <Button size="sm" variant="outline" className="border-red-300 text-red-600 hover:bg-red-50 text-xs flex-1">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Requiere Corrección
-                        </Button>
-                      </div>
 
                       {/* Panel de edición */}
-                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h6 className="text-sm font-medium text-blue-900 mb-3">Editor de Documento</h6>
-                        <div className="space-y-3">
+                      <div className="mt-2 p-2 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
+                        <h6 className="text-xs font-medium text-blue-900 mb-1">Editor de Documento</h6>
+                        <div className="space-y-2">
                           <div>
-                            <label className="block text-xs font-medium text-blue-800 mb-1">
+                            <label className="block text-xs font-medium text-gray-800 mb-0.5">
                               Campo a editar:
                             </label>
                             <select 
-                              className="w-full px-2 py-1 border border-blue-300 rounded text-xs"
+                              className="w-full px-2 py-1 border border-blue-300 rounded text-xs h-6"
                               value={contractSearchData[currentSearchIndex]?.type || ""}
                               onChange={(e) => {
                                 const selectedIndex = contractSearchData.findIndex(item => item.type === e.target.value);
@@ -3633,52 +4502,91 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-blue-800 mb-1">
+                            <label className="block text-xs font-medium text-gray-800 mb-0.5">
                               Valor actual:
                             </label>
                             <input
                               type="text"
                               value={highlightedText}
-                              className="w-full px-2 py-1 border border-blue-300 rounded text-xs bg-blue-100"
+                              className="w-full px-2 py-1 border border-blue-300 rounded text-xs bg-gray-100 h-6"
                               readOnly
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-blue-800 mb-1">
+                            <label className="block text-xs font-medium text-gray-800 mb-0.5">
                               Nuevo valor:
                             </label>
                             <input
                               type="text"
                               placeholder="Ingrese el valor corregido..."
-                              className="w-full px-2 py-1 border border-blue-300 rounded text-xs"
+                              className="w-full px-2 py-1 border border-blue-300 rounded text-xs h-6"
                             />
                           </div>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs w-full">
-                            <FileEdit className="h-3 w-3 mr-1" />
+                           <Button 
+                             size="sm" 
+                             className="bg-gray-600 hover:bg-gray-700 text-white text-xs w-full h-6"
+                             disabled={isApplyingCorrection}
+                             onClick={async () => {
+                               const currentField = contractSearchData[currentSearchIndex];
+                               if (currentField && selectedExpediente) {
+                                 setIsApplyingCorrection(true);
+                                 
+                                 // Simular carga de 2-3 segundos
+                                 await new Promise(resolve => setTimeout(resolve, 2500));
+                                 
+                                 // Simular aplicación de corrección
+                                 console.log(`🔧 Aplicando corrección al campo ${currentField.type}...`);
+                                 console.log(`✅ Corrección aplicada exitosamente al documento`);
+                                 
+                                 // Agregar comentario sobre la corrección aplicada
+                                 addComentarioExpediente(
+                                   selectedExpediente.id,
+                                   `CORRECCIÓN APLICADA: Se corrigió el campo "${currentField.type}" en el contrato. El documento ha sido actualizado con la nueva información.`,
+                                   "Licenciado",
+                                   "general"
+                                 );
+                                 
+                                 // Marcar como validado después de aplicar la corrección
+                                 handleContractValidation(selectedExpediente.id, currentField.id, true, "Corrección aplicada al documento");
+                                 
+                                 setIsApplyingCorrection(false);
+                               }
+                             }}
+                           >
+                             {isApplyingCorrection ? (
+                               <>
+                                 <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white mr-1"></div>
+                                 Aplicando...
+                               </>
+                             ) : (
+                               <>
+                            <FileEdit className="h-2 w-2 mr-1" />
                             Aplicar Corrección
+                               </>
+                )}
                           </Button>
                         </div>
                       </div>
                     </div>
                   ) : (
                     /* Panel original de extracción de datos para otros documentos */
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                    <div className="flex-1 overflow-y-auto p-3 space-y-4">
                       {/* Tipo de participante */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
                           Tipo de participante *
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-1">
                           {["Comprador", "Conyuge", "Vendedor", "Representante"].map((tipo) => (
                             <button
                               key={tipo}
-                              className={`px-3 py-2 text-xs rounded-full border transition-colors ${
+                              className={`px-2 py-1 text-xs rounded-full border transition-colors ${
                                 tipo === "Comprador" 
-                                  ? "bg-purple-100 text-purple-700 border-purple-300" 
-                                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                                  ? "bg-blue-100 text-blue-700 border-blue-300" 
+                                  : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
                               }`}
                             >
-                              <User className="h-3 w-3 inline mr-1" />
+                              <User className="h-2 w-2 inline mr-1" />
                               {tipo}
                             </button>
                           ))}
@@ -3687,87 +4595,87 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                       {/* Nombre completo */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
                           Nombre completo *
                         </label>
                         <input
                           type="text"
                           value="JONATHAN RUBEN HERNANDEZ GONZALEZ"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                           readOnly
                         />
                       </div>
 
                       {/* Fecha de nacimiento y Edad */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Fecha de nacimiento
                           </label>
                           <input
                             type="text"
                             value="02/07/1986"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Edad
                           </label>
                           <input
                             type="text"
                             value="38 años"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                       </div>
 
                       {/* Género y Lugar de nacimiento */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Género
                           </label>
                           <input
                             type="text"
                             value="HOMBRE"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Lugar de nacimiento
                           </label>
                           <input
                             type="text"
                             value="NEZAHUALCOYOTL, MEXICO"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                       </div>
 
                       {/* Nacionalidad y Estado civil */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Nacionalidad
                           </label>
                           <input
                             type="text"
                             value="MEXICANA"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Estado civil actual
                           </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                          <select className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800">
                             <option value="SOLTERO">SOLTERO</option>
                             <option value="CASADO" selected>CASADO</option>
                             <option value="DIVORCIADO">DIVORCIADO</option>
@@ -3778,35 +4686,35 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       </div>
 
                       {/* Número de acta y CURP */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Número de acta
                           </label>
                           <input
                             type="text"
                             value="2710"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             CURP
                           </label>
                           <input
                             type="text"
                             value="HEGJ860702HMCRNN07"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
                             readOnly
                           />
                         </div>
                       </div>
 
                       {/* Registro civil y Fecha de registro */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-blue-700 mb-1">
                             Registro civil
                           </label>
                           <input
@@ -3859,12 +4767,12 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       </div>
 
                       {/* Información adicional del documento */}
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h4 className="text-sm font-semibold text-blue-700 mb-3">Datos del Documento</h4>
+                      <div className="bg-gray-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Datos del Documento</h4>
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-xs font-medium text-blue-600 mb-1">
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
                                 Identificador Electrónico
                               </label>
                               <input
@@ -3875,7 +4783,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-blue-600 mb-1">
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
                                 Oficialía
                               </label>
                               <input
@@ -3887,7 +4795,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             </div>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-blue-600 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
                               Fecha de Certificación
                             </label>
                             <input
@@ -3901,14 +4809,14 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       </div>
 
                       {/* Información adicional */}
-                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <div className="bg-gray-50 p-3 rounded-lg border border-blue-200">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                          <span className="text-sm font-medium text-blue-700">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-medium text-gray-700">
                             IA Procesando...
                           </span>
                         </div>
-                        <p className="text-xs text-blue-600">
+                        <p className="text-xs text-gray-600">
                           La inteligencia artificial está analizando el acta de nacimiento para extraer información adicional.
                         </p>
                       </div>
@@ -3918,68 +4826,578 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                 )}
           </div>
 
-          <div className="flex justify-between items-center p-4 border-t bg-gray-50">
-            <div className="text-sm text-gray-600">
-              💡 Documento real utilizado para demostración
-            </div>
-            <div className="flex gap-2">
+          <div className="flex justify-end items-center px-1 py-0 border-t border-gray-50 bg-transparent">
+            <div className="flex gap-0">
               {selectedExpediente?.estado === "LISTO_PARA_FIRMA" ? (
                 // Botones para Listo para firma - Solo PDF con opciones de imprimir y descargar
                 <>
-                  <Button
-                    variant="outline"
+                  <button
                     onClick={() => window.print()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                    className="text-gray-300 hover:text-gray-500 text-xs h-3 w-3 opacity-30 hover:opacity-100 transition-opacity"
+                    title="Imprimir"
                   >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Imprimir
-                  </Button>
-                  <Button
-                    variant="outline"
+                    <FileText className="h-2 w-2" />
+                  </button>
+                  <button
                     onClick={() => {
                       const link = document.createElement('a');
                       link.href = selectedDocument?.archivo || "";
                       link.download = selectedDocument?.nombre || "contrato.pdf";
                       link.click();
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                    className="text-gray-300 hover:text-gray-500 text-xs h-3 w-3 opacity-30 hover:opacity-100 transition-opacity"
+                    title="Descargar"
                   >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Descargar
-                  </Button>
-                  <Button
-                    variant="outline"
+                    <FileText className="h-2 w-2" />
+                  </button>
+                  <button
                     onClick={() => setShowDocumentViewer(false)}
+                    className="text-gray-300 hover:text-gray-500 text-xs h-3 w-3 opacity-30 hover:opacity-100 transition-opacity"
+                    title="Cerrar"
                   >
-                    Cerrar
-                  </Button>
+                    ×
+                  </button>
                 </>
               ) : selectedDocument?.id === "contrato-borrador" ? (
                 // Botones para contrato borrador en otras columnas
-                <Button
-                  variant="outline"
+                <button
                   onClick={() => setShowDocumentViewer(false)}
+                  className="text-gray-300 hover:text-gray-500 text-xs h-3 w-3 opacity-30 hover:opacity-100 transition-opacity"
+                  title="Cerrar"
                 >
-                  Cerrar
-                </Button>
+                  ×
+                </button>
               ) : (
                 // Botones para otros documentos
                 <>
-                  <Button
-                    variant="outline"
+                  <button
                     onClick={() => window.open(selectedDocument?.archivo || "", "_blank")}
+                    className="text-gray-300 hover:text-gray-500 text-xs h-3 w-3 opacity-30 hover:opacity-100 transition-opacity"
+                    title="Abrir"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Abrir en Nueva Pestaña
-                  </Button>
-                  <Button
-                    variant="outline"
+                    <Eye className="h-2 w-2" />
+                  </button>
+                  <button
                     onClick={() => setShowDocumentViewer(false)}
+                    className="text-gray-300 hover:text-gray-500 text-xs h-3 w-3 opacity-30 hover:opacity-100 transition-opacity"
+                    title="Cerrar"
                   >
-                    Cerrar
-                  </Button>
+                    ×
+                  </button>
                 </>
               )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para agendar cita de firma */}
+      <Dialog open={showAppointmentModal} onOpenChange={setShowAppointmentModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Agendar Cita para Firma
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Selecciona la fecha y hora disponible para la firma del contrato de compraventa.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Información del expediente */}
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <h4 className="font-medium text-blue-900 text-sm">Expediente: {selectedExpediente?.numeroSolicitud}</h4>
+              <p className="text-xs text-blue-700 mt-1">
+                Compraventa de casa - {selectedExpediente?.comprador.nombre} {selectedExpediente?.comprador.apellidoPaterno}
+              </p>
+            </div>
+
+            {/* Selector de fecha */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Fecha disponible:</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedAppointmentDate}
+                onChange={(e) => setSelectedAppointmentDate(e.target.value)}
+              >
+                <option value="">Seleccionar fecha</option>
+                <option value="2024-09-29">Domingo, 29 de Septiembre 2024</option>
+                <option value="2024-09-30">Lunes, 30 de Septiembre 2024</option>
+                <option value="2024-10-01">Martes, 1 de Octubre 2024</option>
+                <option value="2024-10-02">Miércoles, 2 de Octubre 2024</option>
+                <option value="2024-10-03">Jueves, 3 de Octubre 2024</option>
+                <option value="2024-10-04">Viernes, 4 de Octubre 2024</option>
+                <option value="2024-10-07">Lunes, 7 de Octubre 2024</option>
+                <option value="2024-10-08">Martes, 8 de Octubre 2024</option>
+                <option value="2024-10-09">Miércoles, 9 de Octubre 2024</option>
+                <option value="2024-10-10">Jueves, 10 de Octubre 2024</option>
+                <option value="2024-10-11">Viernes, 11 de Octubre 2024</option>
+                <option value="2024-10-14">Lunes, 14 de Octubre 2024</option>
+                <option value="2024-10-15">Martes, 15 de Octubre 2024</option>
+              </select>
+            </div>
+
+            {/* Selector de hora */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Hora disponible:</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedAppointmentTime}
+                onChange={(e) => setSelectedAppointmentTime(e.target.value)}
+              >
+                <option value="">Seleccionar hora</option>
+                <option value="09:00">9:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="12:00">12:00 PM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+                <option value="17:00">5:00 PM</option>
+              </select>
+            </div>
+
+            {/* Selector de sala de juntas */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Sala de juntas disponible:</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedMeetingRoom}
+                onChange={(e) => setSelectedMeetingRoom(e.target.value)}
+              >
+                <option value="">Seleccionar sala</option>
+                <option value="Sala de Juntas A">Sala de Juntas A - Capacidad: 8 personas</option>
+                <option value="Sala de Juntas B">Sala de Juntas B - Capacidad: 6 personas</option>
+                <option value="Sala de Juntas C">Sala de Juntas C - Capacidad: 10 personas</option>
+                <option value="Sala Principal">Sala Principal - Capacidad: 15 personas</option>
+                <option value="Oficina del Notario">Oficina del Notario - Capacidad: 4 personas</option>
+              </select>
+            </div>
+
+            {/* Nota adicional */}
+            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <p className="text-xs text-yellow-800">
+                <strong>Nota:</strong> La cita será confirmada una vez que ambas partes confirmen su disponibilidad.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowAppointmentModal(false)}
+              className="text-sm"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                // Validar que se hayan seleccionado fecha, hora y sala
+                if (!selectedAppointmentDate || !selectedAppointmentTime || !selectedMeetingRoom) {
+                  alert("Por favor selecciona una fecha, hora y sala de juntas para la cita.");
+                  return;
+                }
+
+                // Simular agendamiento de cita
+                console.log(`📅 Cita agendada para el expediente ${selectedExpediente?.id} el ${selectedAppointmentDate} a las ${selectedAppointmentTime} en ${selectedMeetingRoom}`);
+                
+                // Actualizar las fechas de firma programadas
+                if (selectedExpediente) {
+                  setFechasFirmaProgramadas(prev => ({
+                    ...prev,
+                    [selectedExpediente.id]: {
+                      fecha: selectedAppointmentDate,
+                      hora: selectedAppointmentTime,
+                      lugar: "Notaría #3 - Oficina Principal",
+                      sala: selectedMeetingRoom
+                    }
+                  }));
+                  
+                  // Forzar re-render para mostrar la información actualizada inmediatamente
+                  setForceUpdate(prev => prev + 1);
+                }
+                
+                // Agregar comentario al expediente
+                if (selectedExpediente) {
+                  const fechaFormateada = new Date(selectedAppointmentDate).toLocaleDateString('es-MX', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  });
+                  addComentarioExpediente(
+                    selectedExpediente.id,
+                    `📅 CITA AGENDADA: Firma programada para el ${fechaFormateada} a las ${selectedAppointmentTime} en ${selectedMeetingRoom}, Notaría #3 - Oficina Principal.`,
+                    "Licenciado",
+                    "general"
+                  );
+                }
+                
+                // Mover expediente a "Listo para firma"
+                if (selectedExpediente) {
+                  const success = updateExpedienteEstado(
+                    selectedExpediente.id,
+                    "LISTO_PARA_FIRMA",
+                    licenciadoId || ""
+                  );
+                  
+                  if (success) {
+                    setExpedientes(prev => prev.map(exp => 
+                      exp.id === selectedExpediente.id 
+                        ? { ...exp, estado: "LISTO_PARA_FIRMA" as EstadoExpediente }
+                        : exp
+                    ));
+                    
+                    // Actualizar el expediente seleccionado para reflejar el cambio de estado
+                    setSelectedExpediente(prev => prev ? { ...prev, estado: "LISTO_PARA_FIRMA" as EstadoExpediente } : null);
+                  }
+                }
+                
+                // Limpiar los selectores y cerrar el modal
+                setSelectedAppointmentDate("");
+                setSelectedAppointmentTime("");
+                setSelectedMeetingRoom("");
+                setShowAppointmentModal(false);
+              }}
+              disabled={!selectedAppointmentDate || !selectedAppointmentTime || !selectedMeetingRoom}
+              className="bg-green-600 hover:bg-green-700 text-white text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Confirmar Cita
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para reprogramar cita de firma */}
+      <Dialog open={showRescheduleModal} onOpenChange={setShowRescheduleModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Reprogramar Cita de Firma
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Selecciona una nueva fecha, hora y sala de juntas para la firma del contrato de compraventa.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Información del expediente */}
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+              <h4 className="font-medium text-orange-900 text-sm">Expediente: {selectedExpediente?.numeroSolicitud}</h4>
+              <p className="text-xs text-orange-700 mt-1">
+                Compraventa de casa - {selectedExpediente?.comprador.nombre} {selectedExpediente?.comprador.apellidoPaterno}
+              </p>
+            </div>
+
+            {/* Selector de nueva fecha */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Nueva fecha disponible:</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={rescheduleDate}
+                onChange={(e) => setRescheduleDate(e.target.value)}
+              >
+                <option value="">Seleccionar nueva fecha</option>
+                <option value="2024-10-14">Lunes, 14 de Octubre 2024</option>
+                <option value="2024-10-15">Martes, 15 de Octubre 2024</option>
+                <option value="2024-10-16">Miércoles, 16 de Octubre 2024</option>
+                <option value="2024-10-17">Jueves, 17 de Octubre 2024</option>
+                <option value="2024-10-18">Viernes, 18 de Octubre 2024</option>
+                <option value="2024-10-21">Lunes, 21 de Octubre 2024</option>
+                <option value="2024-10-22">Martes, 22 de Octubre 2024</option>
+                <option value="2024-10-23">Miércoles, 23 de Octubre 2024</option>
+                <option value="2024-10-24">Jueves, 24 de Octubre 2024</option>
+                <option value="2024-10-25">Viernes, 25 de Octubre 2024</option>
+              </select>
+            </div>
+
+            {/* Selector de nueva hora */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Nueva hora disponible:</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={rescheduleTime}
+                onChange={(e) => setRescheduleTime(e.target.value)}
+              >
+                <option value="">Seleccionar nueva hora</option>
+                <option value="09:00">9:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="12:00">12:00 PM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+                <option value="17:00">5:00 PM</option>
+              </select>
+            </div>
+
+            {/* Selector de nueva sala de juntas */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Nueva sala de juntas disponible:</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={rescheduleRoom}
+                onChange={(e) => setRescheduleRoom(e.target.value)}
+              >
+                <option value="">Seleccionar nueva sala</option>
+                <option value="Sala de Juntas A">Sala de Juntas A - Capacidad: 8 personas</option>
+                <option value="Sala de Juntas B">Sala de Juntas B - Capacidad: 6 personas</option>
+                <option value="Sala de Juntas C">Sala de Juntas C - Capacidad: 10 personas</option>
+                <option value="Sala Principal">Sala Principal - Capacidad: 15 personas</option>
+                <option value="Oficina del Notario">Oficina del Notario - Capacidad: 4 personas</option>
+              </select>
+            </div>
+
+            {/* Campo de motivo */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Motivo de reprogramación:</label>
+              <textarea 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                rows={3}
+                placeholder="Especifica el motivo de la reprogramación..."
+                value={rescheduleReason}
+                onChange={(e) => setRescheduleReason(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowRescheduleModal(false)} className="text-sm">
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                // Validar que se hayan seleccionado fecha, hora y sala
+                if (!rescheduleDate || !rescheduleTime || !rescheduleRoom) {
+                  alert("Por favor selecciona una nueva fecha, hora y sala de juntas para reprogramar la cita.");
+                  return;
+                }
+
+                console.log(`📅 Cita reprogramada para el expediente ${selectedExpediente?.numeroSolicitud} el ${rescheduleDate} a las ${rescheduleTime} en ${rescheduleRoom}`);
+                
+                // Actualizar las fechas de firma programadas
+                if (selectedExpediente) {
+                  setFechasFirmaProgramadas(prev => ({
+                    ...prev,
+                    [selectedExpediente.id]: {
+                      fecha: rescheduleDate,
+                      hora: rescheduleTime,
+                      lugar: "Notaría #3 - Oficina Principal",
+                      sala: rescheduleRoom
+                    }
+                  }));
+                  
+                  // Forzar re-render para mostrar la información actualizada inmediatamente
+                  setForceUpdate(prev => prev + 1);
+                }
+                
+                // Agregar comentario al expediente con motivo
+                if (selectedExpediente) {
+                  const fechaFormateada = new Date(rescheduleDate).toLocaleDateString('es-MX', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  });
+                  
+                  const motivoText = rescheduleReason ? ` Motivo: ${rescheduleReason}` : "";
+                  addComentarioExpediente(
+                    selectedExpediente.id, 
+                    `📅 CITA REPROGRAMADA: Nueva fecha programada para el ${fechaFormateada} a las ${rescheduleTime} en ${rescheduleRoom}, Notaría #3 - Oficina Principal.${motivoText}`, 
+                    "Licenciado", 
+                    "general"
+                  );
+                }
+                
+                // Limpiar los campos y cerrar el modal
+                setRescheduleDate("");
+                setRescheduleTime("");
+                setRescheduleRoom("");
+                setRescheduleReason("");
+                setShowRescheduleModal(false);
+              }}
+              disabled={!rescheduleDate || !rescheduleTime || !rescheduleRoom}
+              className="bg-orange-600 hover:bg-orange-700 text-white text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Confirmar Reprogramación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para ver documentos PDF */}
+      <Dialog open={showDocumentModal} onOpenChange={setShowDocumentModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              {selectedDocumentInfo?.title} - {selectedDocumentInfo?.expediente}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="bg-gray-100 p-8 text-center rounded border">
+            <div className="text-6xl mb-4">📄</div>
+            <p className="text-gray-600 mb-4">Vista previa del documento PDF</p>
+            <p className="text-sm text-gray-500">{selectedDocumentInfo?.title}</p>
+            <p className="text-sm text-gray-500">Expediente: {selectedDocumentInfo?.expediente}</p>
+            <div className="mt-4 flex gap-2 justify-center">
+              <Button
+                onClick={() => {
+                  window.open('/formatos/compraventa.pdf', '_blank');
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Abrir PDF Completo
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDocumentModal(false)}
+              >
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para ver recibos de impuestos */}
+      <Dialog open={showTaxModal} onOpenChange={setShowTaxModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Recibo de {selectedTaxInfo?.title}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="bg-gray-50 p-4 rounded border">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">{selectedTaxInfo?.details?.icon}</div>
+              <p className="font-semibold text-gray-800">{selectedTaxInfo?.title}</p>
+              <p className="text-sm text-gray-600">Expediente: {selectedTaxInfo?.expediente}</p>
+            </div>
+            
+            <div className="bg-white p-3 rounded border">
+              {selectedTaxInfo?.details?.propertyValue && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Valor del Inmueble:</span>
+                  <span className="font-semibold">{selectedTaxInfo.details.propertyValue}</span>
+                </div>
+              )}
+              {selectedTaxInfo?.details?.saleValue && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Valor de Venta:</span>
+                  <span className="font-semibold">{selectedTaxInfo.details.saleValue}</span>
+                </div>
+              )}
+              {selectedTaxInfo?.details?.acquisitionCost && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Costo de Adquisición:</span>
+                  <span className="font-semibold">{selectedTaxInfo.details.acquisitionCost}</span>
+                </div>
+              )}
+              {selectedTaxInfo?.details?.profit && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Ganancia:</span>
+                  <span className="font-semibold">{selectedTaxInfo.details.profit}</span>
+                </div>
+              )}
+              {selectedTaxInfo?.details?.taxRate && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Tasa de Impuesto:</span>
+                  <span className="font-semibold">{selectedTaxInfo.details.taxRate}</span>
+                </div>
+              )}
+              {selectedTaxInfo?.details?.year && (
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600">Año Fiscal:</span>
+                  <span className="font-semibold">{selectedTaxInfo.details.year}</span>
+                </div>
+              )}
+              <hr className="my-2" />
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-gray-800">Total a Pagar:</span>
+                <span className="text-lg font-bold text-red-600">{selectedTaxInfo?.details?.total}</span>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex gap-2 justify-center">
+              <Button
+                onClick={() => {
+                  alert(`Simulando pago del ${selectedTaxInfo?.title}...`);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Simular Pago
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowTaxModal(false)}
+              >
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para vista previa de la Escritura Final */}
+      <Dialog open={showEscrituraModal} onOpenChange={setShowEscrituraModal}>
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0 !max-w-7xl">
+          <DialogHeader className="px-6 py-4 border-b border-gray-200">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Escritura Final - {selectedExpediente?.numeroSolicitud}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex flex-col h-[calc(95vh-80px)]">
+            {/* Barra de herramientas */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">Escritura Final</span>
+                <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-xs">
+                  Firmada
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7"
+                  onClick={() => {
+                    // Descargar el PDF
+                    const link = document.createElement('a');
+                    link.href = '/Escritura.pdf';
+                    link.download = `Escritura_Final_${selectedExpediente?.numeroSolicitud}.pdf`;
+                    link.click();
+                  }}
+                >
+                  <Download className="h-3 w-3 mr-1" />
+                  Descargar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7"
+                  onClick={() => {
+                    // Imprimir el PDF
+                    window.open('/Escritura.pdf', '_blank');
+                  }}
+                >
+                  <Printer className="h-3 w-3 mr-1" />
+                  Imprimir
+                </Button>
+              </div>
+            </div>
+            
+            {/* Visor de PDF */}
+            <div className="flex-1 bg-gray-100 relative">
+              <iframe
+                src="/Escritura.pdf"
+                className="w-full h-full border-0"
+                title="Escritura Final"
+              />
             </div>
           </div>
         </DialogContent>
