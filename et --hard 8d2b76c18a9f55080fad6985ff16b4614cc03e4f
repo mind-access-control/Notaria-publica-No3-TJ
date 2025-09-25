@@ -1,0 +1,20 @@
+8d2b76c 2025-09-22 feat: Implementar flujo completo de post-firma y archivo de expedientes
+fb6bd73 2025-09-18 Validatoin status ended
+c29a87b 2025-09-17 User site finished
+ca6b687 2025-09-17 Adjusting user flow
+f0f8e01 2025-09-12 Adding user notifications
+71e0134 2025-09-12 feat: agregar botón método de pago y reducir headers de escritura
+3bc6857 2025-09-12 Adding appointments tab for the lawyer
+7c79c67 2025-09-12 Eliminando completamente el submódulo 'Notaria-publica-No3-TJ'
+62e515d 2025-09-12 ajustes pedidos por jona
+6673486 2025-09-12 feat: updated pnpm-lock.yaml after adding dependencies
+8846a3f 2025-09-12 Implement a comprehensive feature set including a new user portal with a payment gateway, a Kanban-style lawyer dashboard, and a robust role-based permission system.
+f4e8974 2025-09-11 feat: Improve tramite selection in iniciar-tramite page
+38d5f11 2025-09-11 feat: Implement complete user-authenticated tramite flow
+7bf1412 2025-09-11 feat: Add comprehensive authentication system with role-based access control
+cb758cf 2025-09-11 feat: Implement POC for solicitud status tracking system
+9f298c3 2025-09-11 Merge branch 'main' of https://github.com/mind-access-control/Notaria-publica-No3-TJ
+10ba188 2025-09-11 Complete user portal implementation with document management and digital expediente
+7acee54 2025-09-10 Merge branch 'main' of https://github.com/mind-access-control/Notaria-publica-No3-TJ
+5453fd9 2025-09-10 Implementar sistema de variables predefinidas con editor simple y menú compacto
+f0f5840 2025-09-10 More improvements in the site admin
