@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import { StatusTracker } from "@/components/status-tracker";
 export default function SeguimientoPage() {
   const params = useParams();
   const numeroSolicitud = params.numeroSolicitud as string;
+  const { logout } = useAuth();
   const [solicitud, setSolicitud] = useState<any>(null);
   const [mensaje, setMensaje] = useState("");
   const [enviandoMensaje, setEnviandoMensaje] = useState(false);
@@ -233,15 +235,26 @@ export default function SeguimientoPage() {
     console.log("Actualizando estatus a:", nuevoEstatus);
   };
 
+  const handleNavigateToAccount = () => {
+    console.log("Navegando a Mi Cuenta desde seguimiento");
+    window.location.href = "/mi-cuenta";
+  };
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
 
-    // Simular proceso de logout
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Usar la función logout del contexto de autenticación
+    logout();
 
     // Limpiar datos de autenticación
     localStorage.removeItem("auth");
     localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    localStorage.clear();
+
+    // Simular proceso de logout
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Redirigir a la página principal
     window.location.href = "/";
@@ -280,7 +293,7 @@ export default function SeguimientoPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/mi-cuenta")}
+                onClick={handleNavigateToAccount}
                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               >
                 <User className="h-4 w-4 mr-2" />
@@ -483,7 +496,7 @@ export default function SeguimientoPage() {
                 <div className="text-center">
                   <Button
                     variant="outline"
-                    onClick={() => (window.location.href = "/mi-cuenta")}
+                    onClick={handleNavigateToAccount}
                     className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                   >
                     <User className="h-4 w-4 mr-2" />

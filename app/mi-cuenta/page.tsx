@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import {
   Card,
   CardContent,
@@ -33,11 +34,13 @@ import Link from "next/link";
 
 export default function MiCuentaPage() {
   const router = useRouter();
+  const { logout, isAuthenticated, isLoading } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [showFloatingNotification, setShowFloatingNotification] =
     useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Usuario hardcodeado
   const user = {
@@ -186,6 +189,9 @@ export default function MiCuentaPage() {
   useEffect(() => {
     console.log("Mi Cuenta Hardcodeada - Cargando página");
 
+    // Para la demo, siempre mostrar la página sin verificar autenticación
+    // Esto permite que funcione desde cualquier lugar sin problemas de login
+
     // Simular notificaciones demo después de 3 segundos
     setTimeout(() => {
       const nuevaNotificacion = {
@@ -280,6 +286,23 @@ export default function MiCuentaPage() {
     }
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    // Limpiar localStorage completamente
+    localStorage.removeItem("auth");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    localStorage.clear();
+
+    // Esperar un momento para que se procese la limpieza
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Redirigir a la página principal
+    window.location.href = "/";
+  };
+
   const handleNotificationAction = (notification: any, action: string) => {
     switch (action) {
       case "ver_documento":
@@ -301,6 +324,9 @@ export default function MiCuentaPage() {
         break;
     }
   };
+
+  // Para la demo, siempre mostrar la página sin verificar autenticación
+  // Esto permite que funcione desde cualquier lugar sin problemas de login
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -339,11 +365,12 @@ export default function MiCuentaPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.push("/")}
-                  className="text-red-600"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Sesión
+                  {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
                 </Button>
               </div>
             </div>
