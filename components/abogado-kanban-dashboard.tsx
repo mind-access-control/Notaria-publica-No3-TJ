@@ -429,6 +429,12 @@ export function AbogadoKanbanDashboard({
   const [showEscrituraModal, setShowEscrituraModal] = useState(false);
   const [selectedDocumentInfo, setSelectedDocumentInfo] = useState<{title: string, type: string, expediente: string} | null>(null);
   const [selectedTaxInfo, setSelectedTaxInfo] = useState<{title: string, expediente: string, details: any} | null>(null);
+  const [showRPPCConfirmationModal, setShowRPPCConfirmationModal] = useState(false);
+  const [rppcCompleted, setRppcCompleted] = useState(false);
+  const [rppcProcessing, setRppcProcessing] = useState(false);
+  const [showSATConfirmationModal, setShowSATConfirmationModal] = useState(false);
+  const [satCompleted, setSatCompleted] = useState(false);
+  const [satProcessing, setSatProcessing] = useState(false);
 
   // Lista completa de documentos para compraventa con documentos reales
   const documentosCompraventa = [
@@ -2288,50 +2294,41 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                 {/* Información de fecha programada para Firma agendada */}
                 {selectedExpediente.estado === "LISTO_PARA_FIRMA" && (
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-2">
                     {/* Información de la cita programada */}
                     {fechasFirmaProgramadas[selectedExpediente.id] && (
-                      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="h-4 w-4 text-green-600" />
-                          <h4 className="text-sm font-medium text-green-900">Cita de Firma Programada</h4>
-                        </div>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-gray-600" />
-                            <span className="text-gray-700">
-                              <strong>Fecha:</strong> {new Date(fechasFirmaProgramadas[selectedExpediente.id].fecha).toLocaleDateString('es-MX', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
-                            </span>
+                          <Calendar className="h-3 w-3 text-blue-600" />
+                          <h4 className="text-xs font-medium text-blue-900">Cita de Firma Programada</h4>
+                            </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-800">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-blue-600" />
+                            <span><strong>Fecha:</strong> {new Date(fechasFirmaProgramadas[selectedExpediente.id].fecha).toLocaleDateString('es-MX', { 
+                              weekday: 'short', 
+                              day: 'numeric', 
+                              month: 'short' 
+                            })}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-gray-600" />
-                            <span className="text-gray-700">
-                              <strong>Hora:</strong> {fechasFirmaProgramadas[selectedExpediente.id].hora}
-                            </span>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-blue-600" />
+                            <span><strong>Hora:</strong> {fechasFirmaProgramadas[selectedExpediente.id].hora}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-3 w-3 text-gray-600" />
-                            <span className="text-gray-700">
-                              <strong>Lugar:</strong> {fechasFirmaProgramadas[selectedExpediente.id].lugar}
-                            </span>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-blue-600" />
+                            <span><strong>Lugar:</strong> {fechasFirmaProgramadas[selectedExpediente.id].lugar}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Building className="h-3 w-3 text-gray-600" />
-                            <span className="text-gray-700">
-                              <strong>Sala:</strong> {fechasFirmaProgramadas[selectedExpediente.id].sala}
-                            </span>
+                          <div className="flex items-center gap-1">
+                            <Building className="h-3 w-3 text-blue-600" />
+                            <span><strong>Sala:</strong> {fechasFirmaProgramadas[selectedExpediente.id].sala}</span>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <div className="flex gap-3">
-                      <Button
+                    <div className="flex gap-2">
+                            <Button
                         onClick={() => {
                           console.log(`✅ Firma completada para ${selectedExpediente.numeroSolicitud}`);
                           addComentarioExpediente(selectedExpediente.id, "✅ FIRMA COMPLETADA: La firma del contrato de compraventa se ha realizado exitosamente. El expediente ha sido completado.", "Licenciado", "general");
@@ -2347,19 +2344,19 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             setSelectedExpediente(prev => prev ? { ...prev, estado: "COMPLETADO" as EstadoExpediente } : null);
                           }
                         }}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-8"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <CheckCircle className="h-3 w-3 mr-1" />
                         Firma Completada
                       </Button>
                       
                       <Button
                         variant="outline"
                         onClick={() => setShowRescheduleModal(true)}
-                        className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-50 text-sm h-8"
+                        className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50 text-xs h-7"
                       >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Reprogramar Firma
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Reprogramar
                       </Button>
                     </div>
                   </div>
@@ -2376,52 +2373,202 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       <span>•</span>
                       <span>2 Impuestos</span>
                       <span>•</span>
-                      <span className="text-orange-600">4 Pendientes</span>
+                      <span className="text-orange-600">{rppcCompleted && satCompleted ? 0 : (rppcCompleted ? 3 : satCompleted ? 3 : 6)} Pendientes</span>
                       <span>•</span>
-                      <span className="text-green-600">0 Completados</span>
+                      <span className="text-green-600">{rppcCompleted && satCompleted ? 6 : (rppcCompleted ? 3 : satCompleted ? 3 : 0)} Completados</span>
                     </div>
 
-                    {/* Secciones por entidad */}
+                    {/* Secciones por entidad - Pendientes primero, completados abajo */}
                     <div className="space-y-4">
-                      {/* RPPC de B.C. */}
-                      <div className="bg-white border border-gray-200 rounded-lg p-3">
+                      {/* SAT - Solo mostrar si no está completado */}
+                      {!satCompleted && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-gray-900">SAT</span>
+                            <Badge variant="outline" className={satCompleted ? "bg-green-100 text-green-700 border-green-300 text-xs" : "bg-orange-100 text-orange-700 border-orange-300 text-xs"}>
+                              {satCompleted ? "Completado" : "Pendiente"}
+                            </Badge>
+                          </div>
+                          <Button
+                            size="sm" 
+                            className={satCompleted ? "bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3" : "bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"}
+                            onClick={async () => {
+                              if (!satCompleted && !satProcessing) {
+                                setSatProcessing(true);
+                                
+                                // Simular procesamiento
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                
+                                // Marcar como completado
+                                setSatCompleted(true);
+                                setSatProcessing(false);
+                                
+                                // Mostrar modal de confirmación
+                                setShowSATConfirmationModal(true);
+                                
+                                // Agregar comentario al expediente
+                                if (selectedExpediente) {
+                                  addComentarioExpediente(
+                                    selectedExpediente.id,
+                                    "✅ SAT COMPLETADO: Los documentos e impuestos del SAT han sido entregados exitosamente.",
+                                    "Licenciado",
+                                    "general"
+                                  );
+                                }
+                              }
+                            }}
+                            disabled={satCompleted || satProcessing}
+                          >
+                            {satCompleted ? (
+                              <>
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Completado
+                              </>
+                            ) : satProcessing ? (
+                              <>
+                                <div className="h-3 w-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Procesando...
+                              </>
+                            ) : (
+                              <>
+                                <FileEdit className="h-3 w-3 mr-1" />
+                                Procesar Todo
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        {/* Tabla compacta */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                            <span className="text-gray-500">Declaración de Venta de Inmueble</span>
+                            <Button
+                              size="sm"
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedDocumentInfo({
+                                  title: "Declaración de Venta",
+                                  type: "document",
+                                  expediente: selectedExpediente.numeroSolicitud
+                                });
+                                setShowDocumentModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                            <span className="text-gray-500">Constancia de Situación Fiscal</span>
+                            <Button 
+                              size="sm"
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedDocumentInfo({
+                                  title: "Constancia de Situación Fiscal",
+                                  type: "document",
+                                  expediente: selectedExpediente.numeroSolicitud
+                                });
+                                setShowDocumentModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between text-xs py-1">
+                            <span className="text-gray-500">Impuesto Sobre la Renta por Venta de Inmueble</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs h-5 px-2"
+                              onClick={() => {
+                                setSelectedTaxInfo({
+                                  title: "ISR por Venta",
+                                  expediente: selectedExpediente.numeroSolicitud,
+                                  details: {
+                                    icon: "💰",
+                                    propertyValue: "$1,200,000.00",
+                                    taxRate: "1.5%",
+                                    total: "$18,000.00"
+                                  }
+                                });
+                                setShowTaxModal(true);
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      )}
+
+                      {/* RPPC de B.C. - Solo mostrar si no está completado */}
+                      {!rppcCompleted && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                             <Building className="h-4 w-4 text-blue-600" />
                             <span className="text-sm font-medium text-gray-900">RPPC de B.C.</span>
-                            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 text-xs">
-                              Pendiente
+                            <Badge variant="outline" className={rppcCompleted ? "bg-green-100 text-green-700 border-green-300 text-xs" : "bg-orange-100 text-orange-700 border-orange-300 text-xs"}>
+                              {rppcCompleted ? "Completado" : "Pendiente"}
                             </Badge>
                             </div>
                             <Button
-                            size="sm" 
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"
-                            onClick={async (event) => {
-                              console.log(`📄💰 Procesando documentos e impuestos RPPC para ${selectedExpediente.numeroSolicitud}`);
-                              const button = event?.target as HTMLButtonElement;
-                              const originalText = button.textContent;
-                              button.textContent = 'Procesando...';
-                              button.disabled = true;
-                              await new Promise(resolve => setTimeout(resolve, 3000));
-                              console.log(`✅ Documentos e impuestos RPPC procesados exitosamente para ${selectedExpediente.numeroSolicitud}`);
-                              button.textContent = '✓ Completado';
-                              button.className = 'bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3';
-                              setTimeout(() => {
-                                button.textContent = originalText;
-                                button.disabled = false;
-                                button.className = 'bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3';
-                              }, 2000);
+                              size="sm"
+                            className={rppcCompleted ? "bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3" : "bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"}
+                            onClick={async () => {
+                              if (!rppcCompleted && !rppcProcessing) {
+                                setRppcProcessing(true);
+                                
+                                // Simular procesamiento
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                
+                                // Marcar como completado
+                                setRppcCompleted(true);
+                                setRppcProcessing(false);
+                                
+                                // Mostrar modal de confirmación
+                                setShowRPPCConfirmationModal(true);
+                                
+                                // Agregar comentario al expediente
+                                if (selectedExpediente) {
+                                  addComentarioExpediente(
+                                    selectedExpediente.id,
+                                    "✅ RPPC COMPLETADO: Los documentos e impuestos del RPPC de B.C. han sido entregados exitosamente.",
+                                    "Licenciado",
+                                    "general"
+                                  );
+                                }
+                              }
                             }}
+                            disabled={rppcCompleted || rppcProcessing}
                           >
-                            <FileEdit className="h-3 w-3 mr-1" />
-                            Procesar Todo
-                          </Button>
+                            {rppcCompleted ? (
+                                <>
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                Completado
+                              </>
+                            ) : rppcProcessing ? (
+                              <>
+                                <div className="h-3 w-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Procesando...
+                                </>
+                              ) : (
+                                <>
+                                <FileEdit className="h-3 w-3 mr-1" />
+                                Procesar Todo
+                                </>
+                              )}
+                            </Button>
                           </div>
                         
                         {/* Tabla compacta */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
-                            <span className="text-gray-500">Escritura Pública</span>
+                            <span className="text-gray-500">Escritura Pública de Compraventa</span>
                             <Button
                               size="sm"
                               variant="outline" 
@@ -2439,7 +2586,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             </Button>
                           </div>
                           <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
-                            <span className="text-gray-500">Certificado de Libertad</span>
+                            <span className="text-gray-500">Certificado de Libertad de Gravamen</span>
                             <Button 
                               size="sm"
                               variant="outline" 
@@ -2457,7 +2604,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             </Button>
                           </div>
                           <div className="flex items-center justify-between text-xs py-1">
-                            <span className="text-gray-500">Impuesto Sobre Adquisición</span>
+                            <span className="text-gray-500">Impuesto Sobre Adquisición de Inmuebles</span>
                             <Button 
                               size="sm" 
                               variant="outline" 
@@ -2480,109 +2627,128 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             </Button>
                           </div>
                         </div>
-                          </div>
-
-
-                      {/* SAT */}
-                      <div className="bg-white border border-gray-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Building className="h-4 w-4 text-purple-600" />
-                            <span className="text-sm font-medium text-gray-900">SAT</span>
-                            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 text-xs">
-                              Pendiente
-                            </Badge>
-                          </div>
-                          <Button
-                            size="sm" 
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"
-                            onClick={async (event) => {
-                              console.log(`📄💰 Procesando documentos e impuestos SAT para ${selectedExpediente.numeroSolicitud}`);
-                              const button = event?.target as HTMLButtonElement;
-                              const originalText = button.textContent;
-                              button.textContent = 'Procesando...';
-                              button.disabled = true;
-                              await new Promise(resolve => setTimeout(resolve, 3000));
-                              console.log(`✅ Documentos e impuestos SAT procesados exitosamente para ${selectedExpediente.numeroSolicitud}`);
-                              button.textContent = '✓ Completado';
-                              button.className = 'bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3';
-                              setTimeout(() => {
-                                button.textContent = originalText;
-                                button.disabled = false;
-                                button.className = 'bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3';
-                              }, 2000);
-                            }}
-                          >
-                            <FileEdit className="h-3 w-3 mr-1" />
-                            Procesar Todo
-                          </Button>
-                        </div>
-                        
-                        {/* Tabla compacta */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
-                            <span className="text-gray-500">Declaración de Venta</span>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-xs h-5 px-2"
-                              onClick={() => {
-                                setSelectedDocumentInfo({
-                                  title: "Declaración de Venta",
-                                  type: "document",
-                                  expediente: selectedExpediente.numeroSolicitud
-                                });
-                                setShowDocumentModal(true);
-                              }}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
-                            <span className="text-gray-500">Constancia de Situación Fiscal</span>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-xs h-5 px-2"
-                              onClick={() => {
-                                setSelectedDocumentInfo({
-                                  title: "Constancia de Situación Fiscal",
-                                  type: "document",
-                                  expediente: selectedExpediente.numeroSolicitud
-                                });
-                                setShowDocumentModal(true);
-                              }}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <div className="flex items-center justify-between text-xs py-1">
-                            <span className="text-gray-500">ISR por Venta</span>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-xs h-5 px-2"
-                              onClick={() => {
-                                setSelectedTaxInfo({
-                                  title: "ISR por Venta de Inmueble",
-                                  expediente: selectedExpediente.numeroSolicitud,
-                                  details: {
-                                    icon: "🏛️",
-                                    saleValue: "$1,200,000.00",
-                                    acquisitionCost: "$800,000.00",
-                                    profit: "$400,000.00",
-                                    taxRate: "25%",
-                                    total: "$100,000.00"
-                                  }
-                                });
-                                setShowTaxModal(true);
-                              }}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
                       </div>
+                      )}
+
+                      {/* Secciones completadas - Mostrar al final */}
+                      {rppcCompleted && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-3 opacity-75">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-gray-900">RPPC de B.C.</span>
+                              <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-xs">
+                                Completado
+                              </Badge>
+                            </div>
+                            <Button
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3"
+                              disabled
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Completado
+                            </Button>
+                          </div>
+                          
+                          {/* Tabla compacta */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                              <span className="text-gray-500">Escritura Pública de Compraventa</span>
+                              <Button
+                                size="sm"
+                                variant="outline" 
+                                className="text-xs h-5 px-2"
+                                disabled
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                              <span className="text-gray-500">Certificado de Libertad de Gravamen</span>
+                              <Button 
+                                size="sm"
+                                variant="outline" 
+                                className="text-xs h-5 px-2"
+                                disabled
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between text-xs py-1">
+                              <span className="text-gray-500">Impuesto Sobre Adquisición de Inmuebles</span>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-xs h-5 px-2"
+                                disabled
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {satCompleted && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-3 opacity-75">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-purple-600" />
+                              <span className="text-sm font-medium text-gray-900">SAT</span>
+                              <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-xs">
+                                Completado
+                              </Badge>
+                            </div>
+                            <Button
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3"
+                              disabled
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Completado
+                            </Button>
+                          </div>
+                          
+                          {/* Tabla compacta */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                              <span className="text-gray-500">Declaración de Venta de Inmueble</span>
+                              <Button
+                                size="sm"
+                                variant="outline" 
+                                className="text-xs h-5 px-2"
+                                disabled
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
+                              <span className="text-gray-500">Constancia de Situación Fiscal</span>
+                              <Button 
+                                size="sm"
+                                variant="outline" 
+                                className="text-xs h-5 px-2"
+                                disabled
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between text-xs py-1">
+                              <span className="text-gray-500">Impuesto Sobre la Renta por Venta de Inmueble</span>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-xs h-5 px-2"
+                                disabled
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                     </div>
 
                     {/* Contrato de Compraventa - Al final de Post Firma */}
@@ -2656,21 +2822,70 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             return null;
                           })()}
 
-                          {/* Botón para agendar cita de firma - Mostrar cuando ambas partes están aprobadas */}
+                          {/* Mensaje de cita programada - Mostrar cuando ambas partes están aprobadas */}
                           {contractApprovals[selectedExpediente.id]?.comprador && contractApprovals[selectedExpediente.id]?.vendedor && (
-                            <div className="mb-4">
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                  setShowAppointmentModal(true);
-                              }}
-                              size="sm"
-                                className="w-full bg-green-600 hover:bg-green-700 text-white text-xs"
-                              >
-                                <Calendar className="h-3 w-3 mr-1" />
-                                Agendar cita para firma
-                            </Button>
-                          </div>
+                            <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-3 w-3 text-gray-600" />
+                                  <span className="text-xs font-medium text-gray-700">Cita Programada</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-2">
+                                <strong>lunes 28 de octubre a las 11:00 AM</strong>
+                              </p>
+                              <div className="flex gap-1">
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Aceptar cita y avanzar al siguiente estado
+                                    if (selectedExpediente) {
+                                      // Agregar comentario al expediente
+                                      addComentarioExpediente(
+                                        selectedExpediente.id,
+                                        `✅ CITA ACEPTADA: La cita para la firma de la escritura ha sido confirmada para el lunes 28 de octubre a las 11:00 AM.`,
+                                        "Licenciado",
+                                        "general"
+                                      );
+
+                                      // Mover expediente a "Listo para firma"
+                                      const success = updateExpedienteEstado(
+                                        selectedExpediente.id,
+                                        "LISTO_PARA_FIRMA",
+                                        licenciadoId || ""
+                                      );
+                                      
+                                      if (success) {
+                                        setExpedientes(prev => prev.map(exp => 
+                                          exp.id === selectedExpediente.id 
+                                            ? { ...exp, estado: "LISTO_PARA_FIRMA" as EstadoExpediente }
+                                            : exp
+                                        ));
+                                        
+                                        // Actualizar el expediente seleccionado para reflejar el cambio de estado
+                                        setSelectedExpediente(prev => prev ? { ...prev, estado: "LISTO_PARA_FIRMA" as EstadoExpediente } : null);
+                                      }
+                                    }
+                                  }}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs h-6 px-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
+                                >
+                                  Aceptar
+                                </Button>
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowAppointmentModal(true);
+                                  }}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs h-6 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                                >
+                                  Cambiar
+                                </Button>
+                              </div>
+                            </div>
                           )}
 
                           {/* Aprobaciones de las partes - Compacto */}
@@ -5400,6 +5615,94 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
               />
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmación RPPC */}
+      <Dialog open={showRPPCConfirmationModal} onOpenChange={setShowRPPCConfirmationModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              Procesamiento Completado
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              Los documentos e impuestos del RPPC han sido procesados exitosamente.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-3">
+            <div className="bg-blue-50 border border-blue-100 rounded-md p-3">
+              <h4 className="text-xs font-medium text-blue-800 mb-1">Documentos e Impuestos Entregados:</h4>
+              <ul className="text-xs text-blue-700 space-y-0.5">
+                <li>• Escritura Pública de Compraventa</li>
+                <li>• Certificado de Libertad de Gravamen</li>
+                <li>• Impuesto Sobre Adquisición de Inmuebles</li>
+              </ul>
+            </div>
+            
+            <div className="mt-3 p-2 bg-gray-50 border border-gray-100 rounded-md">
+              <div className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                <p className="text-xs text-gray-600">
+                  Los recibos de confirmación también llegarán al correo electrónico registrado.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowRPPCConfirmationModal(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm h-8 px-4"
+            >
+              Entendido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmación SAT */}
+      <Dialog open={showSATConfirmationModal} onOpenChange={setShowSATConfirmationModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              Procesamiento Completado
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              Los documentos e impuestos del SAT han sido procesados exitosamente.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-3">
+            <div className="bg-blue-50 border border-blue-100 rounded-md p-3">
+              <h4 className="text-xs font-medium text-blue-800 mb-1">Documentos e Impuestos Entregados:</h4>
+              <ul className="text-xs text-blue-700 space-y-0.5">
+                <li>• Declaración de Venta de Inmueble</li>
+                <li>• Constancia de Situación Fiscal</li>
+                <li>• Impuesto Sobre la Renta por Venta de Inmueble</li>
+              </ul>
+            </div>
+            
+            <div className="mt-3 p-2 bg-gray-50 border border-gray-100 rounded-md">
+              <div className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                <p className="text-xs text-gray-600">
+                  Los recibos de confirmación también llegarán al correo electrónico registrado.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowSATConfirmationModal(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm h-8 px-4"
+            >
+              Entendido
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
