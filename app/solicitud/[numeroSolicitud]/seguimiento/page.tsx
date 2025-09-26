@@ -451,7 +451,7 @@ export default function SeguimientoPage() {
                     <User className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="font-semibold text-gray-900">
-                    Lic. María González
+                    Lic. Carlos López Martínez
                   </h3>
                   <p className="text-sm text-gray-600">Licenciado en Derecho</p>
                   <Badge variant="outline" className="mt-2">

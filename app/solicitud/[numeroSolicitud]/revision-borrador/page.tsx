@@ -109,8 +109,8 @@ export default function RevisionBorradorPage() {
     saldoPendiente: 0,
     notario: {
       id: "lic-001",
-      nombre: "Dr. Xavier Ibañez Veramendi",
-      email: "xavier.ibanez@notaria3bc.com",
+      nombre: "Lic. Carlos López Martínez",
+      email: "carlos.lopez@notaria3bc.com",
       telefono: "+52 664 555 0123",
     },
     costoTotal: 25000,
@@ -276,7 +276,7 @@ export default function RevisionBorradorPage() {
               <CardContent className="space-y-3">
                 <div>
                   <p className="font-medium text-gray-900">
-                    Dr. Xavier Ibañez Veramendi
+                    Lic. Carlos López Martínez
                   </p>
                   <p className="text-sm text-gray-600">Derecho Notarial</p>
                 </div>
@@ -288,7 +288,7 @@ export default function RevisionBorradorPage() {
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500">Email:</span>
                     <span className="text-gray-900">
-                      xavier.ibanez@notaria3bc.com
+                      carlos.lopez@notaria3bc.com
                     </span>
                   </div>
                 </div>

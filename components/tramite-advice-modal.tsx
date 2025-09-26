@@ -58,6 +58,7 @@ export function TramiteAdviceModal({
   // Estados para preguntas dinámicas
   const [estadoCivil, setEstadoCivil] = useState<string>("");
   const [usarCredito, setUsarCredito] = useState<boolean>(false);
+  const [tipoPersona, setTipoPersona] = useState<string>("comprador");
 
   const tramite = tramites.find((t) => t.id === selectedTramiteId);
 
@@ -76,6 +77,7 @@ export function TramiteAdviceModal({
         setZonaInmueble(datosActuales.zonaInmueble || "");
         setEstadoCivil(datosActuales.estadoCivil || "");
         setUsarCredito(datosActuales.usarCredito || false);
+        setTipoPersona(datosActuales.tipoPersona || "comprador");
         setValorInmueble(datosActuales.valorInmueble || "");
       }
     }
@@ -114,15 +116,10 @@ export function TramiteAdviceModal({
       const valor = parseFloat(valorInmueble.replace(/[,$]/g, ""));
       const costosCalculados = calcularCostoVariable(
         selectedTramiteId,
-        valorInmueble,
-        zonaInmueble
+        valorInmueble
       );
 
       if (costosCalculados) {
-        console.log(
-          "ANTES de crear datosCalculados - zonaInmueble:",
-          zonaInmueble
-        );
         console.log(
           "ANTES de crear datosCalculados - estadoCivil:",
           estadoCivil
@@ -135,16 +132,15 @@ export function TramiteAdviceModal({
         const datosCalculados = {
           tramite: selectedTramiteId,
           valorInmueble: valorInmueble,
-          zonaInmueble: zonaInmueble,
           estadoCivil: estadoCivil,
           usarCredito: usarCredito,
+          tipoPersona: tipoPersona,
           costosCalculados: costosCalculados,
           fechaCalculo: new Date().toISOString(),
           id: `calc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         };
 
         console.log("Guardando datos desde modal:", datosCalculados);
-        console.log("Zona seleccionada:", zonaInmueble);
         console.log("Estado civil:", estadoCivil);
         console.log("Usar crédito:", usarCredito);
         console.log("Valor inmueble:", valorInmueble);
@@ -280,8 +276,7 @@ export function TramiteAdviceModal({
 
   const calcularCostoVariable = (
     tramiteId: string,
-    valor: string,
-    zona: string
+    valor: string
   ) => {
     const valorNum = parseFloat(valor.replace(/[,$]/g, ""));
     if (!valorNum || valorNum <= 0) return null;
@@ -295,27 +290,23 @@ export function TramiteAdviceModal({
       const aranceles = calcularArancelesTotales(valorNum, usarCredito);
       return {
         ...aranceles,
-        zona: zona,
         valorInmueble: valorNum,
       };
     }
 
     switch (tramiteId) {
       case "donacion":
-        porcentaje =
-          zona === "centro" ? 0.02 : zona === "zona-rio" ? 0.025 : 0.03;
+        porcentaje = 0.025; // Promedio de las zonas
         costoMinimo = 3000;
         costoMaximo = 8000;
         break;
       case "permuta":
-        porcentaje =
-          zona === "centro" ? 0.02 : zona === "zona-rio" ? 0.025 : 0.03;
+        porcentaje = 0.025; // Promedio de las zonas
         costoMinimo = 8000;
         costoMaximo = 25000;
         break;
       case "credito-hipotecario":
-        porcentaje =
-          zona === "centro" ? 0.015 : zona === "zona-rio" ? 0.02 : 0.025;
+        porcentaje = 0.02; // Promedio de las zonas
         costoMinimo = 8000;
         costoMaximo = 20000;
         break;
@@ -332,7 +323,6 @@ export function TramiteAdviceModal({
     return {
       costo: costoFinal,
       porcentaje: porcentaje * 100,
-      zona: zona,
     };
   };
 
@@ -356,6 +346,35 @@ export function TramiteAdviceModal({
         tooltip: "CLABE y banco para dispersión y comprobación de fondos",
       },
     ];
+
+    // Documentos específicos según el tipo de persona
+    if (tipoPersona === "vendedor") {
+      documentosBase.push(
+        {
+          texto: "Título de propiedad",
+          tooltip: "Escritura o documento que acredite la propiedad",
+        },
+        {
+          texto: "Predial al corriente",
+          tooltip: "Comprobante de pago del predial sin adeudos",
+        },
+        {
+          texto: "Constancia de no adeudo",
+          tooltip: "Del agua, luz y otros servicios",
+        }
+      );
+    } else if (tipoPersona === "comprador") {
+      documentosBase.push(
+        {
+          texto: "Comprobante de ingresos",
+          tooltip: "Estados de cuenta, recibos de nómina o declaraciones",
+        },
+        {
+          texto: "Avalúo del inmueble",
+          tooltip: "Avalúo bancario o comercial del inmueble a adquirir",
+        }
+      );
+    }
 
     const documentosAdicionales = [];
 
@@ -574,15 +593,15 @@ export function TramiteAdviceModal({
                                       indiceExistente
                                     ].estadoCivil = estado;
                                   } else {
-                                    datosExistentes.push({
-                                      tramite: selectedTramiteId,
-                                      zonaInmueble: zonaInmueble,
-                                      estadoCivil: estado,
-                                      usarCredito: usarCredito,
-                                      valorInmueble: valorInmueble,
-                                      fechaCalculo: new Date().toISOString(),
-                                      id: `temp-${Date.now()}`,
-                                    });
+                                  datosExistentes.push({
+                                    tramite: selectedTramiteId,
+                                    estadoCivil: estado,
+                                    usarCredito: usarCredito,
+                                    tipoPersona: tipoPersona,
+                                    valorInmueble: valorInmueble,
+                                    fechaCalculo: new Date().toISOString(),
+                                    id: `temp-${Date.now()}`,
+                                  });
                                   }
                                   localStorage.setItem(
                                     "arancelesCalculados",
@@ -627,9 +646,9 @@ export function TramiteAdviceModal({
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
-                                  zonaInmueble: zonaInmueble,
                                   estadoCivil: estadoCivil,
                                   usarCredito: true,
+                                  tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
                                   id: `temp-${Date.now()}`,
@@ -666,9 +685,9 @@ export function TramiteAdviceModal({
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
-                                  zonaInmueble: zonaInmueble,
                                   estadoCivil: estadoCivil,
                                   usarCredito: false,
+                                  tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
                                   id: `temp-${Date.now()}`,
@@ -686,6 +705,94 @@ export function TramiteAdviceModal({
                             }`}
                           >
                             No
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Pregunta de tipo de persona */}
+                      <div>
+                        <label className="text-base font-medium text-gray-700 mb-1 block">
+                          ¿Es comprador o vendedor?
+                        </label>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              setTipoPersona("comprador");
+                              // Guardar inmediatamente en localStorage
+                              const datosExistentes = JSON.parse(
+                                localStorage.getItem("arancelesCalculados") ||
+                                  "[]"
+                              );
+                              const indiceExistente = datosExistentes.findIndex(
+                                (item: any) =>
+                                  item.tramite === selectedTramiteId
+                              );
+                              if (indiceExistente >= 0) {
+                                datosExistentes[indiceExistente].tipoPersona =
+                                  "comprador";
+                              } else {
+                                datosExistentes.push({
+                                  tramite: selectedTramiteId,
+                                  estadoCivil: estadoCivil,
+                                  usarCredito: usarCredito,
+                                  tipoPersona: "comprador",
+                                  valorInmueble: valorInmueble,
+                                  fechaCalculo: new Date().toISOString(),
+                                  id: `temp-${Date.now()}`,
+                                });
+                              }
+                              localStorage.setItem(
+                                "arancelesCalculados",
+                                JSON.stringify(datosExistentes)
+                              );
+                            }}
+                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
+                              tipoPersona === "comprador"
+                                ? "bg-blue-100 border-blue-300 text-blue-700"
+                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Comprador
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTipoPersona("vendedor");
+                              // Guardar inmediatamente en localStorage
+                              const datosExistentes = JSON.parse(
+                                localStorage.getItem("arancelesCalculados") ||
+                                  "[]"
+                              );
+                              const indiceExistente = datosExistentes.findIndex(
+                                (item: any) =>
+                                  item.tramite === selectedTramiteId
+                              );
+                              if (indiceExistente >= 0) {
+                                datosExistentes[indiceExistente].tipoPersona =
+                                  "vendedor";
+                              } else {
+                                datosExistentes.push({
+                                  tramite: selectedTramiteId,
+                                  zonaInmueble: zonaInmueble,
+                                  estadoCivil: estadoCivil,
+                                  usarCredito: usarCredito,
+                                  tipoPersona: "vendedor",
+                                  valorInmueble: valorInmueble,
+                                  fechaCalculo: new Date().toISOString(),
+                                  id: `temp-${Date.now()}`,
+                                });
+                              }
+                              localStorage.setItem(
+                                "arancelesCalculados",
+                                JSON.stringify(datosExistentes)
+                              );
+                            }}
+                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
+                              tipoPersona === "vendedor"
+                                ? "bg-blue-100 border-blue-300 text-blue-700"
+                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Vendedor
                           </button>
                         </div>
                       </div>
@@ -748,109 +855,10 @@ export function TramiteAdviceModal({
                     Calculadora de Aranceles - Notaría 3 Tijuana
                   </CardTitle>
                   <p className="text-base text-blue-700 mt-1">
-                    Calcula los costos exactos según la zona y valor de tu
-                    inmueble
+                    Calcula los costos exactos según el valor de tu inmueble
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  {/* Selección de Zona */}
-                  <div className="bg-white p-4 rounded-lg border border-blue-100 mb-4">
-                    <h4 className="text-base font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      Selecciona la Zona de Tijuana
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-3">
-                      La zona determina los costos legales y el avalúo mínimo
-                      requerido
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      {[
-                        {
-                          id: "centro",
-                          nombre: "Centro",
-                          avaluoMinimo: 1200000,
-                          descripcion: "Zona comercial y residencial céntrica",
-                        },
-                        {
-                          id: "zona-rio",
-                          nombre: "Zona Río",
-                          avaluoMinimo: 1800000,
-                          descripcion: "Zona residencial de alto valor",
-                        },
-                        {
-                          id: "otras-zonas",
-                          nombre: "Otras Zonas",
-                          avaluoMinimo: 800000,
-                          descripcion: "Zonas residenciales periféricas",
-                        },
-                      ].map((zona) => (
-                        <button
-                          key={zona.id}
-                          onClick={() => {
-                            console.log("Seleccionando zona:", zona.id);
-                            setZonaInmueble(zona.id);
-                            // Guardar inmediatamente en localStorage para persistir
-                            const datosExistentes = JSON.parse(
-                              localStorage.getItem("arancelesCalculados") ||
-                                "[]"
-                            );
-                            // Buscar si ya existe un cálculo para este trámite
-                            const indiceExistente = datosExistentes.findIndex(
-                              (item: any) => item.tramite === selectedTramiteId
-                            );
-                            if (indiceExistente >= 0) {
-                              datosExistentes[indiceExistente].zonaInmueble =
-                                zona.id;
-                            } else {
-                              // Crear un objeto temporal si no existe
-                              datosExistentes.push({
-                                tramite: selectedTramiteId,
-                                zonaInmueble: zona.id,
-                                estadoCivil: estadoCivil,
-                                usarCredito: usarCredito,
-                                valorInmueble: valorInmueble,
-                                fechaCalculo: new Date().toISOString(),
-                                id: `temp-${Date.now()}`,
-                              });
-                            }
-                            localStorage.setItem(
-                              "arancelesCalculados",
-                              JSON.stringify(datosExistentes)
-                            );
-                            console.log(
-                              "Zona guardada inmediatamente:",
-                              zona.id
-                            );
-                          }}
-                          className={`p-3 rounded-lg border-2 text-left transition-all ${
-                            zonaInmueble === zona.id
-                              ? "border-blue-500 bg-blue-50 text-blue-900"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-25"
-                          }`}
-                        >
-                          <div className="font-medium text-base">
-                            {zona.nombre}
-                          </div>
-                          <div className="text-sm text-gray-500 mt-1">
-                            {zona.descripcion}
-                          </div>
-                          <div className="text-sm font-semibold text-green-600 mt-1">
-                            Avalúo mínimo: $
-                            {zona.avaluoMinimo.toLocaleString("es-MX")}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    {zonaInmueble && (
-                      <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
-                        <p className="text-sm text-green-800">
-                          ✅ Zona seleccionada: <strong>{zonaInmueble}</strong>
-                        </p>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Valor del Inmueble */}
                   <div className="bg-white p-4 rounded-lg border border-blue-100 mb-4">
@@ -885,6 +893,7 @@ export function TramiteAdviceModal({
                                 zonaInmueble: zonaInmueble,
                                 estadoCivil: estadoCivil,
                                 usarCredito: usarCredito,
+                                tipoPersona: tipoPersona,
                                 valorInmueble: e.target.value,
                                 fechaCalculo: new Date().toISOString(),
                                 id: `temp-${Date.now()}`,
@@ -904,86 +913,6 @@ export function TramiteAdviceModal({
                         />
                       </div>
 
-                      {zonaInmueble &&
-                        valorInmueble &&
-                        !isNaN(
-                          parseFloat(valorInmueble.replace(/[,$]/g, ""))
-                        ) &&
-                        (() => {
-                          const valor = parseFloat(
-                            valorInmueble.replace(/[,$]/g, "")
-                          );
-                          const zonaSeleccionada = [
-                            { id: "centro", avaluoMinimo: 1200000 },
-                            { id: "zona-rio", avaluoMinimo: 1800000 },
-                            { id: "otras-zonas", avaluoMinimo: 800000 },
-                          ].find((z) => z.id === zonaInmueble);
-
-                          const avaluoMinimo =
-                            zonaSeleccionada?.avaluoMinimo || 0;
-                          const valorMinimoPermitido = avaluoMinimo * 0.9; // 90% del avalúo mínimo
-                          const cumpleRequisito = valor >= valorMinimoPermitido;
-
-                          return (
-                            <div
-                              className={`p-3 rounded-lg border ${
-                                cumpleRequisito
-                                  ? "bg-green-50 border-green-200"
-                                  : "bg-red-50 border-red-200"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                <div
-                                  className={`w-2 h-2 rounded-full ${
-                                    cumpleRequisito
-                                      ? "bg-green-500"
-                                      : "bg-red-500"
-                                  }`}
-                                ></div>
-                                <span
-                                  className={`text-base font-medium ${
-                                    cumpleRequisito
-                                      ? "text-green-800"
-                                      : "text-red-800"
-                                  }`}
-                                >
-                                  {cumpleRequisito
-                                    ? "✅ Valor válido"
-                                    : "⚠️ Valor muy bajo"}
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-600 space-y-1">
-                                <div>
-                                  • Avalúo mínimo zona:{" "}
-                                  <strong>
-                                    ${avaluoMinimo.toLocaleString("es-MX")}
-                                  </strong>
-                                </div>
-                                <div>
-                                  • Valor mínimo permitido:{" "}
-                                  <strong>
-                                    $
-                                    {valorMinimoPermitido.toLocaleString(
-                                      "es-MX"
-                                    )}
-                                  </strong>
-                                </div>
-                                <div>
-                                  • Tu valor:{" "}
-                                  <strong>
-                                    ${valor.toLocaleString("es-MX")}
-                                  </strong>
-                                </div>
-                              </div>
-                              {!cumpleRequisito && (
-                                <div className="mt-2 text-xs text-red-700 font-medium">
-                                  💡 El valor debe ser al menos el 90% del
-                                  avalúo mínimo de la zona
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
                     </div>
                   </div>
 
