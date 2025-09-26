@@ -1,6 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+// Estilos CSS para animaciones de resaltado
+const highlightStyles = `
+  @keyframes highlightPulse {
+    0% { 
+      background-color: rgba(255, 235, 59, 0.3);
+      transform: scale(1);
+    }
+    50% { 
+      background-color: rgba(255, 235, 59, 0.9);
+      transform: scale(1.02);
+    }
+    100% { 
+      background-color: rgba(255, 235, 59, 0.8);
+      transform: scale(1);
+    }
+  }
+`;
+
+// Inyectar estilos en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement("style");
+  styleSheet.type = "text/css";
+  styleSheet.innerText = highlightStyles;
+  document.head.appendChild(styleSheet);
+}
 import Image from "next/image";
 import {
   Card,
@@ -72,6 +98,8 @@ import {
     Download,
     Printer,
     MapPin,
+    Archive,
+    Bell,
 } from "lucide-react";
 import {
   ExpedienteCompraventa,
@@ -87,6 +115,7 @@ import {
   aiValidationService,
   ExpedienteValidationReport,
 } from "@/lib/ai-validation-service";
+import { NotificationsPanel } from "@/components/notifications-panel";
 
 interface AbogadoKanbanDashboardProps {
   licenciadoId: string;
@@ -341,67 +370,67 @@ export function AbogadoKanbanDashboard({
       location: "Encabezado del contrato"
     },
     {
+      id: "volumen-ordinario",
+      text: "VOLUMEN ORDINARIO NÚMERO MIL TRESCIENTOS NOVENTA Y SIETE",
+      type: "Volumen Ordinario",
+      description: "Verificar número de volumen ordinario",
+      location: "Encabezado del contrato"
+    },
+    {
+      id: "datos-notario",
+      text: "XAVIER IBAÑEZ VERAMENDI",
+      type: "Datos del Notario",
+      description: "Verificar nombre del notario público",
+      location: "Encabezado del contrato"
+    },
+    {
       id: "nombre-comprador",
       text: "JONATHAN RUBEN HERNANDEZ GONZALEZ",
       type: "Nombre del Comprador",
       description: "Verificar nombre completo del comprador",
-      location: "Sección EL COMPRADOR"
+      location: "Sección del contrato de compraventa"
     },
     {
-      id: "nombre-vendedor",
-      text: "MARÍA ELENA RODRÍGUEZ GARCÍA",
-      type: "Nombre del Vendedor", 
-      description: "Verificar nombre completo del vendedor",
-      location: "Sección EL VENDEDOR"
+      id: "precio-inmueble",
+      text: "$853,500.00 (OCHOCIENTOS CINCUENTA Y TRES MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL)",
+      type: "Precio del Inmueble",
+      description: "Verificar precio pactado de la compraventa",
+      location: "Cláusula Segunda del contrato de compraventa"
     },
     {
       id: "direccion-inmueble",
-      text: "CALLE PRIVADA DE LAS FLORES #123, COLONIA CENTRO",
+      text: "CALLE CAPULÍN NUMERO TREINTA Y TRES",
       type: "Dirección del Inmueble",
-      description: "Verificar dirección completa del inmueble",
-      location: "Descripción del inmueble"
+      description: "Verificar dirección del inmueble",
+      location: "Cláusula Primera del contrato de compraventa"
     },
     {
-      id: "valor-venta",
-      text: "$2,950,000.00",
-      type: "Valor de Venta",
-      description: "Verificar monto total de la operación",
-      location: "Cláusula de precio"
+      id: "conjunto-habitacional",
+      text: "BOSQUES DE LOS HÉROES",
+      type: "Conjunto Habitacional",
+      description: "Verificar nombre del conjunto habitacional",
+      location: "Cláusula Primera del contrato de compraventa"
     },
     {
-      id: "fecha-contrato",
-      text: "15 de Enero de 2025",
-      type: "Fecha del Contrato",
-      description: "Verificar fecha de celebración del contrato",
-      location: "Fecha de firma"
+      id: "monto-credito",
+      text: "$788,500.00 (SETECIENTOS OCHENTA Y OCHO MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL)",
+      type: "Monto del Crédito",
+      description: "Verificar monto del crédito otorgado",
+      location: "Cláusula Primera del contrato de crédito"
     },
     {
-      id: "superficie-terreno",
-      text: "300.00 metros cuadrados",
-      type: "Superficie del Terreno",
-      description: "Verificar medidas del terreno",
-      location: "Descripción física"
+      id: "banco-acreditante",
+      text: "SCOTIABANK INVERLAT",
+      type: "Banco Acreditante",
+      description: "Verificar nombre del banco acreditante",
+      location: "Cláusula Primera del contrato de crédito"
     },
     {
-      id: "clave-catastral",
-      text: "123-456-789-012-345-678",
-      type: "Clave Catastral",
-      description: "Verificar clave catastral del inmueble",
-      location: "Datos registrales"
-    },
-    {
-      id: "estado-civil-comprador",
-      text: "CASADO",
-      type: "Estado Civil del Comprador",
-      description: "Verificar estado civil para efectos legales",
-      location: "Datos del comprador"
-    },
-    {
-      id: "forma-pago",
-      text: "CONTADO",
-      type: "Forma de Pago",
-      description: "Verificar modalidad de pago acordada",
-      location: "Condiciones de pago"
+      id: "plazo-credito",
+      text: "VEINTE AÑOS",
+      type: "Plazo del Crédito",
+      description: "Verificar plazo máximo del crédito",
+      location: "Cláusula Tercera del contrato de crédito"
     }
   ];
   const [manualValidations, setManualValidations] = useState<
@@ -427,7 +456,7 @@ export function AbogadoKanbanDashboard({
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showTaxModal, setShowTaxModal] = useState(false);
   const [showEscrituraModal, setShowEscrituraModal] = useState(false);
-  const [selectedDocumentInfo, setSelectedDocumentInfo] = useState<{title: string, type: string, expediente: string} | null>(null);
+  const [selectedDocumentInfo, setSelectedDocumentInfo] = useState<{title: string, type: string, expediente: string, archivo?: string} | null>(null);
   const [selectedTaxInfo, setSelectedTaxInfo] = useState<{title: string, expediente: string, details: any} | null>(null);
   const [showRPPCConfirmationModal, setShowRPPCConfirmationModal] = useState(false);
   const [rppcCompleted, setRppcCompleted] = useState(false);
@@ -435,6 +464,11 @@ export function AbogadoKanbanDashboard({
   const [showSATConfirmationModal, setShowSATConfirmationModal] = useState(false);
   const [satCompleted, setSatCompleted] = useState(false);
   const [satProcessing, setSatProcessing] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Estado para el documento real del contrato
+  const [documentoContratoReal, setDocumentoContratoReal] = useState<string>("");
+  const [cargandoDocumento, setCargandoDocumento] = useState(false);
 
   // Lista completa de documentos para compraventa con documentos reales
   const documentosCompraventa = [
@@ -815,142 +849,20 @@ export function AbogadoKanbanDashboard({
   // Funciones para navegación en el contrato
   const handleNextSearch = () => {
     if (currentSearchIndex < contractSearchData.length - 1) {
-      setCurrentSearchIndex(currentSearchIndex + 1);
-      setHighlightedText(contractSearchData[currentSearchIndex + 1].text);
+      const nextIndex = currentSearchIndex + 1;
+      setCurrentSearchIndex(nextIndex);
+      setHighlightedText(contractSearchData[nextIndex].text);
     }
   };
 
   const handlePreviousSearch = () => {
     if (currentSearchIndex > 0) {
-      setCurrentSearchIndex(currentSearchIndex - 1);
-      setHighlightedText(contractSearchData[currentSearchIndex - 1].text);
+      const prevIndex = currentSearchIndex - 1;
+      setCurrentSearchIndex(prevIndex);
+      setHighlightedText(contractSearchData[prevIndex].text);
     }
   };
 
-  const handleGoToText = () => {
-    const currentItem = contractSearchData[currentSearchIndex];
-    console.log(`Navegando a: ${currentItem.text} en ${currentItem.location}`);
-    
-    // Crear overlay con resaltado amarillo sobre el PDF
-    const pdfContainer = document.querySelector('.pdf-viewer-container');
-    if (pdfContainer) {
-      // Limpiar highlights anteriores
-      const existingHighlights = pdfContainer.querySelectorAll('.pdf-highlight');
-      existingHighlights.forEach(highlight => highlight.remove());
-      
-      // Obtener dimensiones del contenedor
-      const containerRect = pdfContainer.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
-      
-      // Crear nuevo highlight con posicionamiento más preciso
-      const highlight = document.createElement('div');
-      highlight.className = 'pdf-highlight';
-      highlight.style.cssText = `
-        position: absolute;
-        background-color: rgba(255, 235, 59, 0.6);
-        border: 2px solid #ffc107;
-        border-radius: 3px;
-        pointer-events: none;
-        z-index: 10;
-        animation: highlightPulse 3s ease-in-out;
-        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
-      `;
-      
-      // Posiciones más precisas basadas en la estructura real del contrato PDF
-      // Usando coordenadas más específicas para mejor alineación
-      const positions = {
-        'instrumento-numero': { 
-          top: `${Math.round(containerHeight * 0.08)}px`, 
-          left: `${Math.round(containerWidth * 0.28)}px`, 
-          width: `${Math.round(containerWidth * 0.44)}px`, 
-          height: `${Math.round(containerHeight * 0.045)}px` 
-        },
-        'nombre-comprador': { 
-          top: `${Math.round(containerHeight * 0.21)}px`, 
-          left: `${Math.round(containerWidth * 0.15)}px`, 
-          width: `${Math.round(containerWidth * 0.32)}px`, 
-          height: `${Math.round(containerHeight * 0.035)}px` 
-        },
-        'nombre-vendedor': { 
-          top: `${Math.round(containerHeight * 0.175)}px`, 
-          left: `${Math.round(containerWidth * 0.15)}px`, 
-          width: `${Math.round(containerWidth * 0.32)}px`, 
-          height: `${Math.round(containerHeight * 0.035)}px` 
-        },
-        'direccion-inmueble': { 
-          top: `${Math.round(containerHeight * 0.31)}px`, 
-          left: `${Math.round(containerWidth * 0.12)}px`, 
-          width: `${Math.round(containerWidth * 0.52)}px`, 
-          height: `${Math.round(containerHeight * 0.055)}px` 
-        },
-        'valor-venta': { 
-          top: `${Math.round(containerHeight * 0.405)}px`, 
-          left: `${Math.round(containerWidth * 0.18)}px`, 
-          width: `${Math.round(containerWidth * 0.65)}px`, 
-          height: `${Math.round(containerHeight * 0.075)}px` 
-        },
-        'fecha-contrato': { 
-          top: `${Math.round(containerHeight * 0.87)}px`, 
-          left: `${Math.round(containerWidth * 0.68)}px`, 
-          width: `${Math.round(containerWidth * 0.28)}px`, 
-          height: `${Math.round(containerHeight * 0.035)}px` 
-        },
-        'superficie-terreno': { 
-          top: `${Math.round(containerHeight * 0.27)}px`, 
-          left: `${Math.round(containerWidth * 0.12)}px`, 
-          width: `${Math.round(containerWidth * 0.36)}px`, 
-          height: `${Math.round(containerHeight * 0.035)}px` 
-        },
-        'clave-catastral': { 
-          top: `${Math.round(containerHeight * 0.35)}px`, 
-          left: `${Math.round(containerWidth * 0.12)}px`, 
-          width: `${Math.round(containerWidth * 0.46)}px`, 
-          height: `${Math.round(containerHeight * 0.035)}px` 
-        },
-        'estado-civil-comprador': { 
-          top: `${Math.round(containerHeight * 0.23)}px`, 
-          left: `${Math.round(containerWidth * 0.58)}px`, 
-          width: `${Math.round(containerWidth * 0.18)}px`, 
-          height: `${Math.round(containerHeight * 0.03)}px` 
-        },
-        'forma-pago': { 
-          top: `${Math.round(containerHeight * 0.445)}px`, 
-          left: `${Math.round(containerWidth * 0.18)}px`, 
-          width: `${Math.round(containerWidth * 0.65)}px`, 
-          height: `${Math.round(containerHeight * 0.055)}px` 
-        }
-      };
-      
-      const position = positions[currentItem.id as keyof typeof positions] || { 
-        top: `${Math.round(containerHeight * 0.2)}px`, 
-        left: `${Math.round(containerWidth * 0.2)}px`, 
-        width: `${Math.round(containerWidth * 0.6)}px`, 
-        height: `${Math.round(containerHeight * 0.08)}px` 
-      };
-      
-      Object.assign(highlight.style, position);
-      
-      pdfContainer.appendChild(highlight);
-      
-      // Remover el highlight después de 6 segundos (más tiempo para ver mejor)
-      setTimeout(() => {
-        if (highlight.parentNode) {
-          highlight.remove();
-        }
-      }, 6000);
-      
-      // Scroll suave hacia el área resaltada
-      const iframe = pdfContainer.querySelector('iframe');
-      if (iframe) {
-        iframe.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      
-      // Mostrar información adicional en consola para debugging
-      console.log(`Resaltando: ${currentItem.text}`);
-      console.log(`Posición:`, position);
-    }
-  };
 
   // Inicializar el texto destacado cuando se abre el modal del contrato
   useEffect(() => {
@@ -959,6 +871,22 @@ export function AbogadoKanbanDashboard({
       setCurrentSearchIndex(0);
     }
   }, [selectedDocument?.id]);
+
+  // Mostrar automáticamente el texto resaltado cuando cambie el índice de búsqueda
+  useEffect(() => {
+    if (selectedDocument?.id === "contrato-borrador" && contractSearchData.length > 0) {
+      // Asegurar que el índice esté dentro del rango válido
+      const validIndex = Math.max(0, Math.min(currentSearchIndex, contractSearchData.length - 1));
+      
+      // Actualizar el texto destacado primero
+      setHighlightedText(contractSearchData[validIndex].text);
+      
+      // Pequeño delay para asegurar que el DOM esté listo
+      setTimeout(() => {
+        mostrarTextoResaltado(validIndex);
+      }, 500);
+    }
+  }, [currentSearchIndex, selectedDocument?.id]);
 
   // Función para abrir documento
   const handleOpenDocument = (documento: any) => {
@@ -976,6 +904,146 @@ export function AbogadoKanbanDashboard({
     console.log("Abriendo documento:", documentoConArchivo);
     setSelectedDocument(documentoConArchivo);
     setShowDocumentViewer(true);
+  };
+
+  // Función para cargar el documento real del contrato
+  const cargarDocumentoReal = async () => {
+    if (documentoContratoReal) return; // Ya está cargado
+    
+    setCargandoDocumento(true);
+    try {
+      const response = await fetch('/documento-contrato-real.txt');
+      const texto = await response.text();
+      setDocumentoContratoReal(texto);
+    } catch (error) {
+      console.error('Error al cargar el documento:', error);
+      // Fallback con contenido del documento
+      const contenidoFallback = `INSTRUMENTO NÚMERO TREINTA Y DOS MIL SEISCIENTOS OCHENTA Y NUEVE
+
+VOLUMEN ORDINARIO NÚMERO MIL TRESCIENTOS NOVENTA Y SIETE
+
+En la ciudad de Tijuana, Baja California, a los siete días del mes de marzo del año dos mil dieciocho, Yo, Doctor en Derecho XAVIER IBAÑEZ VERAMENDI, Titular de la Notaría Pública número Tres del Estado de Baja California, hago constar:
+
+I.- EL CONTRATO DE COMPRAVENTA que celebran por una parte la sociedad mercantil denominada "DESARROLLOS INMOBILIARIOS SADASI", SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, representado en este acto por la Contadora MARIA TERESA VIEYRA MALPICA, de cuya personalidad más adelante haré mérito, a quien en lo sucesivo se le denominará la "PARTE VENDEDORA", y de la otra, JONATHAN RUBEN HERNANDEZ GONZALEZ, a quien en lo sucesivo se le denominará la "PARTE COMPRADORA".
+
+II.- EL CONTRATO DE APERTURA DE CRÉDITO SIMPLE CON INTERÉS, QUE CELEBRAN DE UNA PARTE SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, a quien en el presente se le denominará el "BANCO" o el "ACREDITANTE", representado por las Licenciadas MA. GUADALUPE TINAJERO SANCHEZ Y CLEMENTINA CLAUDIA GUERRERO LEGASPI, y de otra parte JONATHAN RUBEN HERNANDEZ GONZALEZ, a quien en lo sucesivo se denominará como EL "ACREDITADO".
+
+III.- EL CONTRATO DE HIPOTECA que otorga JONATHAN RUBEN HERNANDEZ GONZALEZ, a quienes en lo sucesivo se les denominará indistintamente como el "ACREDITADO" y en su caso, el "COACREDITADO", y/o conjuntamente el "GARANTE HIPOTECARIO", en favor de SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, representado como ha quedado dicho.
+
+CLÁUSULAS
+
+PRIMERA.- la sociedad mercantil denominada "DESARROLLOS INMOBILIARIOS SADASI", SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, representada como ha quedado dicho en el proemio, enajena a JONATHAN RUBEN HERNANDEZ GONZALEZ, quien adquiere para sí, libre de todo gravamen y responsabilidad y sin reserva, ni limitación alguna, la vivienda de interés social marcada con el número UNO, del lote SIETE, edificio UNO, NIVEL PLANTA BAJA, de la manzana SEIS, ubicada en la calle CAPULÍN NUMERO TREINTA Y TRES, perteneciente al Conjunto Urbano de tipo Habitacional de interés social denominado "BOSQUES DE LOS HÉROES" ubicado en el Municipio de Tecamac, Estado de México.
+
+SEGUNDA.- El precio pactado por ambas partes como el justo y legitimo de la compraventa consignada en la cláusula anterior es la cantidad de $853,500.00 (OCHOCIENTOS CINCUENTA Y TRES MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL) que la parte vendedora recibe en el acto de la firma del presente instrumento de la parte compradora.
+
+PRIMERA.- MONTO DEL CRÉDITO.- SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, con el carácter de "ACREDITANTE", otorga en favor de JONATHAN RUBEN HERNANDEZ GONZALEZ en su carácter de "ACREDITADO" y en su caso, de "COACREDITADO" un crédito simple hasta por la cantidad de $788,500.00 (SETECIENTOS OCHENTA Y OCHO MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL).
+
+TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "COACREDITADO" SE OBLIGA(N) A PAGAR AL "ACREDITANTE" EL CAPITAL, LOS INTERESES Y DEMÁS PRESTACIONES DERIVADAS DE ESTE CONTRATO, EN UN PLAZO MÁXIMO E IMPRORROGABLE DE VEINTE AÑOS, CONTADOS A PARTIR DE LA FECHA DE FIRMA DE ESTE INSTRUMENTO.`;
+      setDocumentoContratoReal(contenidoFallback);
+    }
+    setCargandoDocumento(false);
+  };
+
+  // Función para mostrar el texto resaltado automáticamente
+  const mostrarTextoResaltado = async (forceIndex?: number) => {
+    // Cargar el documento real si no está cargado
+    if (!documentoContratoReal) {
+      await cargarDocumentoReal();
+    }
+    
+    // Usar el índice forzado o el actual
+    const indexToUse = forceIndex !== undefined ? forceIndex : currentSearchIndex;
+    const validIndex = Math.max(0, Math.min(indexToUse, contractSearchData.length - 1));
+    const currentItem = contractSearchData[validIndex];
+    
+    if (!currentItem) {
+      return;
+    }
+    
+    // Debug temporal para verificar la secuencia
+    console.log(`Mostrando sección ${validIndex + 1}/${contractSearchData.length}: ${currentItem.type}`);
+    
+    // Buscar el texto en el documento real
+    const documentContainer = document.querySelector('.pdf-viewer-container');
+    if (documentContainer) {
+      // Remover resaltados anteriores
+      const existingHighlights = documentContainer.querySelectorAll('.text-highlight-overlay');
+      existingHighlights.forEach(highlight => highlight.remove());
+      
+      // Crear un overlay con el documento real para resaltar el texto
+      const overlay = document.createElement('div');
+      overlay.className = 'text-highlight-overlay';
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        z-index: 1000;
+        padding: 20px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+      `;
+      
+      // Crear contenido del documento con resaltado
+      const documentContent = documentoContratoReal || `INSTRUMENTO NÚMERO TREINTA Y DOS MIL SEISCIENTOS OCHENTA Y NUEVE
+
+VOLUMEN ORDINARIO NÚMERO MIL TRESCIENTOS NOVENTA Y SIETE
+
+En la ciudad de Tijuana, Baja California, a los siete días del mes de marzo del año dos mil dieciocho, Yo, Doctor en Derecho XAVIER IBAÑEZ VERAMENDI, Titular de la Notaría Pública número Tres del Estado de Baja California, hago constar:
+
+I.- EL CONTRATO DE COMPRAVENTA que celebran por una parte la sociedad mercantil denominada "DESARROLLOS INMOBILIARIOS SADASI", SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, representado en este acto por la Contadora MARIA TERESA VIEYRA MALPICA, de cuya personalidad más adelante haré mérito, a quien en lo sucesivo se le denominará la "PARTE VENDEDORA", y de la otra, JONATHAN RUBEN HERNANDEZ GONZALEZ, a quien en lo sucesivo se le denominará la "PARTE COMPRADORA".
+
+II.- EL CONTRATO DE APERTURA DE CRÉDITO SIMPLE CON INTERÉS, QUE CELEBRAN DE UNA PARTE SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, a quien en el presente se le denominará el "BANCO" o el "ACREDITANTE", representado por las Licenciadas MA. GUADALUPE TINAJERO SANCHEZ Y CLEMENTINA CLAUDIA GUERRERO LEGASPI, y de otra parte JONATHAN RUBEN HERNANDEZ GONZALEZ, a quien en lo sucesivo se denominará como EL "ACREDITADO".
+
+CLÁUSULAS
+
+PRIMERA.- la sociedad mercantil denominada "DESARROLLOS INMOBILIARIOS SADASI", SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, representada como ha quedado dicho en el proemio, enajena a JONATHAN RUBEN HERNANDEZ GONZALEZ, quien adquiere para sí, libre de todo gravamen y responsabilidad y sin reserva, ni limitación alguna, la vivienda de interés social marcada con el número UNO, del lote SIETE, edificio UNO, NIVEL PLANTA BAJA, de la manzana SEIS, ubicada en la calle CAPULÍN NUMERO TREINTA Y TRES, perteneciente al Conjunto Urbano de tipo Habitacional de interés social denominado "BOSQUES DE LOS HÉROES" ubicado en el Municipio de Tecamac, Estado de México.
+
+SEGUNDA.- El precio pactado por ambas partes como el justo y legitimo de la compraventa consignada en la cláusula anterior es la cantidad de $853,500.00 (OCHOCIENTOS CINCUENTA Y TRES MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL) que la parte vendedora recibe en el acto de la firma del presente instrumento de la parte compradora.
+
+PRIMERA.- MONTO DEL CRÉDITO.- SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, con el carácter de "ACREDITANTE", otorga en favor de JONATHAN RUBEN HERNANDEZ GONZALEZ en su carácter de "ACREDITADO" y en su caso, de "COACREDITADO" un crédito simple hasta por la cantidad de $788,500.00 (SETECIENTOS OCHENTA Y OCHO MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL).
+
+TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "COACREDITADO" SE OBLIGA(N) A PAGAR AL "ACREDITANTE" EL CAPITAL, LOS INTERESES Y DEMÁS PRESTACIONES DERIVADAS DE ESTE CONTRATO, EN UN PLAZO MÁXIMO E IMPRORROGABLE DE VEINTE AÑOS, CONTADOS A PARTIR DE LA FECHA DE FIRMA DE ESTE INSTRUMENTO.`;
+      
+      // Resaltar el texto específico
+      const highlightedContent = documentContent.replace(
+        new RegExp(currentItem.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+        `<mark style="background-color: #fef08a; padding: 2px 4px; border-radius: 2px; font-weight: bold; color: #92400e;">$&</mark>`
+      );
+      
+      overlay.innerHTML = `
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px;">
+          ${highlightedContent}
+        </div>
+      `;
+      
+      documentContainer.appendChild(overlay);
+      
+      // Hacer scroll al texto resaltado
+      setTimeout(() => {
+        const highlightedElement = overlay.querySelector('mark');
+        if (highlightedElement) {
+          highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
+      // Cerrar automáticamente después de 3 segundos
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.remove();
+        }
+      }, 3000);
+    }
+  };
+
+  // Función para ir al texto específico en el documento real (mantener para compatibilidad)
+  const handleGoToText = async () => {
+    await mostrarTextoResaltado();
   };
 
   // Función para aceptar documento
@@ -1324,6 +1392,13 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     setExpedientes(expedientesLicenciado);
     setFilteredExpedientes(expedientesLicenciado);
     
+    // Guardar en localStorage para sincronización con ArchivoDashboard
+    try {
+      localStorage.setItem('expedientes', JSON.stringify(expedientesLicenciado));
+    } catch (error) {
+      console.error('Error al guardar expedientes en localStorage:', error);
+    }
+    
     // Cargar validaciones existentes para cada expediente
     const existingValidations: Record<string, ExpedienteValidationReport> = {};
     expedientesLicenciado.forEach(expediente => {
@@ -1386,6 +1461,13 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       setValidationReports(testValidations);
     }
   }, [licenciadoId || ""]);
+
+  // Cargar documento real cuando se seleccione el contrato
+  useEffect(() => {
+    if (selectedDocument?.id === "contrato-borrador" && !documentoContratoReal && !cargandoDocumento) {
+      cargarDocumentoReal();
+    }
+  }, [selectedDocument]);
 
   useEffect(() => {
     // Filtrar expedientes
@@ -1676,14 +1758,12 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   };
 
   // Función para manejar validación del contrato
-  const handleContractValidation = (
+  const handleContractValidation = async (
     expedienteId: string,
     fieldId: string,
     approved: boolean,
     reason?: string
   ) => {
-    console.log(`📋 Validación de contrato: ${expedienteId} - ${fieldId} - ${approved ? "APROBADO" : "RECHAZADO"}`);
-
     setContractValidations(prev => {
       const updated = {
         ...prev,
@@ -1692,7 +1772,6 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           [fieldId]: { approved, reason },
         },
       };
-      console.log(`📝 Validaciones de contrato actualizadas para ${expedienteId}:`, updated[expedienteId]);
       return updated;
     });
 
@@ -1708,6 +1787,21 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
       approved ? "general" : "requerimiento"
     );
 
+    // Si se aprobó, pasar automáticamente a la siguiente sección
+    if (approved && currentSearchIndex < contractSearchData.length - 1) {
+      // Esperar un momento para que el usuario vea la validación
+      setTimeout(() => {
+        const nextIndex = currentSearchIndex + 1;
+        setCurrentSearchIndex(nextIndex);
+        setHighlightedText(contractSearchData[nextIndex].text);
+        
+        // Mostrar automáticamente el texto de la siguiente sección
+        setTimeout(() => {
+          mostrarTextoResaltado(nextIndex);
+        }, 500);
+      }, 1000);
+    }
+
     // Verificar si se han validado todos los campos del contrato
     const updatedValidations = {
       ...contractValidations[expedienteId],
@@ -1718,8 +1812,6 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     const allValidated = totalValidated === contractSearchData.length;
     
     if (allValidated) {
-      console.log(`🎯 ¡TODAS LAS VALIDACIONES DEL CONTRATO COMPLETADAS! Cerrando automáticamente.`);
-      
       // Agregar comentario final
       addComentarioExpediente(
         expedienteId,
@@ -2263,9 +2355,15 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                            onClick={() => {
                              const documentoContrato = {
                                id: "contrato-borrador",
-                               nombre: "Contrato de Compraventa - Borrador",
-                             descripcion: "Documento en expediente preliminar - Generado automáticamente",
-                               archivo: "http://localhost:3000/documentos_legales/Contrato_Compraventa_Borrador.pdf",
+                               nombre: selectedExpediente.estado === "PROYECTO_ESCRITURA" 
+                                 ? "Contrato de Compraventa - Proyecto" 
+                                 : "Contrato de Compraventa - Borrador",
+                             descripcion: selectedExpediente.estado === "PROYECTO_ESCRITURA"
+                               ? "Documento de proyecto de escritura - Generado automáticamente"
+                               : "Documento en expediente preliminar - Generado automáticamente",
+                               archivo: selectedExpediente.estado === "PROYECTO_ESCRITURA"
+                                 ? "/contrato-compraventa.md"
+                                 : "http://localhost:3000/documentos_legales/Contrato_Compraventa_Borrador.pdf",
                                estado: "pendiente",
                                requerido: true,
                                fechaSubida: null,
@@ -2384,14 +2482,14 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       {!satCompleted && (
                         <div className="bg-white border border-gray-200 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
                             <Building className="h-4 w-4 text-purple-600" />
                             <span className="text-sm font-medium text-gray-900">SAT</span>
                             <Badge variant="outline" className={satCompleted ? "bg-green-100 text-green-700 border-green-300 text-xs" : "bg-orange-100 text-orange-700 border-orange-300 text-xs"}>
                               {satCompleted ? "Completado" : "Pendiente"}
                             </Badge>
-                          </div>
-                          <Button
+                            </div>
+                            <Button
                             size="sm" 
                             className={satCompleted ? "bg-green-600 hover:bg-green-700 text-white text-xs h-6 px-3" : "bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-3"}
                             onClick={async () => {
@@ -2452,7 +2550,8 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                 setSelectedDocumentInfo({
                                   title: "Declaración de Venta",
                                   type: "document",
-                                  expediente: selectedExpediente.numeroSolicitud
+                                  expediente: selectedExpediente.numeroSolicitud,
+                                  archivo: "/Contrato_Compraventa_NT3-2025-001.pdf"
                                 });
                                 setShowDocumentModal(true);
                               }}
@@ -2490,9 +2589,9 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   expediente: selectedExpediente.numeroSolicitud,
                                   details: {
                                     icon: "💰",
-                                    propertyValue: "$1,200,000.00",
+                                    propertyValue: "$853,500.00",
                                     taxRate: "1.5%",
-                                    total: "$18,000.00"
+                                    total: "$12,802.50"
                                   }
                                 });
                                 setShowTaxModal(true);
@@ -2615,9 +2714,14 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   expediente: selectedExpediente.numeroSolicitud,
                                   details: {
                                     icon: "💰",
-                                    propertyValue: "$1,200,000.00",
-                                    taxRate: "2.5%",
-                                    total: "$30,000.00"
+                                    propertyValue: "$853,500.00",
+                                    taxRate: "1.33%",
+                                    total: "$11,398.60",
+                                    breakdown: {
+                                      porTramos: "$379.10",
+                                      sobretasa: "$11,398.60",
+                                      subtotal: "$11,398.60"
+                                    }
                                   }
                                 });
                                 setShowTaxModal(true);
@@ -2751,6 +2855,59 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                     </div>
 
+                    {/* Botón de Archivar - Solo mostrar cuando ambos trámites estén completados */}
+                    {rppcCompleted && satCompleted && (
+                      <div className="flex justify-end mt-6">
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm h-9 px-4"
+                          onClick={() => {
+                            if (selectedExpediente) {
+                              // Actualizar estado del expediente
+                              const expedienteActualizado = { 
+                                ...selectedExpediente, 
+                                estado: "ARCHIVADO_POST_FIRMA" as EstadoExpediente 
+                              };
+                              
+                              setExpedientes(prev => prev.map(exp => 
+                                exp.id === selectedExpediente.id 
+                                  ? expedienteActualizado
+                                  : exp
+                              ));
+                              
+                              // Actualizar expediente seleccionado
+                              setSelectedExpediente(expedienteActualizado);
+                              
+                              // Guardar en localStorage para sincronización con ArchivoDashboard
+                              try {
+                                const expedientesGuardados = localStorage.getItem('expedientes');
+                                let expedientes = expedientesGuardados ? JSON.parse(expedientesGuardados) : [];
+                                expedientes = expedientes.map((exp: ExpedienteCompraventa) => 
+                                  exp.id === selectedExpediente.id ? expedienteActualizado : exp
+                                );
+                                localStorage.setItem('expedientes', JSON.stringify(expedientes));
+                              } catch (error) {
+                                console.error('Error al guardar en localStorage:', error);
+                              }
+                              
+                              // Agregar comentario
+                              addComentarioExpediente(
+                                selectedExpediente.id,
+                                "📦 EXPEDIENTE ARCHIVADO: Toda la documentación post-firma ha sido completada y el expediente ha sido archivado.",
+                                "Licenciado",
+                                "general"
+                              );
+                              
+                              // Cerrar modal
+                              setShowExpedienteModal(false);
+                            }
+                          }}
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          Archivar Expediente
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Contrato de Compraventa - Al final de Post Firma */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
@@ -2840,6 +2997,25 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                     e.stopPropagation();
                                     // Aceptar cita y avanzar al siguiente estado
                                     if (selectedExpediente) {
+                                      // Crear la cita y guardarla en localStorage
+                                      const nuevaCita = {
+                                        id: `cita-${selectedExpediente.id}-${Date.now()}`,
+                                        expedienteId: selectedExpediente.id,
+                                        cliente: `${selectedExpediente.comprador.nombre} ${selectedExpediente.comprador.apellidoPaterno}`,
+                                        tipo: "Firma de Escritura",
+                                        fecha: "2025-10-28",
+                                        hora: "11:00",
+                                        estado: "confirmada",
+                                        ubicacion: "Oficina Principal",
+                                        notas: `Expediente: ${selectedExpediente.numeroSolicitud} - ${selectedExpediente.tipoTramite}`,
+                                        fechaCreacion: new Date().toISOString()
+                                      };
+
+                                      // Obtener citas existentes del localStorage
+                                      const citasExistentes = JSON.parse(localStorage.getItem('citas') || '[]');
+                                      const nuevasCitas = [...citasExistentes, nuevaCita];
+                                      localStorage.setItem('citas', JSON.stringify(nuevasCitas));
+
                                       // Agregar comentario al expediente
                                       addComentarioExpediente(
                                         selectedExpediente.id,
@@ -4321,14 +4497,43 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   };
 
   return (
-    <div className="space-y-6">
-      {/* Filtros y búsqueda */}
+    <div className="space-y-4">
+      {/* Búsqueda y Notificaciones */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Búsqueda */}
+        <div className="flex-1 max-w-lg">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Buscar expedientes por número, cliente o vendedor..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white/70 border-white/30 text-slate-700 placeholder-slate-400 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-200 transition-all duration-200"
+            />
+          </div>
+        </div>
+
+        {/* Botón de Notificaciones Simplificado */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="bg-white/70 border-white/30 text-slate-700 hover:bg-white hover:border-slate-300 shadow-sm p-2"
+          >
+            <Bell className="h-4 w-4" />
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center">
+              2
+            </Badge>
+          </Button>
+        </div>
+      </div>
+
+      {/* Filtros */}
       <div className="bg-white/50 backdrop-blur-sm rounded-xl border border-white/20 shadow-sm p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-          {/* Filtro por tipo de trámite - Botones modernos */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium text-slate-600 mr-2">Filtrar:</span>
-            
+          
             {TRAMITE_TYPES.filter(tipo => !tipo.submenu && tipo.id !== "todos").map((tipo) => (
               <button
                 key={tipo.id}
@@ -4356,20 +4561,6 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
               <FileText className="h-4 w-4" />
               Todos
             </button>
-            </div>
-
-            {/* Búsqueda */}
-            <div className="flex-1">
-              <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                placeholder="Buscar expedientes..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/70 border-white/30 text-slate-700 placeholder-slate-400 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-200 transition-all duration-200"
-                />
-              </div>
-            </div>
           </div>
       </div>
 
@@ -4535,7 +4726,9 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                       <h3 className="text-base font-semibold text-blue-900">
-                        {selectedDocument?.id === "contrato-borrador" ? "Validación del Contrato" : "Extracción de Datos con IA"}
+                        {selectedDocument?.id === "contrato-borrador" ? "Validación del Contrato" : 
+                         selectedDocument?.nombre === "CURP" ? "Datos de la CURP" : 
+                         selectedDocument?.nombre === "RFC y Constancia de Situación Fiscal (CSF)" ? "Datos del RFC" : "Extracción de Datos con IA"}
                       </h3>
                         {selectedDocument?.id === "contrato-borrador" && selectedExpediente && (
                           <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 text-xs">
@@ -4571,6 +4764,10 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                     <p className="text-xs text-blue-600 mt-1">
                       {selectedDocument?.id === "contrato-borrador" 
                         ? "Validación guiada del borrador del contrato de compraventa"
+                        : selectedDocument?.nombre === "CURP"
+                        ? "Información extraída de la constancia CURP"
+                        : selectedDocument?.nombre === "RFC y Constancia de Situación Fiscal (CSF)"
+                        ? "Información extraída de la constancia RFC"
                         : "Datos extraídos del documento"
                       }
                     </p>
@@ -4591,15 +4788,18 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           }}
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Validar
+                          {currentSearchIndex < contractSearchData.length - 1 ? "Validar y Continuar" : "Validar"}
                         </Button>
                 )}
                       
                       {/* Sección de búsqueda */}
-                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs text-blue-700">Buscar en el documento:</p>
-                          <span className="text-xs text-blue-800 font-medium">
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-blue-700 font-medium">Mostrando automáticamente:</p>
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          </div>
+                          <span className="text-sm text-blue-800 font-semibold">
                             {contractSearchData[currentSearchIndex]?.type}
                           </span>
                         </div>
@@ -4617,7 +4817,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           })()
                         }`}>
                           <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-blue-900">
+                          <p className="text-sm font-semibold text-blue-900">
                             "{highlightedText}"
                           </p>
                             {(() => {
@@ -4633,22 +4833,22 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             })()}
                         </div>
                         </div>
-                        <div className="mt-1">
-                          <p className="text-xs text-blue-600 mb-0.5">
+                        <div className="mt-2">
+                          <p className="text-xs text-blue-600 mb-1 font-medium">
                             {contractSearchData[currentSearchIndex]?.location}
                           </p>
-                          <p className="text-xs text-blue-700">
+                          <p className="text-sm text-blue-700">
                             {contractSearchData[currentSearchIndex]?.description}
                           </p>
                         </div>
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="mt-1 text-xs bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 h-6"
+                          className="mt-2 text-sm bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 h-8 w-full"
                           onClick={handleGoToText}
                         >
-                          <Eye className="h-2 w-2 mr-1" />
-                          Ir al Texto
+                          <Eye className="h-3 w-3 mr-2" />
+                          Ver Texto Completo
                         </Button>
                       </div>
 
@@ -4665,7 +4865,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           Anterior
                         </Button>
                         <div className="flex flex-col items-center">
-                        <span className="text-xs text-blue-600">
+                        <span className="text-sm text-blue-600 font-medium">
                           {currentSearchIndex + 1} de {contractSearchData.length}
                         </span>
                           {selectedExpediente && (
@@ -4780,6 +4980,206 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                </>
                 )}
                           </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : selectedDocument?.nombre === "CURP" ? (
+                    /* Panel específico para documentos CURP */
+                    <div className="flex-1 overflow-y-auto p-3 space-y-4">
+                      {/* Clave CURP */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Clave CURP *
+                        </label>
+                        <input
+                          type="text"
+                          value="HEGJ860702HMCRNN07"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800 font-mono"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Nombre completo */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Nombre completo *
+                        </label>
+                        <input
+                          type="text"
+                          value="JONATHAN RUBEN HERNANDEZ GONZALEZ"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Fecha de nacimiento */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Fecha de nacimiento
+                        </label>
+                        <input
+                          type="text"
+                          value="02/07/1986"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Género */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Género
+                        </label>
+                        <input
+                          type="text"
+                          value="HOMBRE"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Entidad de registro */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Entidad de registro
+                        </label>
+                        <input
+                          type="text"
+                          value="MEXICO"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Número de acta */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Número de acta
+                        </label>
+                        <input
+                          type="text"
+                          value="2710"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Información del documento */}
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 className="text-sm font-semibold text-blue-700 mb-2">Información del Documento</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-blue-600">Tipo:</span>
+                            <span className="text-blue-800 font-medium">Constancia CURP</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-blue-600">Autoridad:</span>
+                            <span className="text-blue-800 font-medium">RENAPO</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-blue-600">Vigencia:</span>
+                            <span className="text-blue-800 font-medium">Indefinida</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : selectedDocument?.nombre === "RFC y Constancia de Situación Fiscal (CSF)" ? (
+                    /* Panel específico para documentos RFC */
+                    <div className="flex-1 overflow-y-auto p-3 space-y-4">
+                      {/* RFC */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          RFC *
+                        </label>
+                        <input
+                          type="text"
+                          value="HEGJ8607022G5"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800 font-mono"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Nombre completo */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Nombre completo *
+                        </label>
+                        <input
+                          type="text"
+                          value="JONATHAN RUBEN HERNANDEZ GONZALEZ"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* CURP */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          CURP
+                        </label>
+                        <input
+                          type="text"
+                          value="HEGJ860702HMCRNN07"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800 font-mono"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Fecha de inscripción */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Fecha de inscripción
+                        </label>
+                        <input
+                          type="text"
+                          value="31-01-2008"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Fecha de inicio de operaciones */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Fecha de inicio de operaciones
+                        </label>
+                        <input
+                          type="text"
+                          value="25-01-2008"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Fecha de emisión */}
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          Fecha de emisión
+                        </label>
+                        <input
+                          type="text"
+                          value="07-02-2008"
+                          className="w-full px-2 py-1 border border-blue-200 rounded-md text-xs bg-blue-50 text-blue-800"
+                          readOnly
+                        />
+                      </div>
+
+                      {/* Información del documento */}
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <h4 className="text-sm font-semibold text-blue-700 mb-2">Información del Documento</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-blue-600">Tipo:</span>
+                            <span className="text-blue-800 font-medium">Constancia RFC</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-blue-600">Autoridad:</span>
+                            <span className="text-blue-800 font-medium">SAT</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-blue-600">Vigencia:</span>
+                            <span className="text-blue-800 font-medium">Indefinida</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -5444,34 +5844,44 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
       {/* Modal para ver documentos PDF */}
       <Dialog open={showDocumentModal} onOpenChange={setShowDocumentModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-900">
               {selectedDocumentInfo?.title} - {selectedDocumentInfo?.expediente}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="bg-gray-100 p-8 text-center rounded border">
-            <div className="text-6xl mb-4">📄</div>
-            <p className="text-gray-600 mb-4">Vista previa del documento PDF</p>
-            <p className="text-sm text-gray-500">{selectedDocumentInfo?.title}</p>
-            <p className="text-sm text-gray-500">Expediente: {selectedDocumentInfo?.expediente}</p>
-            <div className="mt-4 flex gap-2 justify-center">
-              <Button
-                onClick={() => {
-                  window.open('/formatos/compraventa.pdf', '_blank');
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Abrir PDF Completo
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowDocumentModal(false)}
-              >
-                Cerrar
-              </Button>
-            </div>
+          <div className="bg-white border rounded-lg overflow-hidden" style={{ height: 'calc(95vh - 120px)' }}>
+            {selectedDocumentInfo?.archivo ? (
+              <iframe
+                src={selectedDocumentInfo.archivo}
+                className="w-full h-full border-0"
+                title={selectedDocumentInfo.title}
+              />
+            ) : (
+              <div className="bg-gray-100 p-8 text-center rounded border h-full flex flex-col items-center justify-center">
+                <div className="text-6xl mb-4">📄</div>
+                <p className="text-gray-600 mb-4">Vista previa del documento PDF</p>
+                <p className="text-sm text-gray-500">{selectedDocumentInfo?.title}</p>
+                <p className="text-sm text-gray-500">Expediente: {selectedDocumentInfo?.expediente}</p>
+                <div className="mt-4 flex gap-2 justify-center">
+                  <Button
+                    onClick={() => {
+                      window.open('/formatos/compraventa.pdf', '_blank');
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Abrir PDF Completo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDocumentModal(false)}
+                  >
+                    Cerrar
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -5529,6 +5939,28 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                   <span className="font-semibold">{selectedTaxInfo.details.year}</span>
                 </div>
               )}
+              
+              {/* Desglose del ISAI */}
+              {selectedTaxInfo?.details?.breakdown && (
+                <div className="mt-3 p-3 bg-blue-50 rounded border">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-2">Desglose del ISAI:</h4>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Por tramos:</span>
+                      <span className="font-medium">{selectedTaxInfo.details.breakdown.porTramos}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Sobretasa 0.4%:</span>
+                      <span className="font-medium">{selectedTaxInfo.details.breakdown.sobretasa}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-semibold border-t border-blue-200 pt-1">
+                      <span className="text-blue-800">Subtotal:</span>
+                      <span className="text-blue-800">{selectedTaxInfo.details.breakdown.subtotal}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <hr className="my-2" />
               <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-gray-800">Total a Pagar:</span>
@@ -5537,14 +5969,6 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
             </div>
             
             <div className="mt-4 flex gap-2 justify-center">
-              <Button
-                onClick={() => {
-                  alert(`Simulando pago del ${selectedTaxInfo?.title}...`);
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                Simular Pago
-              </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowTaxModal(false)}
@@ -5583,7 +6007,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                   onClick={() => {
                     // Descargar el PDF
                     const link = document.createElement('a');
-                    link.href = '/Escritura.pdf';
+                    link.href = '/Escrituras dummy.pdf';
                     link.download = `Escritura_Final_${selectedExpediente?.numeroSolicitud}.pdf`;
                     link.click();
                   }}
@@ -5597,7 +6021,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                   className="text-xs h-7"
                   onClick={() => {
                     // Imprimir el PDF
-                    window.open('/Escritura.pdf', '_blank');
+                    window.open('/Escrituras dummy.pdf', '_blank');
                   }}
                 >
                   <Printer className="h-3 w-3 mr-1" />
@@ -5609,7 +6033,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
             {/* Visor de PDF */}
             <div className="flex-1 bg-gray-100 relative">
               <iframe
-                src="/Escritura.pdf"
+                src="/Escrituras dummy.pdf"
                 className="w-full h-full border-0"
                 title="Escritura Final"
               />
@@ -5705,6 +6129,13 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Panel de Notificaciones */}
+      <NotificationsPanel
+        licenciadoId={licenciadoId}
+        isOpen={showNotifications}
+        onToggle={() => setShowNotifications(!showNotifications)}
+      />
     </div>
   );
 }

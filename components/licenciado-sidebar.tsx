@@ -120,7 +120,7 @@ export function LicenciadoSidebar({
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Navigation Menu */}
-        <div className="p-4 space-y-2">
+        <div className={`space-y-2 ${isCollapsed ? "p-2" : "p-4"}`}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -130,13 +130,13 @@ export function LicenciadoSidebar({
                 key={item.id}
                 variant="ghost"
                 onClick={() => onTabChange(item.id)}
-                className={`w-full justify-start h-auto p-3 transition-all duration-200 focus:outline-none focus:ring-0 text-white hover:text-white focus:text-white ${
-                  isActive
-                    ? "bg-white/20 shadow-lg border-l-4 border-white/60 focus:bg-white/25"
-                    : "hover:bg-white/10 focus:bg-white/10"
+                className={`w-full transition-all duration-200 focus:outline-none focus:ring-0 text-white hover:text-white focus:text-white ${
+                  isCollapsed 
+                    ? `justify-center p-3 ${isActive ? "bg-white/20 shadow-lg" : "hover:bg-white/10"}`
+                    : `justify-start h-auto p-3 ${isActive ? "bg-white/20 shadow-lg border-l-4 border-white/60 focus:bg-white/25" : "hover:bg-white/10 focus:bg-white/10"}`
                 }`}
               >
-                <div className="flex items-center gap-3 w-full">
+                <div className={`flex items-center w-full ${isCollapsed ? "justify-center" : "gap-3"}`}>
                   <Icon className="h-5 w-5 flex-shrink-0 text-white" />
                   {!isCollapsed && (
                     <div className="flex-1 min-w-0">
@@ -151,7 +151,7 @@ export function LicenciadoSidebar({
         </div>
 
         {/* Bottom Menu */}
-        <div className="p-4 border-t border-white/10 space-y-2">
+        <div className={`border-t border-white/10 space-y-2 ${isCollapsed ? "p-2" : "p-4"}`}>
           {bottomMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -161,13 +161,13 @@ export function LicenciadoSidebar({
                 key={item.id}
                 variant="ghost"
                 onClick={() => onTabChange(item.id)}
-                className={`w-full justify-start h-auto p-3 transition-all duration-200 focus:outline-none focus:ring-0 text-white hover:text-white focus:text-white ${
-                  isActive
-                    ? "bg-white/20 shadow-lg border-l-4 border-white/60 focus:bg-white/25"
-                    : "hover:bg-white/10 focus:bg-white/10"
+                className={`w-full transition-all duration-200 focus:outline-none focus:ring-0 text-white hover:text-white focus:text-white ${
+                  isCollapsed 
+                    ? `justify-center p-3 ${isActive ? "bg-white/20 shadow-lg" : "hover:bg-white/10"}`
+                    : `justify-start h-auto p-3 ${isActive ? "bg-white/20 shadow-lg border-l-4 border-white/60 focus:bg-white/25" : "hover:bg-white/10 focus:bg-white/10"}`
                 }`}
               >
-                <div className="flex items-center gap-3 w-full">
+                <div className={`flex items-center w-full ${isCollapsed ? "justify-center" : "gap-3"}`}>
                   <Icon className="h-5 w-5 flex-shrink-0 text-white" />
                   {!isCollapsed && (
                     <div className="flex-1 min-w-0">
@@ -183,13 +183,15 @@ export function LicenciadoSidebar({
       </div>
 
       {/* Footer - Logout */}
-      <div className="p-4 border-t border-white/10 bg-blue-900/50">
+      <div className={`border-t border-white/10 bg-blue-900/50 ${isCollapsed ? "p-2" : "p-4"}`}>
         <Button
           variant="ghost"
           onClick={onLogout}
-          className="w-full justify-start h-auto p-3 text-white hover:text-red-500 hover:bg-transparent focus:bg-transparent transition-all duration-200"
+          className={`w-full text-white hover:text-red-500 hover:bg-transparent focus:bg-transparent transition-all duration-200 ${
+            isCollapsed ? "justify-center p-3" : "justify-start h-auto p-3"
+          }`}
         >
-          <div className="flex items-center gap-3 w-full">
+          <div className={`flex items-center w-full ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <LogOut className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && (
               <div className="flex-1 min-w-0">

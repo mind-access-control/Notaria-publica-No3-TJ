@@ -177,6 +177,7 @@ export type EstadoExpediente =
   | "LISTO_PARA_FIRMA"
   | "POST_FIRMA"
   | "COMPLETADO"
+  | "ARCHIVADO_POST_FIRMA"
   | "CANCELADO";
 
 export interface CostosCompraventa {
