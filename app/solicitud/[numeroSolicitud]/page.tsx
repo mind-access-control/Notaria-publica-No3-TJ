@@ -238,10 +238,10 @@ export default function SolicitudStatusPage() {
         // También cargar datos mock para compatibilidad (solo si no hay datos persistentes)
         if (!dataPersistente) {
           const data = await getSolicitudByNumber(numeroSolicitud);
-          if (data) {
-            setSolicitud(data);
-          } else {
-            setError("Solicitud no encontrada");
+        if (data) {
+          setSolicitud(data);
+        } else {
+          setError("Solicitud no encontrada");
           }
         } else {
           // Si tenemos datos persistentes, crear datos mock básicos para compatibilidad
@@ -569,9 +569,9 @@ export default function SolicitudStatusPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="max-w-6xl mx-auto px-4 py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Cargando...</p>
           </div>
         </div>
@@ -583,13 +583,13 @@ export default function SolicitudStatusPage() {
   if (accessDenied) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <div className="max-w-2xl mx-auto px-4 py-12">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Acceso Denegado
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              No tienes permisos para acceder a esta solicitud
+          <div className="max-w-2xl mx-auto px-4 py-12">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Acceso Denegado
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                No tienes permisos para acceder a esta solicitud
             </p>
           </div>
         </div>
@@ -601,7 +601,7 @@ export default function SolicitudStatusPage() {
   if (error || !solicitud) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
             <p className="text-gray-600">
@@ -614,7 +614,7 @@ export default function SolicitudStatusPage() {
     );
   }
 
-  return (
+    return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
@@ -671,19 +671,19 @@ export default function SolicitudStatusPage() {
                 className="bg-emerald-600 h-3 rounded-full transition-all duration-500"
                 style={{ width: `${calcularProgreso()}%` }}
               ></div>
-            </div>
+                </div>
             <div className="flex items-center justify-between text-sm text-gray-600">
               <span>{calcularProgreso()}% completado</span>
               <span>
                 {documentos.filter((doc) => doc.subido).length} de{" "}
                 {documentos.length} documentos
-              </span>
-            </div>
+                </span>
+              </div>
 
             {/* Pasos del flujo horizontal compacto */}
             <div className="mt-6">
               <div className="flex items-center justify-between relative">
-                {/* Línea conectora */}
+              {/* Línea conectora */}
                 <div className="absolute top-8 left-0 right-0 h-0.5 bg-gray-200 z-0"></div>
 
                 {PASOS_FLUJO.map((paso, index) => (
@@ -706,7 +706,7 @@ export default function SolicitudStatusPage() {
                       ) : (
                         <span className="text-sm font-bold">{index + 1}</span>
                       )}
-                    </div>
+                </div>
 
                     {/* Contenido del paso */}
                     <div className="mt-3 text-center max-w-32">
@@ -716,9 +716,9 @@ export default function SolicitudStatusPage() {
                             ? "text-green-700"
                             : paso.activo
                             ? "text-blue-700"
-                            : "text-gray-500"
-                        }`}
-                      >
+                      : "text-gray-500"
+                  }`}
+                >
                         {paso.titulo}
                       </h4>
                       <p
@@ -732,10 +732,10 @@ export default function SolicitudStatusPage() {
                       >
                         {paso.descripcion}
                       </p>
-                    </div>
-                  </div>
-                ))}
               </div>
+            </div>
+                ))}
+          </div>
 
               {/* Estado actual destacado */}
               <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -744,7 +744,7 @@ export default function SolicitudStatusPage() {
                     <span className="text-white text-sm font-bold">
                       {PASOS_FLUJO.findIndex((p) => p.activo) + 1}
                     </span>
-                  </div>
+        </div>
                   <div>
                     <h4 className="font-semibold text-blue-800">
                       Estado actual: {getPasoActual().titulo}
@@ -752,7 +752,7 @@ export default function SolicitudStatusPage() {
                     <p className="text-sm text-blue-600">
                       {getPasoActual().descripcion}
                     </p>
-                  </div>
+      </div>
                 </div>
               </div>
             </div>
@@ -783,7 +783,7 @@ export default function SolicitudStatusPage() {
                   🔔 Seguimiento y Notificaciones
                 </button>
               </nav>
-            </div>
+    </div>
 
             <div className="p-6">
               {/* Tab: Documentos */}
@@ -847,7 +847,7 @@ export default function SolicitudStatusPage() {
                         📁 Subir Todos
                       </label>
                     </div>
-                  </div>
+          </div>
 
                   {/* Documentos individuales */}
                   <div className="space-y-4">
@@ -861,11 +861,11 @@ export default function SolicitudStatusPage() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3">
                             <span className="text-lg">
                               {documento.subido ? "✅" : "📄"}
                             </span>
-                            <div>
+                        <div>
                               <h4 className="font-medium text-gray-900">
                                 {documento.nombre}
                               </h4>
@@ -884,9 +884,9 @@ export default function SolicitudStatusPage() {
                                   ).toLocaleTimeString()}
                                 </p>
                               )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
                             {documento.subido ? (
                               <>
                                 <button
@@ -919,9 +919,9 @@ export default function SolicitudStatusPage() {
                               >
                                 Subir
                               </button>
-                            )}
-                          </div>
-                        </div>
+                        )}
+                      </div>
+                    </div>
 
                         {/* Input de archivo oculto */}
                         <input
@@ -933,9 +933,9 @@ export default function SolicitudStatusPage() {
                           }
                           className="hidden"
                         />
-                      </div>
+              </div>
                     ))}
-                  </div>
+        </div>
 
                   {/* Botón para proceder al pago */}
                   {canProceedToPayment() && !paymentCompleted && (
@@ -946,7 +946,7 @@ export default function SolicitudStatusPage() {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">
                           ¡Documentos Completados!
-                        </h3>
+        </h3>
                         <p className="text-gray-600 mb-6">
                           Todos los documentos requeridos han sido subidos y
                           procesados. Ahora puedes proceder con el pago para
@@ -972,7 +972,7 @@ export default function SolicitudStatusPage() {
                         <h3 className="text-xl font-bold text-gray-900 mb-2">
                           ¡Pago Confirmado!
                         </h3>
-                        <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-4">
                           Tu solicitud ha sido activada exitosamente. El equipo
                           legal revisará tus documentos y te notificará sobre el
                           siguiente paso.
@@ -980,11 +980,11 @@ export default function SolicitudStatusPage() {
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                           <CheckCircle className="h-4 w-4" />
                           Solicitud Activa
-                        </div>
                       </div>
                     </div>
+                    </div>
                   )}
-                </div>
+                  </div>
               )}
 
               {/* Tab: Seguimiento y Notificaciones */}
@@ -1000,7 +1000,7 @@ export default function SolicitudStatusPage() {
                         En tiempo real
                       </span>
                     </div>
-                  </div>
+              </div>
 
                   <div className="space-y-6">
                     {/* Estado Actual */}
@@ -1008,7 +1008,7 @@ export default function SolicitudStatusPage() {
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                           <CheckCircle className="h-5 w-5 text-emerald-600" />
-                        </div>
+              </div>
                         <div>
                           <h4 className="font-semibold text-emerald-800">
                             Estado Actual del Trámite
@@ -1016,8 +1016,8 @@ export default function SolicitudStatusPage() {
                           <p className="text-sm text-emerald-600">
                             {getPasoActual().titulo}
                           </p>
-                        </div>
-                      </div>
+                            </div>
+                          </div>
                       <p className="text-gray-700 mb-3">
                         {getPasoActual().descripcion}
                       </p>
@@ -1026,7 +1026,7 @@ export default function SolicitudStatusPage() {
                           <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                           <span className="text-sm text-gray-600">
                             Progreso: {calcularProgreso()}%
-                          </span>
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -1045,7 +1045,7 @@ export default function SolicitudStatusPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+              </div>
 
                     {/* Historial de Actividades */}
                     <div className="bg-white border border-gray-200 rounded-lg">
@@ -1056,7 +1056,7 @@ export default function SolicitudStatusPage() {
                         <p className="text-sm text-gray-600 mt-1">
                           Todas las acciones realizadas en tu solicitud
                         </p>
-                      </div>
+              </div>
                       <div className="p-4 space-y-4">
                         {/* Actividades simuladas */}
                         <div className="flex gap-4">
@@ -1080,13 +1080,13 @@ export default function SolicitudStatusPage() {
                               registrada en el sistema.
                             </p>
                           </div>
-                        </div>
+      </div>
 
                         <div className="flex gap-4">
                           <div className="flex-shrink-0">
                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                               <FileText className="h-4 w-4 text-blue-600" />
-                            </div>
+    </div>
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
@@ -1242,19 +1242,19 @@ export default function SolicitudStatusPage() {
               </button>
             </div>
 
-            <div className="space-y-6">
+    <div className="space-y-6">
               {/* Información del archivo */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold mb-3 text-gray-800">
                   📋 Información del Archivo
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
+        <div>
                     <span className="text-gray-600 font-medium">Nombre:</span>
                     <p className="font-semibold text-gray-900">
                       {selectedDoc.archivo?.name || selectedDoc.nombre}
-                    </p>
-                  </div>
+            </p>
+          </div>
                   <div>
                     <span className="text-gray-600 font-medium">Tamaño:</span>
                     <p className="font-semibold text-gray-900">
@@ -1282,8 +1282,8 @@ export default function SolicitudStatusPage() {
                           new Date(selectedDoc.fechaSubida).toLocaleTimeString()
                         : "N/A"}
                     </p>
-                  </div>
                 </div>
+                  </div>
               </div>
 
               {/* Vista previa del archivo */}
@@ -1291,7 +1291,7 @@ export default function SolicitudStatusPage() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold mb-3 text-gray-800">
                     👁️ Vista Previa del Documento
-                  </h4>
+                    </h4>
                   <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
                     {selectedDoc.archivo.type.startsWith("image/") ? (
                       <div className="text-center p-4">
@@ -1302,8 +1302,8 @@ export default function SolicitudStatusPage() {
                         />
                         <p className="text-sm text-gray-600 mt-3 font-medium">
                           📷 {selectedDoc.archivo.name}
-                        </p>
-                      </div>
+                    </p>
+                  </div>
                     ) : selectedDoc.archivo.type === "application/pdf" ? (
                       <div className="w-full h-[70vh]">
                         <iframe
@@ -1319,9 +1319,9 @@ export default function SolicitudStatusPage() {
                             )}{" "}
                             MB
                           </p>
-                        </div>
-                      </div>
-                    ) : (
+                </div>
+        </div>
+      ) : (
                       <div className="text-center py-12">
                         <div className="text-6xl text-gray-400 mb-4">📄</div>
                         <p className="text-lg font-medium text-gray-700 mb-2">
@@ -1338,10 +1338,10 @@ export default function SolicitudStatusPage() {
                         <p className="text-sm text-gray-500 mt-4">
                           Vista previa no disponible para este tipo de archivo
                         </p>
-                      </div>
+            </div>
                     )}
+          </div>
                   </div>
-                </div>
               )}
 
               {/* Datos extraídos por OCR */}
@@ -1359,10 +1359,10 @@ export default function SolicitudStatusPage() {
                         >
                           <span className="text-gray-600 w-40 font-medium capitalize">
                             {key.replace(/([A-Z])/g, " $1").trim()}:
-                          </span>
+                                </span>
                           <span className="font-semibold text-gray-900 flex-1">
                             {String(value)}
-                          </span>
+                                </span>
                         </div>
                       )
                     )}
@@ -1390,7 +1390,7 @@ export default function SolicitudStatusPage() {
                       📥 Descargar
                     </button>
                   )}
-                </div>
+                  </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowModal(false)}
@@ -1404,11 +1404,11 @@ export default function SolicitudStatusPage() {
                   >
                     ✏️ Corregir Datos
                   </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                          </div>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
       )}
 
       {/* Modal de edición de datos */}
@@ -1425,7 +1425,7 @@ export default function SolicitudStatusPage() {
               >
                 ✕
               </button>
-            </div>
+                    </div>
 
             <div className="space-y-6">
               {/* Información del documento */}
@@ -1436,8 +1436,8 @@ export default function SolicitudStatusPage() {
                 <p className="text-blue-700">{editingData.nombre}</p>
                 <p className="text-sm text-blue-600">
                   {editingData.descripcion}
-                </p>
-              </div>
+                      </p>
+                    </div>
 
               {/* Formulario de edición */}
               <div className="bg-gray-50 p-6 rounded-lg">
@@ -1460,9 +1460,9 @@ export default function SolicitudStatusPage() {
                           .trim()
                           .toLowerCase()}`}
                       />
-                    </div>
+                  </div>
                   ))}
-                </div>
+                    </div>
               </div>
 
               {/* Botones de acción */}
@@ -1479,8 +1479,8 @@ export default function SolicitudStatusPage() {
                 >
                   💾 Guardar Cambios
                 </button>
-              </div>
-            </div>
+                  </div>
+                </div>
           </div>
         </div>
       )}
@@ -1538,7 +1538,7 @@ export default function SolicitudStatusPage() {
                 >
                   Iniciar Nuevo Trámite
                 </button>
-              </div>
+                </div>
               <p className="text-xs text-gray-500 mt-3">
                 Serás redirigido automáticamente en unos segundos...
               </p>

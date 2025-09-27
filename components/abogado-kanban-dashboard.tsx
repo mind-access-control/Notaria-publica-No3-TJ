@@ -2981,14 +2981,14 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                           {/* Mensaje de cita programada - Mostrar cuando ambas partes están aprobadas */}
                           {contractApprovals[selectedExpediente.id]?.comprador && contractApprovals[selectedExpediente.id]?.vendedor && (
-                            <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <Calendar className="h-3 w-3 text-gray-600" />
-                                  <span className="text-xs font-medium text-gray-700">Cita Programada</span>
+                                  <Calendar className="h-3 w-3 text-blue-600" />
+                                  <span className="text-xs font-medium text-blue-700">Cita Programada</span>
                                 </div>
                               </div>
-                              <p className="text-xs text-gray-600 mb-2">
+                              <p className="text-xs text-blue-600 mb-2">
                                 <strong>lunes 28 de octubre a las 11:00 AM</strong>
                               </p>
                               <div className="flex gap-1">
@@ -3045,7 +3045,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   }}
                                   size="sm"
                                   variant="ghost"
-                                  className="text-xs h-6 px-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
+                                  className="text-xs h-6 px-6 bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
                                 >
                                   Aceptar
                                 </Button>
@@ -3056,7 +3056,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                   }}
                                   size="sm"
                                   variant="ghost"
-                                  className="text-xs h-6 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                                  className="text-xs h-6 px-6 bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 hover:text-gray-800 transition-colors"
                                 >
                                   Cambiar
                                 </Button>
@@ -6033,7 +6033,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
             {/* Visor de PDF */}
             <div className="flex-1 bg-gray-100 relative">
               <iframe
-                src="/Escrituras dummy.pdf"
+                src="/Escrituras_dummy.pdf"
                 className="w-full h-full border-0"
                 title="Escritura Final"
               />
