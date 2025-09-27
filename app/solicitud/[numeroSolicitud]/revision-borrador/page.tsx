@@ -365,6 +365,46 @@ function DocumentViewerModal({
   const [acceptedSteps, setAcceptedSteps] = useState<number[]>([]);
   const [documentRef, setDocumentRef] = useState<HTMLDivElement | null>(null);
   const [fullDocument, setFullDocument] = useState<string>("");
+  const [comments, setComments] = useState<
+    Array<{
+      id: string;
+      text: string;
+      comment: string;
+      position: { top: number; left: number };
+      timestamp: string;
+      author: string;
+      replies: Array<{
+        id: string;
+        comment: string;
+        author: string;
+        timestamp: string;
+      }>;
+      isEditing?: boolean;
+      isReplying?: boolean;
+      isResolved?: boolean;
+    }>
+  >([]);
+  const [selectedText, setSelectedText] = useState<string>("");
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [commentPosition, setCommentPosition] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+  const [showCommentViewModal, setShowCommentViewModal] = useState(false);
+  const [selectedComment, setSelectedComment] = useState<{
+    id: string;
+    text: string;
+    comment: string;
+    position: { top: number; left: number };
+    timestamp: string;
+  } | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(
+    null
+  );
+  const [editText, setEditText] = useState<string>("");
+  const [replyText, setReplyText] = useState<string>("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Cargar el documento completo al montar el componente
   useEffect(() => {
@@ -410,6 +450,25 @@ function DocumentViewerModal({
     }
   }, [documentRef, fullDocument]);
 
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId) {
+        const target = event.target as HTMLElement;
+        if (!target.closest(".comment-menu")) {
+          setOpenMenuId(null);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [openMenuId, isOpen]);
+
   const documentSections = [
     {
       title: "Encabezado y Datos Generales",
@@ -452,22 +511,351 @@ function DocumentViewerModal({
     },
   ];
 
-  const highlightText = (text: string, highlight: string) => {
-    if (!highlight) return text;
-    console.log("Aplicando resaltado:", highlight);
-    console.log(
-      "Texto completo contiene el highlight:",
-      text.includes(highlight)
+  // Función para manejar la selección de texto
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0) {
+      const selectedText = selection.toString().trim();
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+
+      // Calcular posición relativa al documento con mayor precisión
+      if (documentRef) {
+        const containerRect = documentRef.getBoundingClientRect();
+        const position = {
+          top: rect.top - containerRect.top + documentRef.scrollTop,
+          left: rect.left - containerRect.left,
+        };
+
+        console.log("Posición calculada:", position);
+        console.log("Scroll actual:", documentRef.scrollTop);
+
+        setSelectedText(selectedText);
+        setCommentPosition(position);
+        setShowCommentModal(true);
+      }
+    }
+  };
+
+  // Función para agregar comentario
+  const handleAddComment = (commentText: string) => {
+    if (commentText.trim()) {
+      const commentId = `comment-${Date.now()}`;
+
+      // Obtener contexto más amplio para mayor precisión
+      let contextText = selectedText;
+      if (documentRef) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const container = range.commonAncestorContainer;
+
+          // Obtener texto del párrafo completo
+          let paragraphText = "";
+          if (container.nodeType === Node.TEXT_NODE) {
+            paragraphText = container.textContent || "";
+          } else {
+            paragraphText = container.textContent || "";
+          }
+
+          // Usar más contexto si es posible
+          if (paragraphText.length > selectedText.length) {
+            contextText = paragraphText.substring(
+              0,
+              Math.min(200, paragraphText.length)
+            );
+          }
+        }
+      }
+
+      const newComment = {
+        id: commentId,
+        text: selectedText,
+        context: contextText, // Agregar contexto
+        comment: commentText,
+        position: commentPosition,
+        timestamp: new Date().toLocaleString("es-MX"),
+        author: "JONATHAN RUBEN HERNANDEZ GONZALEZ",
+        replies: [],
+        isEditing: false,
+        isReplying: false,
+      };
+
+      setComments([...comments, newComment]);
+      setShowCommentModal(false);
+      setSelectedText("");
+
+      // Limpiar selección
+      window.getSelection()?.removeAllRanges();
+    }
+  };
+
+  // Función para eliminar comentario
+  const handleDeleteComment = (commentId: string) => {
+    setComments(comments.filter((comment) => comment.id !== commentId));
+    setOpenMenuId(null); // Cerrar menú
+  };
+
+  // Función para agregar respuesta
+  const handleAddReply = (commentId: string) => {
+    if (replyText.trim()) {
+      const newReply = {
+        id: Date.now().toString(),
+        comment: replyText,
+        author: "JONATHAN RUBEN HERNANDEZ GONZALEZ",
+        timestamp: new Date().toLocaleString("es-MX"),
+      };
+
+      setComments(
+        comments.map((comment) =>
+          comment.id === commentId
+            ? {
+                ...comment,
+                replies: [...comment.replies, newReply],
+                isReplying: false,
+              }
+            : comment
+        )
+      );
+
+      setReplyText("");
+      setReplyingToCommentId(null);
+    }
+  };
+
+  // Función para editar comentario
+  const handleEditComment = (commentId: string) => {
+    const comment = comments.find((c) => c.id === commentId);
+    if (comment) {
+      setEditText(comment.comment);
+      setEditingCommentId(commentId);
+      setOpenMenuId(null); // Cerrar menú
+    }
+  };
+
+  // Función para guardar edición
+  const handleSaveEdit = (commentId: string) => {
+    if (editText.trim()) {
+      setComments(
+        comments.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, comment: editText, isEditing: false }
+            : comment
+        )
+      );
+
+      setEditText("");
+      setEditingCommentId(null);
+    }
+  };
+
+  // Función para cancelar edición
+  const handleCancelEdit = () => {
+    setEditText("");
+    setEditingCommentId(null);
+  };
+
+  // Función para cancelar respuesta
+  const handleCancelReply = () => {
+    setReplyText("");
+    setReplyingToCommentId(null);
+  };
+
+  // Función para abrir/cerrar menú
+  const handleToggleMenu = (commentId: string) => {
+    setOpenMenuId(openMenuId === commentId ? null : commentId);
+  };
+
+  // Función para cerrar menú
+  const handleCloseMenu = () => {
+    setOpenMenuId(null);
+  };
+
+  // Función para marcar comentario como resuelto
+  const handleResolveComment = (commentId: string) => {
+    setComments(
+      comments.map((comment) =>
+        comment.id === commentId ? { ...comment, isResolved: true } : comment
+      )
     );
-    // Escapar caracteres especiales de regex
-    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`(${escapedHighlight})`, "gi");
-    const result = text.replace(
-      regex,
-      '<mark class="bg-yellow-400 px-2 py-1 rounded font-bold border-2 border-yellow-500 animate-pulse">$1</mark>'
-    );
-    console.log("Texto resaltado aplicado:", result !== text);
-    console.log("Resultado contiene mark:", result.includes("<mark"));
+    setOpenMenuId(null);
+  };
+
+  // Función para navegar a un comentario específico (solo navegación, sin modal)
+  const handleNavigateToComment = (comment: {
+    id: string;
+    text: string;
+    comment: string;
+    position: { top: number; left: number };
+    timestamp: string;
+  }) => {
+    if (documentRef) {
+      console.log("Navegando a comentario:", comment.text);
+      console.log("ID del comentario:", comment.id);
+      console.log("Contexto:", (comment as any).context);
+
+      // Buscar el elemento ancla en el documento
+      const anchorElement = documentRef.querySelector(`#${comment.id}`);
+
+      if (anchorElement) {
+        console.log("Ancla encontrada, haciendo scroll");
+
+        // Hacer scroll al elemento ancla
+        anchorElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+
+        // Resaltar temporalmente el texto después del scroll
+        setTimeout(() => {
+          const originalHTML = documentRef.innerHTML;
+          const highlightedHTML = originalHTML.replace(
+            new RegExp(
+              `(${comment.text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+              "gi"
+            ),
+            '<mark class="bg-yellow-400 px-1 py-0.5 rounded font-bold border-2 border-yellow-500 animate-pulse">$1</mark>'
+          );
+
+          documentRef.innerHTML = highlightedHTML;
+
+          // Remover el resaltado después de 3 segundos
+          setTimeout(() => {
+            documentRef.innerHTML = originalHTML;
+          }, 3000);
+        }, 500);
+
+        // Abrir el comentario en modal después del scroll
+        setTimeout(() => {
+          setSelectedComment(comment);
+          setShowCommentViewModal(true);
+        }, 800);
+      } else {
+        console.log("Ancla no encontrada, usando búsqueda por contexto");
+
+        // Intentar búsqueda por contexto primero
+        const contextText = (comment as any).context || comment.text;
+        const walker = document.createTreeWalker(
+          documentRef,
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+
+        let node;
+        let found = false;
+
+        while ((node = walker.nextNode())) {
+          if (node.textContent?.includes(contextText)) {
+            console.log("Contexto encontrado, haciendo scroll");
+
+            // Crear rango para el contexto encontrado
+            const textIndex = node.textContent.indexOf(contextText);
+            if (textIndex !== -1) {
+              const range = document.createRange();
+              range.setStart(node, textIndex);
+              range.setEnd(node, textIndex + contextText.length);
+
+              const rect = range.getBoundingClientRect();
+              const containerRect = documentRef.getBoundingClientRect();
+              const scrollTop =
+                documentRef.scrollTop + rect.top - containerRect.top - 150;
+
+              documentRef.scrollTo({
+                top: Math.max(0, scrollTop),
+                behavior: "smooth",
+              });
+            }
+
+            found = true;
+            break;
+          }
+        }
+
+        // Si no encuentra contexto, usar posición guardada
+        if (!found) {
+          console.log("Contexto no encontrado, usando posición guardada");
+          documentRef.scrollTo({
+            top: comment.position.top - 150,
+            behavior: "smooth",
+          });
+        }
+
+        // Abrir el comentario en modal después del scroll
+        setTimeout(() => {
+          setSelectedComment(comment);
+          setShowCommentViewModal(true);
+        }, 800);
+      }
+    }
+  };
+
+  // Función para mostrar comentario en modal (solo para marcadores del documento)
+  const handleShowCommentModal = (comment: {
+    id: string;
+    text: string;
+    comment: string;
+    position: { top: number; left: number };
+    timestamp: string;
+  }) => {
+    setSelectedComment(comment);
+    setShowCommentViewModal(true);
+  };
+
+  const highlightText = (text: string) => {
+    // Resaltar datos importantes sin animación ni salto automático
+    const importantData = [
+      "INSTRUMENTO NÚMERO TREINTA Y DOS MIL SEISCIENTOS OCHENTA Y NUEVE",
+      "JONATHAN RUBEN HERNANDEZ GONZALEZ",
+      "853,500.00",
+      "OCHOCIENTOS CINCUENTA Y TRES MIL QUINIENTOS PESOS",
+      "la vivienda de interés social marcada con el número **UNO**",
+    ];
+
+    let result = text;
+
+    // Primero agregar anclas de comentarios existentes usando contexto
+    // Solo procesar comentarios activos (no resueltos)
+    const activeComments = comments.filter((comment) => !comment.isResolved);
+
+    activeComments.forEach((comment) => {
+      // Usar contexto si está disponible, sino usar texto seleccionado
+      const searchText = (comment as any).context || comment.text;
+      const escapedText = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escapedText})`, "gi");
+
+      // Buscar la primera ocurrencia del contexto completo
+      const match = result.match(regex);
+      if (match) {
+        // Reemplazar solo la primera ocurrencia para mayor precisión
+        result = result.replace(
+          regex,
+          `<span id="${comment.id}" class="comment-anchor"></span>$1`
+        );
+      } else {
+        // Fallback al texto seleccionado si no encuentra contexto
+        const escapedSelectedText = comment.text.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&"
+        );
+        const selectedRegex = new RegExp(`(${escapedSelectedText})`, "gi");
+        result = result.replace(
+          selectedRegex,
+          `<span id="${comment.id}" class="comment-anchor"></span>$1`
+        );
+      }
+    });
+
+    // Luego resaltar datos importantes
+    importantData.forEach((data) => {
+      const escapedData = data.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escapedData})`, "gi");
+      result = result.replace(
+        regex,
+        '<mark class="bg-yellow-300 px-1 py-0.5 rounded font-semibold border border-yellow-400">$1</mark>'
+      );
+    });
+
     return result;
   };
 
@@ -660,11 +1048,6 @@ function DocumentViewerModal({
 
     if (currentStep < documentSections.length - 1) {
       setCurrentStep(currentStep + 1);
-      // Esperar a que el DOM se actualice antes de hacer scroll
-      setTimeout(() => {
-        const section = documentSections[currentStep + 1];
-        scrollToSection(section.anchorId, section.scrollToText);
-      }, 200);
     }
   };
 
@@ -678,22 +1061,12 @@ function DocumentViewerModal({
   const handleNextStep = () => {
     if (currentStep < documentSections.length - 1) {
       setCurrentStep(currentStep + 1);
-      // Esperar a que el DOM se actualice antes de hacer scroll
-      setTimeout(() => {
-        const section = documentSections[currentStep + 1];
-        scrollToSection(section.anchorId, section.scrollToText);
-      }, 200);
     }
   };
 
   const handlePreviousStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      // Esperar a que el DOM se actualice antes de hacer scroll
-      setTimeout(() => {
-        const section = documentSections[currentStep - 1];
-        scrollToSection(section.anchorId, section.scrollToText);
-      }, 200);
     }
   };
 
@@ -736,139 +1109,460 @@ function DocumentViewerModal({
           </button>
         </div>
 
+        {/* Panel de Pasos de Revisión */}
+        <div className="p-4 border-b bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-2">
+              {documentSections.map((section, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentStep(index)}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    index === currentStep
+                      ? "bg-blue-100 text-blue-700 border border-blue-300"
+                      : acceptedSteps.includes(index)
+                      ? "bg-green-100 text-green-700 border border-green-300"
+                      : "bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200"
+                  }`}
+                >
+                  {index + 1}. {section.title.split(" ")[0]}
+                </button>
+              ))}
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousStep}
+                disabled={currentStep === 0}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextStep}
+                disabled={currentStep === documentSections.length - 1}
+              >
+                Siguiente
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRejectStep}
+                className="text-red-600 border-red-200 hover:bg-red-50"
+              >
+                Rechazar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleAcceptStep}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Aceptar
+              </Button>
+            </div>
+          </div>
+
+          {/* Botón de Aceptar Escritura Completa */}
+          {acceptedSteps.length === documentSections.length && (
+            <div className="mt-4 text-center">
+              <Button
+                onClick={handleAceptarEscritura}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+              >
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Aceptar Escritura Completa
+              </Button>
+            </div>
+          )}
+        </div>
+
         {/* Contenido del Modal */}
         <div className="flex flex-1 overflow-hidden">
           {/* Panel Izquierdo - Documento */}
-          <div className="flex-1 p-1 overflow-auto bg-gray-50">
+          <div className="flex-1 p-1 overflow-auto bg-gray-50 relative">
             <div
               ref={setDocumentRef}
-              className="bg-white p-3 min-h-[3000px] rounded-lg shadow-sm"
+              className="bg-white p-3 min-h-[3000px] rounded-lg shadow-sm relative"
               dangerouslySetInnerHTML={{
-                __html: highlightText(
-                  fullDocument,
-                  documentSections[currentStep]?.highlightText || ""
-                ),
+                __html: highlightText(fullDocument),
               }}
               style={{ whiteSpace: "pre-line" }}
+              onMouseUp={handleTextSelection}
             />
+            <style jsx>{`
+              .comment-anchor {
+                display: inline !important;
+                position: relative !important;
+                width: 0 !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                background: none !important;
+                visibility: hidden !important;
+              }
+            `}</style>
+
+            {/* Marcadores de comentarios */}
+            {comments
+              .filter((comment) => !comment.isResolved)
+              .map((comment) => (
+                <div
+                  key={comment.id}
+                  className="absolute w-4 h-4 bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg"
+                  style={{
+                    top: comment.position.top,
+                    left: comment.position.left,
+                  }}
+                  title={`Comentario: ${comment.comment.substring(0, 50)}...`}
+                  onClick={() => handleShowCommentModal(comment)}
+                />
+              ))}
           </div>
 
-          {/* Panel Derecho - Pasos de Revisión */}
-          <div className="w-96 p-6 border-l bg-white overflow-y-auto">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Pasos de Revisión
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Revisa cada sección del documento y acepta o rechaza según
-                  corresponda.
-                </p>
-              </div>
+          {/* Panel Derecho - Comentarios estilo Google Docs */}
+          <div className="w-80 border-l bg-white overflow-y-auto">
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Comentarios ({comments.length})
+              </h3>
 
-              {/* Lista de Pasos */}
-              <div className="space-y-3">
-                {documentSections.map((section, index) => (
-                  <div
-                    key={index}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                      index === currentStep
-                        ? "border-blue-500 bg-blue-50"
-                        : acceptedSteps.includes(index)
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                    }`}
-                    onClick={() => {
-                      setCurrentStep(index);
-                      setTimeout(() => {
-                        scrollToSection(section.anchorId, section.scrollToText);
-                      }, 100);
-                    }}
-                  >
-                    <div className="flex items-center space-x-2 mb-1">
+              {comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No hay comentarios aún</p>
+                  <p className="text-sm mt-1">
+                    Selecciona texto para agregar comentarios
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {comments
+                    .filter((comment) => !comment.isResolved)
+                    .map((comment) => (
                       <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                          acceptedSteps.includes(index)
-                            ? "bg-green-500 text-white"
-                            : index === currentStep
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-300 text-gray-600"
-                        }`}
+                        key={comment.id}
+                        className="border border-gray-200 rounded-lg p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => handleNavigateToComment(comment)}
                       >
-                        {acceptedSteps.includes(index) ? "✓" : index + 1}
+                        {/* Información del autor */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                              {comment.author
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .substring(0, 2)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {comment.author}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {comment.timestamp}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleResolveComment(comment.id);
+                              }}
+                              className="text-green-600 hover:text-green-800 p-1"
+                              title="Marcar el debate como resuelto y ocultarlo"
+                            >
+                              ✓
+                            </button>
+                            <div className="relative comment-menu">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleMenu(comment.id);
+                                }}
+                                className="text-gray-400 hover:text-gray-600 p-1"
+                                title="Más opciones"
+                              >
+                                ⋮
+                              </button>
+                              {openMenuId === comment.id && (
+                                <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-32">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditComment(comment.id);
+                                    }}
+                                    className="block w-full text-left px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteComment(comment.id);
+                                    }}
+                                    className="block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-gray-100"
+                                  >
+                                    Eliminar
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Texto comentado */}
+                        <div className="bg-yellow-100 border border-yellow-300 rounded p-2 mb-2">
+                          <p className="text-sm text-gray-800 italic">
+                            "{comment.text}"
+                          </p>
+                        </div>
+
+                        {/* Comentario */}
+                        {editingCommentId === comment.id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded text-sm"
+                              rows={2}
+                              autoFocus
+                            />
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleSaveEdit(comment.id)}
+                                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                              >
+                                Guardar
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-800 mb-2">
+                            {comment.comment}
+                          </p>
+                        )}
+
+                        {/* Respuestas */}
+                        {comment.replies.length > 0 && (
+                          <div className="ml-4 space-y-2">
+                            {comment.replies.map((reply) => (
+                              <div
+                                key={reply.id}
+                                className="bg-white border border-gray-200 rounded p-2"
+                              >
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                    {reply.author
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .substring(0, 2)}
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-900">
+                                      {reply.author}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {reply.timestamp}
+                                    </p>
+                                  </div>
+                                </div>
+                                <p className="text-sm text-gray-800">
+                                  {reply.comment}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Campo de respuesta */}
+                        {replyingToCommentId === comment.id ? (
+                          <div className="mt-2 space-y-2">
+                            <textarea
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Responde o añade a otros con @"
+                              className="w-full p-2 border border-gray-300 rounded text-sm"
+                              rows={2}
+                              autoFocus
+                            />
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleAddReply(comment.id)}
+                                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                              >
+                                Responder
+                              </button>
+                              <button
+                                onClick={handleCancelReply}
+                                className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setReplyingToCommentId(comment.id)}
+                            className="text-sm text-blue-600 hover:text-blue-800 mt-1"
+                          >
+                            Responder
+                          </button>
+                        )}
                       </div>
-                      <span
-                        className={`font-medium ${
-                          index === currentStep
-                            ? "text-blue-900"
-                            : acceptedSteps.includes(index)
-                            ? "text-green-900"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        {section.title}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 ml-8">
-                      {section.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Controles de Navegación */}
-              <div className="space-y-3 pt-4 border-t">
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={handlePreviousStep}
-                    disabled={currentStep === 0}
-                    className="flex-1"
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleNextStep}
-                    disabled={currentStep === documentSections.length - 1}
-                    className="flex-1"
-                  >
-                    Siguiente
-                  </Button>
+                    ))}
                 </div>
-
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleRejectStep}
-                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    Rechazar
-                  </Button>
-                  <Button
-                    onClick={handleAcceptStep}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Aceptar esta Sección
-                  </Button>
-                </div>
-
-                {/* Botón de Aceptar Escritura Completa */}
-                {acceptedSteps.length === documentSections.length && (
-                  <Button
-                    onClick={handleAceptarEscritura}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-lg"
-                  >
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    Aceptar Escritura Completa
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal de Comentarios - Popup Pequeño */}
+      {showCommentModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg p-4 w-80 max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              Agregar Comentario
+            </h3>
+
+            <div className="mb-3">
+              <p className="text-sm text-gray-600 mb-2">Texto seleccionado:</p>
+              <div className="bg-gray-100 p-2 rounded text-sm italic">
+                "{selectedText}"
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tu comentario:
+              </label>
+              <textarea
+                className="w-full p-2 border border-gray-300 rounded text-sm"
+                rows={3}
+                placeholder="Escribe tu comentario aquí..."
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && e.ctrlKey) {
+                    const textarea = e.target as HTMLTextAreaElement;
+                    handleAddComment(textarea.value);
+                  }
+                }}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowCommentModal(false);
+                  setSelectedText("");
+                  window.getSelection()?.removeAllRanges();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  const textarea = document.querySelector(
+                    "textarea"
+                  ) as HTMLTextAreaElement;
+                  handleAddComment(textarea.value);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Agregar
+              </Button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-2">
+              Tip: Presiona Ctrl+Enter para agregar rápidamente
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Ver Comentario - Popup Pequeño */}
+      {showCommentViewModal && selectedComment && (
+        <div className="fixed inset-0 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg p-4 w-80 max-w-sm mx-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Comentario
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCommentViewModal(false);
+                  setSelectedComment(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-3">
+              <p className="text-sm text-gray-600 mb-1">Texto comentado:</p>
+              <div className="bg-yellow-100 p-2 rounded border border-yellow-300">
+                <p className="text-sm font-medium text-gray-800">
+                  "{selectedComment.text}"
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <p className="text-sm text-gray-600 mb-1">Comentario:</p>
+              <div className="bg-gray-50 p-2 rounded border border-gray-200">
+                <p className="text-sm text-gray-800">
+                  {selectedComment.comment}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">
+                {selectedComment.timestamp}
+              </span>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowCommentViewModal(false);
+                    setSelectedComment(null);
+                  }}
+                >
+                  Cerrar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    handleDeleteComment(selectedComment.id);
+                    setShowCommentViewModal(false);
+                    setSelectedComment(null);
+                  }}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  Eliminar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
