@@ -54,24 +54,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        console.log("AuthContext - Token encontrado:", !!token);
+        const userDataStored = localStorage.getItem("userData");
+        console.log("=== AuthContext - Verificando autenticación ===");
+        console.log("Token encontrado:", !!token);
+        console.log("UserData almacenado:", !!userDataStored);
+        
         if (token) {
           const userData = await getUserByToken(token);
           console.log("AuthContext - Datos de usuario obtenidos:", !!userData);
+          console.log("AuthContext - Usuario:", userData);
           if (userData) {
             setUser(userData);
+            console.log("✅ AuthContext - Usuario establecido correctamente");
           } else {
             // Token inválido, limpiar
-            console.log("AuthContext - Token inválido, limpiando");
+            console.log("❌ AuthContext - Token inválido, limpiando");
             localStorage.removeItem("authToken");
+            localStorage.removeItem("userData");
           }
+        } else {
+          console.log("❌ AuthContext - No hay token, usuario no autenticado");
         }
       } catch (error) {
-        console.error("Error checking auth:", error);
+        console.error("❌ AuthContext - Error checking auth:", error);
         localStorage.removeItem("authToken");
+        localStorage.removeItem("userData");
       } finally {
         setIsLoading(false);
-        console.log("AuthContext - Carga completada");
+        console.log("AuthContext - Carga completada, isLoading: false");
       }
     };
 
@@ -82,14 +92,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     credentials: LoginCredentials,
     redirectTo?: string
   ): Promise<AuthResponse> => {
+    console.log("=== AuthContext - Iniciando LOGIN ===");
     setIsLoading(true);
     try {
       const response = await authenticateUser(credentials);
+      console.log("AuthContext - Respuesta de login:", response);
 
       if (response.success && response.user && response.token) {
+        console.log("✅ AuthContext - Login exitoso, estableciendo usuario");
         setUser(response.user);
         localStorage.setItem("authToken", response.token);
         localStorage.setItem("userData", JSON.stringify(response.user));
+        console.log("AuthContext - Token y userData guardados en localStorage");
 
         // Redirigir después del login exitoso
         if (redirectTo) {
@@ -128,14 +142,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (
     userData: Omit<User, "id" | "fechaCreacion" | "ultimoAcceso">
   ): Promise<AuthResponse> => {
+    console.log("=== AuthContext - Iniciando REGISTER ===");
     setIsLoading(true);
     try {
       const response = await registerUser(userData);
+      console.log("AuthContext - Respuesta de register:", response);
 
       if (response.success && response.user && response.token) {
+        console.log("✅ AuthContext - Register exitoso, estableciendo usuario");
         setUser(response.user);
         localStorage.setItem("authToken", response.token);
         localStorage.setItem("userData", JSON.stringify(response.user));
+        console.log("AuthContext - Token y userData guardados en localStorage");
       }
 
       return response;

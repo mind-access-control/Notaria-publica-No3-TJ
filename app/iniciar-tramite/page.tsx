@@ -79,19 +79,77 @@ export default function IniciarTramitePage() {
   const tramitePreseleccionado = searchParams.get("tramite");
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    console.log('=== DEBUG: Estado de autenticación ===');
+    console.log('isLoading:', isLoading);
+    console.log('isAuthenticated:', isAuthenticated);
+    console.log('user:', user);
+    
+    // Verificar también localStorage como respaldo
+    const token = localStorage.getItem("authToken");
+    const userData = localStorage.getItem("userData");
+    console.log('Token en localStorage:', !!token);
+    console.log('UserData en localStorage:', !!userData);
+    
+    // Solo redirigir al login si realmente no hay evidencia de autenticación
+    if (!isLoading && !isAuthenticated && !token) {
+      console.log('❌ Usuario no autenticado, redirigiendo al login');
       router.push(
         "/login?redirect=" +
           encodeURIComponent(window.location.pathname + window.location.search)
       );
+    } else if (token && !isAuthenticated) {
+      console.log('⚠️ Token existe pero isAuthenticated es false, esperando...');
+      // Dar un poco más de tiempo para que el contexto se actualice
+      setTimeout(() => {
+        if (!isAuthenticated) {
+          console.log('❌ Después del timeout, aún no autenticado, redirigiendo');
+          router.push(
+            "/login?redirect=" +
+              encodeURIComponent(window.location.pathname + window.location.search)
+          );
+        }
+      }, 2000);
+    } else {
+      console.log('✅ Usuario autenticado, continuando');
     }
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     if (tramitePreseleccionado) {
       setTramiteSeleccionado(tramitePreseleccionado);
+    } else {
+      // Verificar si viene del flujo de compraventa
+      const fromCompraventaFlow = localStorage.getItem('fromCompraventaFlow');
+      const selectedTramiteFromModal = localStorage.getItem('selectedTramiteFromModal');
+      
+      if (fromCompraventaFlow === 'true' && selectedTramiteFromModal) {
+        setTramiteSeleccionado(selectedTramiteFromModal);
+        // Limpiar los flags del localStorage
+        localStorage.removeItem('fromCompraventaFlow');
+        localStorage.removeItem('selectedTramiteFromModal');
+      }
     }
   }, [tramitePreseleccionado]);
+
+  // Efecto separado para verificar localStorage al cargar la página
+  useEffect(() => {
+    // Solo ejecutar si el usuario está autenticado y no está cargando
+    if (isAuthenticated && !isLoading) {
+      // Solo ejecutar si no hay trámite preseleccionado por URL
+      if (!tramitePreseleccionado && !tramiteSeleccionado) {
+        const fromCompraventaFlow = localStorage.getItem('fromCompraventaFlow');
+        const selectedTramiteFromModal = localStorage.getItem('selectedTramiteFromModal');
+        
+        if (fromCompraventaFlow === 'true' && selectedTramiteFromModal) {
+          console.log('✅ Pre-seleccionando trámite desde localStorage:', selectedTramiteFromModal);
+          setTramiteSeleccionado(selectedTramiteFromModal);
+          // Limpiar los flags del localStorage
+          localStorage.removeItem('fromCompraventaFlow');
+          localStorage.removeItem('selectedTramiteFromModal');
+        }
+      }
+    }
+  }, [isAuthenticated, isLoading, tramitePreseleccionado, tramiteSeleccionado]);
 
   // Cargar aranceles calculados
   useEffect(() => {

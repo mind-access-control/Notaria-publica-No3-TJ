@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/auth-context";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,12 +21,14 @@ import {
 import {
   Calculator,
   FileText,
+  CheckCircle,
+  Users,
+  Upload,
+  Loader2,
+  FileCheck,
   Calendar,
   Mail,
   MessageCircle,
-  CheckCircle,
-  DollarSign,
-  Users,
 } from "lucide-react";
 import { tramites as tramitesData, getTramiteById } from "@/lib/tramites-data";
 
@@ -46,6 +48,7 @@ export function TramiteAdviceModal({
   selectedTramiteId,
   onTramiteSelect,
 }: TramiteAdviceModalProps) {
+  const { isAuthenticated } = useAuth();
   const [userInfo, setUserInfo] = useState({
     nombre: "",
     telefono: "",
@@ -59,6 +62,12 @@ export function TramiteAdviceModal({
   const [estadoCivil, setEstadoCivil] = useState<string>("");
   const [usarCredito, setUsarCredito] = useState<boolean>(false);
   const [tipoPersona, setTipoPersona] = useState<string>("comprador");
+
+  // Estados para el flujo de upload y análisis de IA
+  const [contratoSubido, setContratoSubido] = useState<boolean>(false);
+  const [analizandoContrato, setAnalizandoContrato] = useState<boolean>(false);
+  const [archivoContrato, setArchivoContrato] = useState<File | null>(null);
+  const [mostrarSecciones, setMostrarSecciones] = useState<boolean>(false);
 
   const tramite = tramites.find((t) => t.id === selectedTramiteId);
 
@@ -104,6 +113,56 @@ export function TramiteAdviceModal({
       subject
     )}&body=${encodeURIComponent(body)}`;
     window.open(mailtoUrl);
+  };
+
+  // Función para manejar el upload del contrato
+  const handleUploadContrato = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("handleUploadContrato llamado");
+    const file = event.target.files?.[0];
+    console.log("Archivo seleccionado:", file);
+    
+    if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const fileType = file.type;
+      
+      if (!allowedTypes.includes(fileType)) {
+        alert('Por favor selecciona un archivo PDF, DOC o DOCX válido.');
+        return;
+      }
+      
+      // Validar tamaño (máximo 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+        return;
+      }
+      
+      console.log("Archivo válido, iniciando proceso...");
+      setArchivoContrato(file);
+      setContratoSubido(true);
+      setAnalizandoContrato(true);
+      
+      // Simular análisis de IA
+      setTimeout(() => {
+        console.log("Análisis completado, extrayendo datos...");
+        // Simular datos extraídos del contrato
+        const precioSimulado = "2950000"; // Precio predeterminado
+        const estadoCivilSimulado = "casado";
+        const tipoPersonaSimulado = "comprador";
+        
+        // Auto-llenar campos
+        setValorInmueble(precioSimulado);
+        setEstadoCivil(estadoCivilSimulado);
+        setTipoPersona(tipoPersonaSimulado);
+        
+        setAnalizandoContrato(false);
+        setMostrarSecciones(true);
+        console.log("Datos extraídos y secciones mostradas");
+      }, 3000); // 3 segundos de simulación
+    } else {
+      console.log("No se seleccionó ningún archivo");
+    }
   };
 
   const handleIniciarTramite = () => {
@@ -434,9 +493,6 @@ export function TramiteAdviceModal({
               <DialogTitle className="text-xl font-semibold text-center">
                 Asesoría para {tramite.name}
               </DialogTitle>
-              <DialogDescription className="text-center text-base">
-                Aquí tienes toda la información que necesitas para tu trámite
-              </DialogDescription>
             </div>
             <Button
               variant="ghost"
@@ -444,7 +500,7 @@ export function TramiteAdviceModal({
               onClick={onClose}
               className="h-6 w-6 p-0 hover:bg-gray-100 ml-2"
             >
-              <X className="h-3 w-3" />
+              <span className="text-xs">×</span>
             </Button>
           </div>
         </div>
@@ -452,152 +508,116 @@ export function TramiteAdviceModal({
         {/* Contenido scrolleable */}
         <div className="overflow-y-auto max-h-[calc(85vh-40px)] pt-1 pb-2">
           <div className="space-y-3 mb-1">
-            {/* Información del trámite */}
+            {/* Paso 1: Upload del contrato */}
+            {tramite.id === "compraventa" && !mostrarSecciones && (
             <Card className="border border-blue-200 bg-blue-50">
-              <CardContent className="px-3 py-1">
-                <div className="flex items-center gap-2">
-                  <div className="text-lg font-semibold text-blue-800">
-                    {tramite.name}
+                <CardContent className="p-6 text-center">
+                  {!contratoSubido ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <div className="p-4 bg-blue-100 rounded-full">
+                          <Upload className="h-8 w-8 text-blue-600" />
                   </div>
-                  <div className="text-gray-400">•</div>
-                  <div className="text-lg text-gray-600">
-                    {tramite.description}
                   </div>
-                  <div className="text-gray-400">•</div>
-                  <div className="text-lg text-gray-600">
-                    {tramite.id === "compraventa" &&
-                      "Servicio especializado en escrituración segura de propiedades"}
-                    {tramite.id === "testamento" &&
-                      "Protección legal para el futuro de tu familia"}
-                    {tramite.id === "donacion" &&
-                      "Transferencia legal y segura de bienes"}
-                    {tramite.id === "permuta" &&
-                      "Intercambio equitativo de propiedades"}
-                    {tramite.id === "credito-hipotecario" &&
-                      "Financiamiento seguro para tu hogar"}
-                    {tramite.id === "sociedad" &&
-                      "Constitución legal de empresas"}
-                    {tramite.id === "fideicomiso" &&
-                      "Administración profesional de bienes"}
-                    {tramite.id === "adjudicacion-hereditaria" &&
-                      "Transferencia legal de herencias"}
-                    {tramite.id === "liquidacion-copropiedad" &&
-                      "División equitativa de propiedades"}
-                    {tramite.id === "elevacion-judicial" &&
-                      "Conversión de sentencias a escrituras"}
-                    {tramite.id === "inicio-sucesion" &&
-                      "Proceso legal de herencias"}
-                    {tramite.id === "contrato-mutuo" &&
-                      "Contratos de préstamo seguros"}
-                    {tramite.id === "reconocimiento-adeudo" &&
-                      "Reconocimiento formal de deudas"}
-                    {tramite.id === "cesion-derechos" &&
-                      "Transferencia de derechos patrimoniales"}
-                    {tramite.id === "servidumbre" &&
-                      "Constitución de derechos de uso"}
-                    {tramite.id === "convenios-modificatorios" &&
-                      "Modificación de contratos existentes"}
-                    {tramite.id === "dacion-pago" &&
-                      "Pago con bienes en lugar de dinero"}
-                    {tramite.id === "formalizacion-contrato" &&
-                      "Elevación de contratos privados"}
-                    {tramite.id === "cancelacion-hipoteca" &&
-                      "Liberación de gravámenes hipotecarios"}
-                    {tramite.id === "protocolizacion-acta" &&
-                      "Validación legal de actas empresariales"}
-                    {tramite.id === "cambio-regimen-matrimonial" &&
-                      "Modificación del régimen matrimonial"}
-                    {tramite.id === "cotejos" &&
-                      "Verificación de autenticidad de documentos"}
-                    {tramite.id === "fe-hechos" &&
-                      "Constancias notariales de eventos"}
-                    {tramite.id === "poderes" &&
-                      "Delegación de facultades legales"}
-                    {tramite.id === "rectificacion-escrituras" &&
-                      "Corrección de errores en documentos"}
-                    {![
-                      "testamento",
-                      "compraventa",
-                      "donacion",
-                      "permuta",
-                      "credito-hipotecario",
-                      "contrato-mutuo",
-                      "reconocimiento-adeudo",
-                      "adjudicacion-hereditaria",
-                      "sociedad",
-                      "liquidacion-copropiedad",
-                      "cesion-derechos",
-                      "servidumbre",
-                      "convenios-modificatorios",
-                      "elevacion-judicial",
-                      "dacion-pago",
-                      "formalizacion-contrato",
-                      "fideicomiso",
-                      "inicio-sucesion",
-                      "cancelacion-hipoteca",
-                      "protocolizacion-acta",
-                      "cambio-regimen-matrimonial",
-                      "cotejos",
-                      "fe-hechos",
-                      "poderes",
-                      "rectificacion-escrituras",
-                    ].includes(tramite.id) &&
-                      "Servicio especializado en trámites legales"}
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                          Sube tu contrato de compraventa
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          Nuestra IA analizará automáticamente tu contrato para extraer la información necesaria
+                        </p>
                   </div>
+                      <div className="flex justify-center">
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={handleUploadContrato}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            id="file-upload"
+                          />
+                          <Button 
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
+                            asChild
+                          >
+                            <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2">
+                              <Upload className="h-4 w-4" />
+                              Seleccionar archivo
+                            </label>
+                          </Button>
                 </div>
+                      </div>
+                    </div>
+                  ) : analizandoContrato ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                          Analizando contrato...
+                        </h3>
+                        <p className="text-gray-600">
+                          Nuestra IA está extrayendo información de tu contrato
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <div className="p-4 bg-green-100 rounded-full">
+                          <FileCheck className="h-8 w-8 text-green-600" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-green-800 mb-2">
+                          ¡Contrato analizado exitosamente!
+                        </h3>
+                        <p className="text-gray-600">
+                          Hemos extraído la información de tu contrato
+                        </p>
+                      </div>
+                    </div>
+                  )}
               </CardContent>
             </Card>
+            )}
 
-            {/* Información adicional y documentos en dos columnas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            {/* Información adicional y documentos en dos columnas - Solo mostrar después del análisis */}
+            {mostrarSecciones && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Columna izquierda - Información adicional */}
-              <div className="space-y-2 flex flex-col">
+              <div className="bg-blue-50 p-3 rounded border border-blue-200 space-y-2">
                 {/* Preguntas dinámicas para compraventa */}
                 {tramite.id === "compraventa" && (
-                  <Card className="flex-1">
-                    <CardHeader className="pb-1 pt-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Users className="h-4 w-4 text-blue-600" />
-                        Información Adicional
-                      </CardTitle>
-                      <CardDescription className="text-base">
-                        Para personalizar documentos
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-0">
-                      {/* Pregunta de estado civil */}
+                  <>
+                    {/* Pregunta de tipo de persona - PRIMERA */}
                       <div>
-                        <label className="text-base font-medium text-gray-700 mb-1 block">
-                          ¿Estado civil?
+                      <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
+                        ¿Es comprador o vendedor?
                         </label>
-                        <div className="grid grid-cols-2 gap-1">
-                          {["soltero", "casado", "divorciado", "viudo"].map(
-                            (estado) => (
+                      <div className="flex gap-1.5">
                               <button
-                                key={estado}
                                 onClick={() => {
-                                  setEstadoCivil(estado);
+                            setTipoPersona("comprador");
                                   // Guardar inmediatamente en localStorage
                                   const datosExistentes = JSON.parse(
-                                    localStorage.getItem(
-                                      "arancelesCalculados"
-                                    ) || "[]"
+                              localStorage.getItem("arancelesCalculados") ||
+                                "[]"
                                   );
-                                  const indiceExistente =
-                                    datosExistentes.findIndex(
+                            const indiceExistente = datosExistentes.findIndex(
                                       (item: any) =>
                                         item.tramite === selectedTramiteId
                                     );
                                   if (indiceExistente >= 0) {
-                                    datosExistentes[
-                                      indiceExistente
-                                    ].estadoCivil = estado;
+                              datosExistentes[indiceExistente].tipoPersona =
+                                "comprador";
                                   } else {
                                   datosExistentes.push({
                                     tramite: selectedTramiteId,
-                                    estadoCivil: estado,
+                                estadoCivil: estadoCivil,
                                     usarCredito: usarCredito,
-                                    tipoPersona: tipoPersona,
+                                tipoPersona: "comprador",
                                     valorInmueble: valorInmueble,
                                     fechaCalculo: new Date().toISOString(),
                                     id: `temp-${Date.now()}`,
@@ -608,29 +628,17 @@ export function TramiteAdviceModal({
                                     JSON.stringify(datosExistentes)
                                   );
                                 }}
-                                className={`px-2 py-1 text-base rounded-md border transition-colors ${
-                                  estadoCivil === estado
-                                    ? "bg-blue-100 border-blue-300 text-blue-700"
-                                    : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                {estado.charAt(0).toUpperCase() +
-                                  estado.slice(1)}
+                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                            tipoPersona === "comprador"
+                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                          }`}
+                        >
+                          Comprador
                               </button>
-                            )
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Pregunta de crédito bancario */}
-                      <div>
-                        <label className="text-base font-medium text-gray-700 mb-1 block">
-                          ¿Crédito bancario?
-                        </label>
-                        <div className="flex gap-1">
                           <button
                             onClick={() => {
-                              setUsarCredito(true);
+                            setTipoPersona("vendedor");
                               // Guardar inmediatamente en localStorage
                               const datosExistentes = JSON.parse(
                                 localStorage.getItem("arancelesCalculados") ||
@@ -641,13 +649,68 @@ export function TramiteAdviceModal({
                                   item.tramite === selectedTramiteId
                               );
                               if (indiceExistente >= 0) {
-                                datosExistentes[indiceExistente].usarCredito =
-                                  true;
+                              datosExistentes[indiceExistente].tipoPersona =
+                                "vendedor";
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
+                                zonaInmueble: zonaInmueble,
                                   estadoCivil: estadoCivil,
-                                  usarCredito: true,
+                                usarCredito: usarCredito,
+                                tipoPersona: "vendedor",
+                                  valorInmueble: valorInmueble,
+                                  fechaCalculo: new Date().toISOString(),
+                                  id: `temp-${Date.now()}`,
+                                });
+                              }
+                              localStorage.setItem(
+                                "arancelesCalculados",
+                                JSON.stringify(datosExistentes)
+                              );
+                            }}
+                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                            tipoPersona === "vendedor"
+                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                          }`}
+                        >
+                          Vendedor
+                          </button>
+                      </div>
+                    </div>
+
+                    {/* Pregunta de estado civil */}
+                    <div>
+                      <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
+                        ¿Estado civil?
+                      </label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {["soltero", "casado", "divorciado", "viudo"].map(
+                          (estado) => (
+                          <button
+                              key={estado}
+                            onClick={() => {
+                                setEstadoCivil(estado);
+                              // Guardar inmediatamente en localStorage
+                              const datosExistentes = JSON.parse(
+                                  localStorage.getItem(
+                                    "arancelesCalculados"
+                                  ) || "[]"
+                              );
+                                const indiceExistente =
+                                  datosExistentes.findIndex(
+                                (item: any) =>
+                                  item.tramite === selectedTramiteId
+                              );
+                              if (indiceExistente >= 0) {
+                                  datosExistentes[
+                                    indiceExistente
+                                  ].estadoCivil = estado;
+                              } else {
+                                datosExistentes.push({
+                                  tramite: selectedTramiteId,
+                                  estadoCivil: estado,
+                                  usarCredito: usarCredito,
                                   tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
@@ -659,65 +722,29 @@ export function TramiteAdviceModal({
                                 JSON.stringify(datosExistentes)
                               );
                             }}
-                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
-                              usarCredito
-                                ? "bg-blue-100 border-blue-300 text-blue-700"
-                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            Sí
+                              className={`px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                                estadoCivil === estado
+                                  ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                                  : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                              }`}
+                            >
+                              {estado.charAt(0).toUpperCase() +
+                                estado.slice(1)}
                           </button>
-                          <button
-                            onClick={() => {
-                              setUsarCredito(false);
-                              // Guardar inmediatamente en localStorage
-                              const datosExistentes = JSON.parse(
-                                localStorage.getItem("arancelesCalculados") ||
-                                  "[]"
-                              );
-                              const indiceExistente = datosExistentes.findIndex(
-                                (item: any) =>
-                                  item.tramite === selectedTramiteId
-                              );
-                              if (indiceExistente >= 0) {
-                                datosExistentes[indiceExistente].usarCredito =
-                                  false;
-                              } else {
-                                datosExistentes.push({
-                                  tramite: selectedTramiteId,
-                                  estadoCivil: estadoCivil,
-                                  usarCredito: false,
-                                  tipoPersona: tipoPersona,
-                                  valorInmueble: valorInmueble,
-                                  fechaCalculo: new Date().toISOString(),
-                                  id: `temp-${Date.now()}`,
-                                });
-                              }
-                              localStorage.setItem(
-                                "arancelesCalculados",
-                                JSON.stringify(datosExistentes)
-                              );
-                            }}
-                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
-                              !usarCredito
-                                ? "bg-blue-100 border-blue-300 text-blue-700"
-                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            No
-                          </button>
+                          )
+                        )}
                         </div>
                       </div>
 
-                      {/* Pregunta de tipo de persona */}
+                    {/* Pregunta de crédito bancario */}
                       <div>
-                        <label className="text-base font-medium text-gray-700 mb-1 block">
-                          ¿Es comprador o vendedor?
+                      <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
+                        ¿Crédito bancario?
                         </label>
-                        <div className="flex gap-1">
+                      <div className="flex gap-1.5">
                           <button
                             onClick={() => {
-                              setTipoPersona("comprador");
+                            setUsarCredito(true);
                               // Guardar inmediatamente en localStorage
                               const datosExistentes = JSON.parse(
                                 localStorage.getItem("arancelesCalculados") ||
@@ -728,14 +755,14 @@ export function TramiteAdviceModal({
                                   item.tramite === selectedTramiteId
                               );
                               if (indiceExistente >= 0) {
-                                datosExistentes[indiceExistente].tipoPersona =
-                                  "comprador";
+                              datosExistentes[indiceExistente].usarCredito =
+                                true;
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
                                   estadoCivil: estadoCivil,
-                                  usarCredito: usarCredito,
-                                  tipoPersona: "comprador",
+                                usarCredito: true,
+                                tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
                                   id: `temp-${Date.now()}`,
@@ -746,17 +773,17 @@ export function TramiteAdviceModal({
                                 JSON.stringify(datosExistentes)
                               );
                             }}
-                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
-                              tipoPersona === "comprador"
-                                ? "bg-blue-100 border-blue-300 text-blue-700"
-                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            Comprador
+                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                            usarCredito
+                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                          }`}
+                        >
+                          Sí
                           </button>
                           <button
                             onClick={() => {
-                              setTipoPersona("vendedor");
+                            setUsarCredito(false);
                               // Guardar inmediatamente en localStorage
                               const datosExistentes = JSON.parse(
                                 localStorage.getItem("arancelesCalculados") ||
@@ -767,15 +794,14 @@ export function TramiteAdviceModal({
                                   item.tramite === selectedTramiteId
                               );
                               if (indiceExistente >= 0) {
-                                datosExistentes[indiceExistente].tipoPersona =
-                                  "vendedor";
+                              datosExistentes[indiceExistente].usarCredito =
+                                false;
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
-                                  zonaInmueble: zonaInmueble,
                                   estadoCivil: estadoCivil,
-                                  usarCredito: usarCredito,
-                                  tipoPersona: "vendedor",
+                                usarCredito: false,
+                                tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
                                   id: `temp-${Date.now()}`,
@@ -786,32 +812,23 @@ export function TramiteAdviceModal({
                                 JSON.stringify(datosExistentes)
                               );
                             }}
-                            className={`flex-1 px-2 py-1 text-base rounded-md border transition-colors ${
-                              tipoPersona === "vendedor"
-                                ? "bg-blue-100 border-blue-300 text-blue-700"
-                                : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            Vendedor
+                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                            !usarCredito
+                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                          }`}
+                        >
+                          No
                           </button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                  </>
                 )}
               </div>
 
               {/* Columna derecha - Documentos requeridos */}
-              <div className="flex flex-col">
-                <Card className="flex-1">
-                  <CardHeader className="pb-1 pt-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-600" />
-                      Documentos Requeridos
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <ul className="space-y-0.5">
+              <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                <ul className="space-y-1">
                       {(tramite.id === "compraventa"
                         ? obtenerDocumentosDinamicos(tramite.id)
                         : tramite.requirements.map((req) => ({
@@ -819,18 +836,18 @@ export function TramiteAdviceModal({
                             tooltip: "",
                           }))
                       ).map((req, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                          <div className="flex items-center gap-1">
-                            <span className="text-base leading-relaxed">
+                    <li key={index} className="flex items-start gap-1.5 p-1.5 bg-white rounded border border-blue-200">
+                      <CheckCircle className="h-3 w-3 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-blue-800 leading-relaxed">
                               {req.texto}
                             </span>
                             {req.tooltip && (
                               <div className="group relative">
-                                <div className="w-3 h-3 rounded-full bg-blue-200 text-blue-600 text-xs flex items-center justify-center cursor-help">
+                            <div className="w-3 h-3 rounded-full bg-blue-300 text-blue-700 text-xs flex items-center justify-center cursor-help hover:bg-blue-400 transition-colors">
                                   ?
                                 </div>
-                                <div className="absolute left-0 top-4 z-10 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            <div className="absolute left-0 top-4 z-10 w-48 p-2 bg-blue-800 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                                   {req.tooltip}
                                 </div>
                               </div>
@@ -839,37 +856,28 @@ export function TramiteAdviceModal({
                         </li>
                       ))}
                     </ul>
-                  </CardContent>
-                </Card>
               </div>
             </div>
+            )}
 
-            {/* Calculadora de Aranceles - Solo para compraventa */}
-            {tramite.id === "compraventa" ? (
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-lg">
-                <CardHeader className="pb-2 pt-3">
-                  <CardTitle className="text-xl font-bold flex items-center gap-3 text-blue-900">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Calculator className="h-6 w-6 text-blue-600" />
+            {/* Calculadora de Aranceles - Solo para compraventa y después del análisis */}
+            {tramite.id === "compraventa" && mostrarSecciones && (
+              <div className="bg-white border border-blue-200 rounded shadow-lg">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 px-4 py-1 text-center">
+                  <span className="text-base font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded-full">
+                    ¡Calcula los aranceles del trámite!
+                  </span>
                     </div>
-                    Calculadora de Aranceles - Notaría 3 Tijuana
-                  </CardTitle>
-                  <p className="text-base text-blue-700 mt-1">
-                    Calcula los costos exactos según el valor de tu inmueble
-                  </p>
-                </CardHeader>
-                <CardContent className="pt-0">
-
+                <div className="p-3">
                   {/* Valor del Inmueble */}
-                  <div className="bg-white p-4 rounded-lg border border-blue-100 mb-4">
-                    <h4 className="text-base font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-2">
+                    <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
                       Valor del Inmueble
                     </h4>
 
-                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-base font-medium text-gray-600 whitespace-nowrap">
+                      <label className="text-xs font-medium text-blue-700 whitespace-nowrap min-w-[100px]">
                           Precio de venta:
                         </label>
                         <Input
@@ -909,19 +917,17 @@ export function TramiteAdviceModal({
                             );
                           }}
                           placeholder="Ej: $1,500,000"
-                          className="h-10 text-base flex-1"
+                        className="h-8 text-xs flex-1 border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                         />
-                      </div>
-
                     </div>
                   </div>
 
-                  <div className="space-y-1">
+                  {/* Desglose de Costos */}
                     {valorInmueble &&
                       !isNaN(
                         parseFloat(valorInmueble.replace(/[$,]/g, ""))
                       ) && (
-                        <div className="bg-white p-1 rounded border border-gray-200 space-y-1">
+                        <div className="bg-white border border-blue-200 rounded p-3 shadow-sm">
                           {(() => {
                             const valor = parseFloat(
                               valorInmueble.replace(/[$,]/g, "")
@@ -940,260 +946,190 @@ export function TramiteAdviceModal({
                               (usarCredito ? rppc.inscripcionHipoteca : 0);
 
                             return (
-                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                                {/* ISAI */}
                                 <div className="space-y-1">
-                                  <div className="text-xs font-medium text-gray-600">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-0.5">
+                                  {/* ISAI */}
+                                  <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
+                                    <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
                                     ISAI
                                   </div>
-                                  <div className="text-xs space-y-0.5">
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        Por tramos:
-                                      </span>
-                                      <span className="font-medium">
-                                        ${isai.isai.toLocaleString()}
-                                      </span>
+                                    <div className="space-y-0.5">
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">Por tramos:</span>
+                                        <span className="font-semibold text-blue-800">${isai.isai.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        Sobretasa 0.4%:
-                                      </span>
-                                      <span className="font-medium">
-                                        ${isai.sobretasa.toLocaleString()}
-                                      </span>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">Sobretasa 0.4%:</span>
+                                        <span className="font-semibold text-blue-800">${isai.sobretasa.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between border-t pt-1 font-semibold">
-                                      <span className="text-gray-700">
-                                        Subtotal:
-                                      </span>
-                                      <span className="text-gray-900">
-                                        ${isai.total.toLocaleString()}
-                                      </span>
+                                      <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
+                                        <span className="text-blue-700">Subtotal:</span>
+                                        <span className="text-blue-900">${isai.total.toLocaleString()}</span>
                                     </div>
                                   </div>
                                 </div>
 
                                 {/* Honorarios Notariales */}
-                                <div className="space-y-1">
-                                  <div className="text-xs font-medium text-gray-600">
+                                  <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
+                                    <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
                                     Honorarios
                                   </div>
-                                  <div className="text-xs space-y-0.5">
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        Compraventa (1.0%):
-                                      </span>
-                                      <span className="font-medium">
-                                        $
-                                        {honorarios.compraventa.toLocaleString()}
-                                      </span>
+                                    <div className="space-y-0.5">
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">Compraventa (1.0%):</span>
+                                        <span className="font-semibold text-blue-800">${honorarios.compraventa.toLocaleString()}</span>
                                     </div>
                                     {usarCredito && (
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-500">
-                                          Hipoteca (0.5%):
-                                        </span>
-                                        <span className="font-medium">
-                                          $
-                                          {honorarios.hipoteca.toLocaleString()}
-                                        </span>
+                                        <div className="flex justify-between text-xs">
+                                          <span className="text-blue-600">Hipoteca (0.5%):</span>
+                                          <span className="font-semibold text-blue-800">${honorarios.hipoteca.toLocaleString()}</span>
                                       </div>
                                     )}
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        IVA (16%):
-                                      </span>
-                                      <span className="font-medium">
-                                        ${honorarios.iva.toLocaleString()}
-                                      </span>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">IVA (16%):</span>
+                                        <span className="font-semibold text-blue-800">${honorarios.iva.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between border-t pt-1 font-semibold">
-                                      <span className="text-gray-700">
-                                        Total:
-                                      </span>
-                                      <span className="text-gray-900">
-                                        ${honorarios.total.toLocaleString()}
-                                      </span>
+                                      <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
+                                        <span className="text-blue-700">Total:</span>
+                                        <span className="text-blue-900">${honorarios.total.toLocaleString()}</span>
                                     </div>
                                   </div>
                                 </div>
 
                                 {/* RPPC */}
-                                <div className="space-y-1">
-                                  <div className="text-xs font-medium text-gray-600">
+                                  <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
+                                    <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
                                     RPPC
                                   </div>
-                                  <div className="text-xs space-y-0.5">
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        Análisis:
-                                      </span>
-                                      <span className="font-medium">
-                                        ${rppc.analisis.toLocaleString()}
-                                      </span>
+                                    <div className="space-y-0.5">
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">Análisis:</span>
+                                        <span className="font-semibold text-blue-800">${rppc.analisis.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        Inscripción:
-                                      </span>
-                                      <span className="font-medium">
-                                        $
-                                        {rppc.inscripcionCompraventa.toLocaleString()}
-                                      </span>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">Inscripción:</span>
+                                        <span className="font-semibold text-blue-800">${rppc.inscripcionCompraventa.toLocaleString()}</span>
                                     </div>
                                     {usarCredito && (
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-500">
-                                          Hipoteca:
-                                        </span>
-                                        <span className="font-medium">
-                                          $
-                                          {rppc.inscripcionHipoteca.toLocaleString()}
-                                        </span>
+                                        <div className="flex justify-between text-xs">
+                                          <span className="text-blue-600">Hipoteca:</span>
+                                          <span className="font-semibold text-blue-800">${rppc.inscripcionHipoteca.toLocaleString()}</span>
                                       </div>
                                     )}
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">
-                                        Certificados:
-                                      </span>
-                                      <span className="font-medium">
-                                        $
-                                        {(
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">Certificados:</span>
+                                        <span className="font-semibold text-blue-800">${(
                                           rppc.certificadoInscripcion +
                                           rppc.certificacionPartida +
                                           rppc.certificadoNoInscripcion +
                                           rppc.certificadoNoPropiedad
-                                        ).toLocaleString()}
-                                      </span>
+                                        ).toLocaleString()}</span>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                            );
-                          })()}
 
                           {/* Total */}
-                          <div className="border-t pt-2 mt-2">
-                            <div className="flex justify-between text-sm font-bold">
-                              <span className="text-gray-800">
+                                <div className="bg-gradient-to-r from-blue-100 to-blue-200 border border-blue-300 rounded p-1">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-blue-800">
                                 TOTAL ARANCELES:
                               </span>
-                              <span className="text-blue-600">
-                                $
-                                {(() => {
-                                  const valor = parseFloat(
-                                    valorInmueble.replace(/[$,]/g, "")
-                                  );
-                                  const isai = calcularISAI(valor);
-                                  const honorarios =
-                                    calcularHonorariosNotariales(
-                                      valor,
-                                      usarCredito
-                                    );
-                                  const rppc = calcularCostosRPPC();
-                                  return (
-                                    isai.total +
-                                    honorarios.total +
-                                    rppc.inscripcionCompraventa +
-                                    (usarCredito ? rppc.inscripcionHipoteca : 0)
-                                  ).toLocaleString();
-                                })()}
+                                    <span className="text-sm font-bold text-blue-900">
+                                      ${totalAranceles.toLocaleString()}
                               </span>
                             </div>
                           </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                   </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="bg-gray-50">
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-base flex items-center gap-2 text-gray-700">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    Costo Aproximado
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-gray-700 mb-1">
-                      {tramite.estimatedCost}
-                    </p>
-                    <p className="text-base text-gray-500">
-                      * Rango aproximado, puede variar según el caso específico
-                    </p>
                   </div>
-                </CardContent>
-              </Card>
             )}
 
-            {/* Acciones */}
-            <div className="space-y-1">
-              <h3 className="text-base font-semibold">
-                ¿Cómo quieres continuar?
-              </h3>
-
-              <div className="grid grid-cols-2 gap-1">
+            {/* Footer con opciones de acción - Solo mostrar después de subir documento */}
+            {mostrarSecciones && (
+              <div className="pt-4 mt-4 border-t border-gray-200">
+                <div className="flex flex-wrap gap-2 justify-center">
                 <Button
-                  onClick={handleIniciarTramite}
-                  className="h-10 px-2 flex items-center gap-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                    onClick={() => {
+                      // Cerrar el modal primero
+                      onClose();
+                      
+                      // Verificar si ya estamos en la página de iniciar trámite
+                      const currentPath = window.location.pathname;
+                      console.log('Modal - Ruta actual:', currentPath);
+                      
+                      if (currentPath === '/iniciar-tramite') {
+                        // Si ya estamos en iniciar-tramite, solo actualizar la URL con el parámetro
+                        console.log('Modal - Ya en iniciar-tramite, actualizando URL');
+                        window.history.replaceState({}, '', '/iniciar-tramite?tramite=compraventa');
+                        // Recargar la página para que detecte el parámetro
+                        window.location.reload();
+                      } else {
+                        // Si no estamos en iniciar-tramite, verificar autenticación
+                        if (isAuthenticated) {
+                          // Si está logueado, ir directo a iniciar trámite con compraventa pre-seleccionado
+                          console.log('Modal - Usuario autenticado, yendo a iniciar-tramite');
+                          window.location.href = '/iniciar-tramite?tramite=compraventa';
+                        } else {
+                          // Si no está logueado, ir al login con redirect
+                          console.log('Modal - Usuario no autenticado, yendo al login');
+                          window.location.href = '/login?redirect=' + encodeURIComponent('/iniciar-tramite?tramite=compraventa');
+                        }
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs"
                   size="sm"
                 >
-                  <FileText className="h-3 w-3 flex-shrink-0" />
-                  <span className="text-base font-semibold">
+                    <FileText className="h-3 w-3 mr-1" />
                     Iniciar Expediente
-                  </span>
                 </Button>
-
                 <Button
-                  onClick={() => window.open("/citas", "_blank")}
-                  variant="outline"
-                  className="h-10 px-2 flex items-center gap-1 border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50"
+                    onClick={() => {
+                      // Lógica para agendar cita
+                      console.log("Agendar cita");
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-xs"
                   size="sm"
                 >
-                  <Calendar className="h-3 w-3 text-slate-600 flex-shrink-0" />
-                  <span className="text-base font-semibold text-slate-700">
+                    <Calendar className="h-3 w-3 mr-1" />
                     Agendar Cita
-                  </span>
                 </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1">
                 <Button
-                  onClick={handleWhatsApp}
-                  variant="outline"
-                  className="h-8 px-2 flex items-center gap-1 border border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                    onClick={() => {
+                      // Lógica para WhatsApp
+                      window.open("https://wa.me/1234567890", "_blank");
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 text-xs"
                   size="sm"
                 >
-                  <MessageCircle className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                  <span className="text-base text-blue-700">WhatsApp</span>
+                    <MessageCircle className="h-3 w-3 mr-1" />
+                    WhatsApp
                 </Button>
-
                 <Button
-                  onClick={handleEmail}
-                  variant="outline"
-                  className="h-8 px-2 flex items-center gap-1 border border-blue-200 hover:border-blue-500 hover:bg-blue-50"
+                    onClick={() => {
+                      // Lógica para email
+                      window.location.href = "mailto:contacto@notaria.com";
+                    }}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 text-xs"
                   size="sm"
                 >
-                  <Mail className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                  <span className="text-base text-blue-700">Email</span>
+                    <Mail className="h-3 w-3 mr-1" />
+                    Email
                 </Button>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-1 mt-1 border-t border-gray-200">
-              <div className="text-base text-gray-500">
-                ¿Necesitas más información? Contáctanos
-              </div>
               <Button
                 onClick={onClose}
-                className="bg-blue-600 hover:bg-blue-700 text-base px-3 py-1"
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 text-xs"
                 size="sm"
               >
                 Cerrar
               </Button>
             </div>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
