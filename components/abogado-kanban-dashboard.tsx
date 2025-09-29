@@ -120,6 +120,7 @@ import { ProyectoEscrituraViewer } from "@/components/proyecto-escritura-viewer"
 import { FirmaAgendadaViewer } from "@/components/firma-agendada-viewer";
 import { EscrituraFirmaAgendadaViewer } from "@/components/escritura-firma-agendada-viewer";
 import { GenericDocumentViewer } from "@/components/generic-document-viewer";
+import { EvidenciasFirma } from "@/components/evidencias-firma";
 
 interface AbogadoKanbanDashboardProps {
   licenciadoId: string;
@@ -330,6 +331,7 @@ export function AbogadoKanbanDashboard({
   const [forceUpdate, setForceUpdate] = useState(0);
   const [showDocumentViewer, setShowDocumentViewer] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [evidenciasCompletas, setEvidenciasCompletas] = useState(false);
   const [documentStates, setDocumentStates] = useState<Record<string, Record<string, string>>>({});
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const [highlightedText, setHighlightedText] = useState("");
@@ -2359,13 +2361,13 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                            onClick={() => {
                              const documentoContrato = {
                                id: "contrato-borrador",
-                               nombre: selectedExpediente.estado === "PROYECTO_ESCRITURA" 
+                               nombre: (selectedExpediente.estado as any) === "PROYECTO_ESCRITURA" 
                                  ? "Escritura - Proyecto" 
                                  : "Escritura - Borrador",
-                             descripcion: selectedExpediente.estado === "PROYECTO_ESCRITURA"
+                             descripcion: (selectedExpediente.estado as any) === "PROYECTO_ESCRITURA"
                                ? "Documento de proyecto de escritura - Generado automáticamente"
                                : "Documento en expediente preliminar - Generado automáticamente",
-                               archivo: selectedExpediente.estado === "PROYECTO_ESCRITURA"
+                               archivo: (selectedExpediente.estado as any) === "PROYECTO_ESCRITURA"
                                  ? "/contrato-compraventa.md"
                                  : "http://localhost:3000/documentos_legales/Contrato_Compraventa_Borrador.pdf",
                                estado: "pendiente",
@@ -2382,8 +2384,8 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       <h4 className="font-medium text-sm text-blue-900">Escritura</h4>
                       <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 border-blue-300 mt-1 shadow-sm">
                         <Clock className="h-2 w-2 mr-1" />
-                          {selectedExpediente.estado === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
-                           selectedExpediente.estado === "LISTO_PARA_FIRMA" ? "Firma agendada" : "Expediente preliminar"}
+                          {(selectedExpediente.estado as any) === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
+                           (selectedExpediente.estado as any) === "LISTO_PARA_FIRMA" ? "Firma agendada" : "Expediente preliminar"}
                               </Badge>
                             </div>
                         </div>
@@ -2396,42 +2398,59 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
 
                 {/* Segunda sección de Escritura - Solo mostrar si NO está en EXPEDIENTE_PRELIMINAR, COMPLETADO ni PROYECTO_ESCRITURA */}
                 {selectedExpediente.estado !== "EXPEDIENTE_PRELIMINAR" && selectedExpediente.estado !== "COMPLETADO" && selectedExpediente.estado !== "PROYECTO_ESCRITURA" && (
-                <div className="flex items-center justify-between py-3 px-4 bg-gradient-to-r from-green-200 via-green-50 to-white border border-green-200 rounded-lg hover:bg-gradient-to-r hover:from-green-300 hover:via-green-100 hover:to-green-50 cursor-pointer transition-all duration-200 shadow-sm"
-                           onClick={() => {
-                             // Abrir directamente el visor de documentos con el PDF dummy
-                             setSelectedDocument({
-                               id: "escritura-firma-dummy",
-                               nombre: "Escritura - Firma Dummy",
-                               descripcion: "Documento de escritura dummy para firma - Generado automáticamente",
-                               archivo: "/documentos/escrituras/Escrituras_Firma_Dummy.pdf",
-                               estado: "pendiente",
-                               requerido: true,
-                               fechaSubida: null,
-                             });
-                             setShowDocumentViewer(true);
-                           }}>
+                <div className="flex items-center justify-between py-3 px-4 bg-gradient-to-r from-blue-200 via-purple-100 to-white border border-blue-300 rounded-lg hover:bg-gradient-to-r hover:from-blue-300 hover:via-purple-200 hover:to-blue-50 cursor-pointer transition-all duration-200 shadow-sm"
+                   onClick={() => {
+                     // Abrir directamente el visor de documentos con el PDF dummy
+                     setSelectedDocument({
+                       id: "escritura-firma-dummy",
+                       nombre: "Escritura - Firma Dummy",
+                       descripcion: "Documento de escritura dummy para firma - Generado automáticamente",
+                       archivo: "/documentos/escrituras/Escrituras_Firma_Dummy.pdf",
+                       estado: "pendiente",
+                       requerido: true,
+                       fechaSubida: null,
+                     });
+                     setShowDocumentViewer(true);
+                   }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-gradient-to-br from-green-200 to-green-300 rounded flex items-center justify-center shadow-sm">
-                      <FileText className="h-3 w-3 text-green-800" />
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-300 to-purple-400 rounded flex items-center justify-center shadow-sm">
+                      <FileText className="h-3 w-3 text-white" />
                           </div>
                     <div>
-                      <h4 className="font-medium text-sm text-green-900">Escritura</h4>
-                      <Badge variant="outline" className="text-xs bg-gradient-to-r from-green-100 to-green-50 text-green-700 border-green-300 mt-1 shadow-sm">
+                      <h4 className="font-medium text-sm text-blue-900">Escritura</h4>
+                      <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-purple-50 text-blue-700 border-blue-300 mt-1 shadow-sm">
                         <Clock className="h-2 w-2 mr-1" />
-                          {selectedExpediente.estado === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
-                           selectedExpediente.estado === "LISTO_PARA_FIRMA" ? "Firma agendada" : "Expediente preliminar"}
+                          {(selectedExpediente.estado as any) === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
+                           (selectedExpediente.estado as any) === "LISTO_PARA_FIRMA" ? "Firma agendada" : "Expediente preliminar"}
                               </Badge>
                             </div>
                         </div>
-                  <Button variant="outline" size="sm" className="text-xs h-7 bg-gradient-to-r from-green-100 to-green-50 text-green-700 border-green-300 hover:bg-gradient-to-r hover:from-green-200 hover:to-green-100 shadow-sm">
+                  <Button variant="outline" size="sm" className="text-xs h-7 bg-gradient-to-r from-blue-100 to-purple-50 text-blue-700 border-blue-300 hover:bg-gradient-to-r hover:from-blue-200 hover:to-purple-100 shadow-sm">
                     <Eye className="h-3 w-3 mr-1" />
                     Ver
                           </Button>
                       </div>
                 )}
 
+                {/* Evidencias de Firma - Solo mostrar en LISTO_PARA_FIRMA */}
+                {(selectedExpediente.estado as any) === "LISTO_PARA_FIRMA" && (
+                  <div className="mt-4">
+                    <EvidenciasFirma
+                      comprador={`${selectedExpediente.comprador.nombre} ${selectedExpediente.comprador.apellidoPaterno}`}
+                      vendedor={`${selectedExpediente.vendedor.nombre} ${selectedExpediente.vendedor.apellidoPaterno}`}
+                      onEvidenciasCompletas={() => {
+                        console.log("✅ Todas las evidencias de firma han sido completadas");
+                        // Aquí se puede agregar lógica para completar el proceso de firma
+                      }}
+                      onEvidenciasStateChange={(todasCompletas) => {
+                        setEvidenciasCompletas(todasCompletas);
+                      }}
+                    />
+                  </div>
+                )}
+
                 {/* Información de fecha programada para Firma agendada */}
-                {selectedExpediente.estado === "LISTO_PARA_FIRMA" && (
+                {(selectedExpediente.estado as any) === "LISTO_PARA_FIRMA" && (
                   <div className="mt-4 space-y-2">
                     {/* Información de la cita programada */}
                     {fechasFirmaProgramadas[selectedExpediente.id] && (
@@ -2482,7 +2501,12 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             setSelectedExpediente(prev => prev ? { ...prev, estado: "COMPLETADO" as EstadoExpediente } : null);
                           }
                         }}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
+                        disabled={!evidenciasCompletas}
+                        className={`flex-1 text-white text-xs h-7 ${
+                          evidenciasCompletas 
+                            ? "bg-blue-600 hover:bg-blue-700" 
+                            : "bg-gray-400 cursor-not-allowed"
+                        }`}
                       >
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Firma Completada
@@ -2991,7 +3015,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                 )}
 
                       {/* Funcionalidad adicional para Proyecto de escritura */}
-                      {selectedExpediente.estado === "PROYECTO_ESCRITURA" && (
+                      {(selectedExpediente.estado as any) === "PROYECTO_ESCRITURA" && (
                         <div className="border-t pt-4 space-y-4">
                           {/* Estado de comunicación con las partes - Solo mostrar si el contrato está validado pero no todo aprobado */}
                           {(() => {
