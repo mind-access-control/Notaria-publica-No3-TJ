@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { createSolicitud } from "@/lib/mock-data";
 import { getTramiteById, getAllTramites } from "@/lib/tramites-data";
+import { formatPesoMexicano } from "@/lib/formatters";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,38 +80,44 @@ export default function IniciarTramitePage() {
   const tramitePreseleccionado = searchParams.get("tramite");
 
   useEffect(() => {
-    console.log('=== DEBUG: Estado de autenticación ===');
-    console.log('isLoading:', isLoading);
-    console.log('isAuthenticated:', isAuthenticated);
-    console.log('user:', user);
-    
+    console.log("=== DEBUG: Estado de autenticación ===");
+    console.log("isLoading:", isLoading);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("user:", user);
+
     // Verificar también localStorage como respaldo
     const token = localStorage.getItem("authToken");
     const userData = localStorage.getItem("userData");
-    console.log('Token en localStorage:', !!token);
-    console.log('UserData en localStorage:', !!userData);
-    
+    console.log("Token en localStorage:", !!token);
+    console.log("UserData en localStorage:", !!userData);
+
     // Solo redirigir al login si realmente no hay evidencia de autenticación
     if (!isLoading && !isAuthenticated && !token) {
-      console.log('❌ Usuario no autenticado, redirigiendo al login');
+      console.log("❌ Usuario no autenticado, redirigiendo al login");
       router.push(
         "/login?redirect=" +
           encodeURIComponent(window.location.pathname + window.location.search)
       );
     } else if (token && !isAuthenticated) {
-      console.log('⚠️ Token existe pero isAuthenticated es false, esperando...');
+      console.log(
+        "⚠️ Token existe pero isAuthenticated es false, esperando..."
+      );
       // Dar un poco más de tiempo para que el contexto se actualice
       setTimeout(() => {
         if (!isAuthenticated) {
-          console.log('❌ Después del timeout, aún no autenticado, redirigiendo');
+          console.log(
+            "❌ Después del timeout, aún no autenticado, redirigiendo"
+          );
           router.push(
             "/login?redirect=" +
-              encodeURIComponent(window.location.pathname + window.location.search)
+              encodeURIComponent(
+                window.location.pathname + window.location.search
+              )
           );
         }
       }, 2000);
     } else {
-      console.log('✅ Usuario autenticado, continuando');
+      console.log("✅ Usuario autenticado, continuando");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -119,14 +126,16 @@ export default function IniciarTramitePage() {
       setTramiteSeleccionado(tramitePreseleccionado);
     } else {
       // Verificar si viene del flujo de compraventa
-      const fromCompraventaFlow = localStorage.getItem('fromCompraventaFlow');
-      const selectedTramiteFromModal = localStorage.getItem('selectedTramiteFromModal');
-      
-      if (fromCompraventaFlow === 'true' && selectedTramiteFromModal) {
+      const fromCompraventaFlow = localStorage.getItem("fromCompraventaFlow");
+      const selectedTramiteFromModal = localStorage.getItem(
+        "selectedTramiteFromModal"
+      );
+
+      if (fromCompraventaFlow === "true" && selectedTramiteFromModal) {
         setTramiteSeleccionado(selectedTramiteFromModal);
         // Limpiar los flags del localStorage
-        localStorage.removeItem('fromCompraventaFlow');
-        localStorage.removeItem('selectedTramiteFromModal');
+        localStorage.removeItem("fromCompraventaFlow");
+        localStorage.removeItem("selectedTramiteFromModal");
       }
     }
   }, [tramitePreseleccionado]);
@@ -137,15 +146,20 @@ export default function IniciarTramitePage() {
     if (isAuthenticated && !isLoading) {
       // Solo ejecutar si no hay trámite preseleccionado por URL
       if (!tramitePreseleccionado && !tramiteSeleccionado) {
-        const fromCompraventaFlow = localStorage.getItem('fromCompraventaFlow');
-        const selectedTramiteFromModal = localStorage.getItem('selectedTramiteFromModal');
-        
-        if (fromCompraventaFlow === 'true' && selectedTramiteFromModal) {
-          console.log('✅ Pre-seleccionando trámite desde localStorage:', selectedTramiteFromModal);
+        const fromCompraventaFlow = localStorage.getItem("fromCompraventaFlow");
+        const selectedTramiteFromModal = localStorage.getItem(
+          "selectedTramiteFromModal"
+        );
+
+        if (fromCompraventaFlow === "true" && selectedTramiteFromModal) {
+          console.log(
+            "✅ Pre-seleccionando trámite desde localStorage:",
+            selectedTramiteFromModal
+          );
           setTramiteSeleccionado(selectedTramiteFromModal);
           // Limpiar los flags del localStorage
-          localStorage.removeItem('fromCompraventaFlow');
-          localStorage.removeItem('selectedTramiteFromModal');
+          localStorage.removeItem("fromCompraventaFlow");
+          localStorage.removeItem("selectedTramiteFromModal");
         }
       }
     }
@@ -233,8 +247,8 @@ export default function IniciarTramitePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <div className="pt-20">
+      {!isAuthenticated && <Header />}
+      <div className={isAuthenticated ? "py-8" : "pt-20"}>
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -387,13 +401,14 @@ export default function IniciarTramitePage() {
                                 <div className="text-sm space-y-1 text-gray-700">
                                   <div>
                                     <span className="font-medium">Valor:</span>{" "}
-                                    $
-                                    {parseFloat(
-                                      arancelCalculado.valorInmueble.replace(
-                                        /[,$]/g,
-                                        ""
+                                    {formatPesoMexicano(
+                                      parseFloat(
+                                        arancelCalculado.valorInmueble.replace(
+                                          /[,$]/g,
+                                          ""
+                                        )
                                       )
-                                    ).toLocaleString("es-MX")}
+                                    )}
                                   </div>
                                   <div>
                                     <span className="font-medium">Zona:</span>{" "}
@@ -426,33 +441,32 @@ export default function IniciarTramitePage() {
                                   <div className="flex justify-between">
                                     <span>ISAI:</span>
                                     <span className="font-medium">
-                                      $
-                                      {arancelCalculado.costosCalculados.isai.total.toLocaleString(
-                                        "es-MX"
+                                      {formatPesoMexicano(
+                                        arancelCalculado.costosCalculados.isai
+                                          .total
                                       )}
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span>Honorarios:</span>
                                     <span className="font-medium">
-                                      $
-                                      {arancelCalculado.costosCalculados.honorarios.total.toLocaleString(
-                                        "es-MX"
+                                      {formatPesoMexicano(
+                                        arancelCalculado.costosCalculados
+                                          .honorarios.total
                                       )}
                                     </span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span>RPPC:</span>
                                     <span className="font-medium">
-                                      $
-                                      {(
+                                      {formatPesoMexicano(
                                         arancelCalculado.costosCalculados.rppc
                                           .inscripcionCompraventa +
-                                        (arancelCalculado.usarCredito
-                                          ? arancelCalculado.costosCalculados
-                                              .rppc.inscripcionHipoteca
-                                          : 0)
-                                      ).toLocaleString("es-MX")}
+                                          (arancelCalculado.usarCredito
+                                            ? arancelCalculado.costosCalculados
+                                                .rppc.inscripcionHipoteca
+                                            : 0)
+                                      )}
                                     </span>
                                   </div>
                                   <div className="flex justify-between border-t pt-1 font-bold text-lg">
@@ -460,9 +474,8 @@ export default function IniciarTramitePage() {
                                       Total:
                                     </span>
                                     <span className="text-blue-600">
-                                      $
-                                      {arancelCalculado.costosCalculados.total.toLocaleString(
-                                        "es-MX"
+                                      {formatPesoMexicano(
+                                        arancelCalculado.costosCalculados.total
                                       )}
                                     </span>
                                   </div>
@@ -525,7 +538,7 @@ export default function IniciarTramitePage() {
           </div>
         </div>
       </div>
-      <Footer />
+      {!isAuthenticated && <Footer />}
 
       {/* Modal de selección de trámites - Solo renderizar cuando sea necesario */}
       {showTramiteModal && (

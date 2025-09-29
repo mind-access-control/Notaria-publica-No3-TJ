@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { formatPesoMexicano } from "@/lib/formatters";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ export function TramiteAdviceModal({
     tramiteEspecifico: "",
   });
   const [valorInmueble, setValorInmueble] = useState("");
+  const [displayValue, setDisplayValue] = useState("");
   const [zonaInmueble, setZonaInmueble] = useState("");
 
   // Estados para preguntas dinámicas
@@ -88,6 +90,11 @@ export function TramiteAdviceModal({
         setUsarCredito(datosActuales.usarCredito || false);
         setTipoPersona(datosActuales.tipoPersona || "comprador");
         setValorInmueble(datosActuales.valorInmueble || "");
+        setDisplayValue(datosActuales.valorInmueble || "");
+      } else {
+        // Reset states when no existing data
+        setValorInmueble("");
+        setDisplayValue("");
       }
     }
   }, [isOpen, selectedTramiteId]);
@@ -120,29 +127,35 @@ export function TramiteAdviceModal({
     console.log("handleUploadContrato llamado");
     const file = event.target.files?.[0];
     console.log("Archivo seleccionado:", file);
-    
+
     if (file) {
       // Validar tipo de archivo
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       const fileType = file.type;
-      
+
       if (!allowedTypes.includes(fileType)) {
-        alert('Por favor selecciona un archivo PDF, DOC o DOCX válido.');
+        alert("Por favor selecciona un archivo PDF, DOC o DOCX válido.");
         return;
       }
-      
+
       // Validar tamaño (máximo 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+        alert(
+          "El archivo es demasiado grande. El tamaño máximo permitido es 10MB."
+        );
         return;
       }
-      
+
       console.log("Archivo válido, iniciando proceso...");
       setArchivoContrato(file);
       setContratoSubido(true);
       setAnalizandoContrato(true);
-      
+
       // Simular análisis de IA
       setTimeout(() => {
         console.log("Análisis completado, extrayendo datos...");
@@ -150,12 +163,13 @@ export function TramiteAdviceModal({
         const precioSimulado = "2950000"; // Precio predeterminado
         const estadoCivilSimulado = "casado";
         const tipoPersonaSimulado = "comprador";
-        
+
         // Auto-llenar campos
         setValorInmueble(precioSimulado);
+        setDisplayValue(formatPesoMexicano(parseFloat(precioSimulado)));
         setEstadoCivil(estadoCivilSimulado);
         setTipoPersona(tipoPersonaSimulado);
-        
+
         setAnalizandoContrato(false);
         setMostrarSecciones(true);
         console.log("Datos extraídos y secciones mostradas");
@@ -299,6 +313,7 @@ export function TramiteAdviceModal({
 
   // Función para calcular costos RPPC (Registro Público de la Propiedad y del Comercio)
   const calcularCostosRPPC = () => {
+    const certificados = 483.12 + 520.33 + 1223.46 + 83.62;
     return {
       analisis: 379.1,
       inscripcionCompraventa: 11398.6,
@@ -307,6 +322,8 @@ export function TramiteAdviceModal({
       certificacionPartida: 520.33,
       certificadoNoInscripcion: 1223.46,
       certificadoNoPropiedad: 83.62,
+      totalCertificados: certificados,
+      total: 379.1 + 11398.6 + certificados, // Análisis + Inscripción + Certificados
     };
   };
 
@@ -322,7 +339,7 @@ export function TramiteAdviceModal({
     const totalAranceles =
       isai.total +
       honorarios.total +
-      rppc.inscripcionCompraventa +
+      rppc.total +
       (usarCredito ? rppc.inscripcionHipoteca : 0);
 
     return {
@@ -333,10 +350,7 @@ export function TramiteAdviceModal({
     };
   };
 
-  const calcularCostoVariable = (
-    tramiteId: string,
-    valor: string
-  ) => {
+  const calcularCostoVariable = (tramiteId: string, valor: string) => {
     const valorNum = parseFloat(valor.replace(/[,$]/g, ""));
     if (!valorNum || valorNum <= 0) return null;
 
@@ -510,23 +524,24 @@ export function TramiteAdviceModal({
           <div className="space-y-3 mb-1">
             {/* Paso 1: Upload del contrato */}
             {tramite.id === "compraventa" && !mostrarSecciones && (
-            <Card className="border border-blue-200 bg-blue-50">
+              <Card className="border border-blue-200 bg-blue-50">
                 <CardContent className="p-6 text-center">
                   {!contratoSubido ? (
                     <div className="space-y-4">
                       <div className="flex justify-center">
                         <div className="p-4 bg-blue-100 rounded-full">
                           <Upload className="h-8 w-8 text-blue-600" />
-                  </div>
-                  </div>
+                        </div>
+                      </div>
                       <div>
                         <h3 className="text-lg font-semibold text-blue-800 mb-2">
                           Sube tu contrato de compraventa
                         </h3>
                         <p className="text-gray-600 mb-4">
-                          Nuestra IA analizará automáticamente tu contrato para extraer la información necesaria
+                          Nuestra IA analizará automáticamente tu contrato para
+                          extraer la información necesaria
                         </p>
-                  </div>
+                      </div>
                       <div className="flex justify-center">
                         <div className="relative">
                           <input
@@ -536,16 +551,19 @@ export function TramiteAdviceModal({
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             id="file-upload"
                           />
-                          <Button 
+                          <Button
                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium"
                             asChild
                           >
-                            <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2">
+                            <label
+                              htmlFor="file-upload"
+                              className="cursor-pointer flex items-center gap-2"
+                            >
                               <Upload className="h-4 w-4" />
                               Seleccionar archivo
                             </label>
                           </Button>
-                </div>
+                        </div>
                       </div>
                     </div>
                   ) : analizandoContrato ? (
@@ -579,66 +597,27 @@ export function TramiteAdviceModal({
                       </div>
                     </div>
                   )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
             )}
 
             {/* Información adicional y documentos en dos columnas - Solo mostrar después del análisis */}
             {mostrarSecciones && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Columna izquierda - Información adicional */}
-              <div className="bg-blue-50 p-3 rounded border border-blue-200 space-y-2">
-                {/* Preguntas dinámicas para compraventa */}
-                {tramite.id === "compraventa" && (
-                  <>
-                    {/* Pregunta de tipo de persona - PRIMERA */}
+                {/* Columna izquierda - Información adicional */}
+                <div className="bg-blue-50 p-3 rounded border border-blue-200 space-y-2">
+                  {/* Preguntas dinámicas para compraventa */}
+                  {tramite.id === "compraventa" && (
+                    <>
+                      {/* Pregunta de tipo de persona - PRIMERA */}
                       <div>
-                      <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
-                        ¿Es comprador o vendedor?
+                        <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
+                          ¿Es comprador o vendedor?
                         </label>
-                      <div className="flex gap-1.5">
-                              <button
-                                onClick={() => {
-                            setTipoPersona("comprador");
-                                  // Guardar inmediatamente en localStorage
-                                  const datosExistentes = JSON.parse(
-                              localStorage.getItem("arancelesCalculados") ||
-                                "[]"
-                                  );
-                            const indiceExistente = datosExistentes.findIndex(
-                                      (item: any) =>
-                                        item.tramite === selectedTramiteId
-                                    );
-                                  if (indiceExistente >= 0) {
-                              datosExistentes[indiceExistente].tipoPersona =
-                                "comprador";
-                                  } else {
-                                  datosExistentes.push({
-                                    tramite: selectedTramiteId,
-                                estadoCivil: estadoCivil,
-                                    usarCredito: usarCredito,
-                                tipoPersona: "comprador",
-                                    valorInmueble: valorInmueble,
-                                    fechaCalculo: new Date().toISOString(),
-                                    id: `temp-${Date.now()}`,
-                                  });
-                                  }
-                                  localStorage.setItem(
-                                    "arancelesCalculados",
-                                    JSON.stringify(datosExistentes)
-                                  );
-                                }}
-                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
-                            tipoPersona === "comprador"
-                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
-                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                          }`}
-                        >
-                          Comprador
-                              </button>
+                        <div className="flex gap-1.5">
                           <button
                             onClick={() => {
-                            setTipoPersona("vendedor");
+                              setTipoPersona("comprador");
                               // Guardar inmediatamente en localStorage
                               const datosExistentes = JSON.parse(
                                 localStorage.getItem("arancelesCalculados") ||
@@ -649,15 +628,14 @@ export function TramiteAdviceModal({
                                   item.tramite === selectedTramiteId
                               );
                               if (indiceExistente >= 0) {
-                              datosExistentes[indiceExistente].tipoPersona =
-                                "vendedor";
+                                datosExistentes[indiceExistente].tipoPersona =
+                                  "comprador";
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
-                                zonaInmueble: zonaInmueble,
                                   estadoCivil: estadoCivil,
-                                usarCredito: usarCredito,
-                                tipoPersona: "vendedor",
+                                  usarCredito: usarCredito,
+                                  tipoPersona: "comprador",
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
                                   id: `temp-${Date.now()}`,
@@ -668,49 +646,140 @@ export function TramiteAdviceModal({
                                 JSON.stringify(datosExistentes)
                               );
                             }}
-                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
-                            tipoPersona === "vendedor"
-                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
-                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                          }`}
-                        >
-                          Vendedor
+                            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                              tipoPersona === "comprador"
+                                ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                                : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                            }`}
+                          >
+                            Comprador
                           </button>
-                      </div>
-                    </div>
-
-                    {/* Pregunta de estado civil */}
-                    <div>
-                      <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
-                        ¿Estado civil?
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {["soltero", "casado", "divorciado", "viudo"].map(
-                          (estado) => (
                           <button
-                              key={estado}
                             onClick={() => {
-                                setEstadoCivil(estado);
+                              setTipoPersona("vendedor");
                               // Guardar inmediatamente en localStorage
                               const datosExistentes = JSON.parse(
-                                  localStorage.getItem(
-                                    "arancelesCalculados"
-                                  ) || "[]"
+                                localStorage.getItem("arancelesCalculados") ||
+                                  "[]"
                               );
-                                const indiceExistente =
-                                  datosExistentes.findIndex(
+                              const indiceExistente = datosExistentes.findIndex(
                                 (item: any) =>
                                   item.tramite === selectedTramiteId
                               );
                               if (indiceExistente >= 0) {
-                                  datosExistentes[
-                                    indiceExistente
-                                  ].estadoCivil = estado;
+                                datosExistentes[indiceExistente].tipoPersona =
+                                  "vendedor";
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
-                                  estadoCivil: estado,
+                                  zonaInmueble: zonaInmueble,
+                                  estadoCivil: estadoCivil,
                                   usarCredito: usarCredito,
+                                  tipoPersona: "vendedor",
+                                  valorInmueble: valorInmueble,
+                                  fechaCalculo: new Date().toISOString(),
+                                  id: `temp-${Date.now()}`,
+                                });
+                              }
+                              localStorage.setItem(
+                                "arancelesCalculados",
+                                JSON.stringify(datosExistentes)
+                              );
+                            }}
+                            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                              tipoPersona === "vendedor"
+                                ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                                : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                            }`}
+                          >
+                            Vendedor
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Pregunta de estado civil */}
+                      <div>
+                        <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
+                          ¿Estado civil?
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {["soltero", "casado", "divorciado", "viudo"].map(
+                            (estado) => (
+                              <button
+                                key={estado}
+                                onClick={() => {
+                                  setEstadoCivil(estado);
+                                  // Guardar inmediatamente en localStorage
+                                  const datosExistentes = JSON.parse(
+                                    localStorage.getItem(
+                                      "arancelesCalculados"
+                                    ) || "[]"
+                                  );
+                                  const indiceExistente =
+                                    datosExistentes.findIndex(
+                                      (item: any) =>
+                                        item.tramite === selectedTramiteId
+                                    );
+                                  if (indiceExistente >= 0) {
+                                    datosExistentes[
+                                      indiceExistente
+                                    ].estadoCivil = estado;
+                                  } else {
+                                    datosExistentes.push({
+                                      tramite: selectedTramiteId,
+                                      estadoCivil: estado,
+                                      usarCredito: usarCredito,
+                                      tipoPersona: tipoPersona,
+                                      valorInmueble: valorInmueble,
+                                      fechaCalculo: new Date().toISOString(),
+                                      id: `temp-${Date.now()}`,
+                                    });
+                                  }
+                                  localStorage.setItem(
+                                    "arancelesCalculados",
+                                    JSON.stringify(datosExistentes)
+                                  );
+                                }}
+                                className={`px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                                  estadoCivil === estado
+                                    ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                                    : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                                }`}
+                              >
+                                {estado.charAt(0).toUpperCase() +
+                                  estado.slice(1)}
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Pregunta de crédito bancario */}
+                      <div>
+                        <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
+                          ¿Crédito bancario?
+                        </label>
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => {
+                              setUsarCredito(true);
+                              // Guardar inmediatamente en localStorage
+                              const datosExistentes = JSON.parse(
+                                localStorage.getItem("arancelesCalculados") ||
+                                  "[]"
+                              );
+                              const indiceExistente = datosExistentes.findIndex(
+                                (item: any) =>
+                                  item.tramite === selectedTramiteId
+                              );
+                              if (indiceExistente >= 0) {
+                                datosExistentes[indiceExistente].usarCredito =
+                                  true;
+                              } else {
+                                datosExistentes.push({
+                                  tramite: selectedTramiteId,
+                                  estadoCivil: estadoCivil,
+                                  usarCredito: true,
                                   tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
@@ -722,29 +791,17 @@ export function TramiteAdviceModal({
                                 JSON.stringify(datosExistentes)
                               );
                             }}
-                              className={`px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
-                                estadoCivil === estado
-                                  ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
-                                  : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                              }`}
-                            >
-                              {estado.charAt(0).toUpperCase() +
-                                estado.slice(1)}
+                            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                              usarCredito
+                                ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                                : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                            }`}
+                          >
+                            Sí
                           </button>
-                          )
-                        )}
-                        </div>
-                      </div>
-
-                    {/* Pregunta de crédito bancario */}
-                      <div>
-                      <label className="text-sm font-semibold text-blue-800 mb-0.5 block">
-                        ¿Crédito bancario?
-                        </label>
-                      <div className="flex gap-1.5">
                           <button
                             onClick={() => {
-                            setUsarCredito(true);
+                              setUsarCredito(false);
                               // Guardar inmediatamente en localStorage
                               const datosExistentes = JSON.parse(
                                 localStorage.getItem("arancelesCalculados") ||
@@ -755,14 +812,14 @@ export function TramiteAdviceModal({
                                   item.tramite === selectedTramiteId
                               );
                               if (indiceExistente >= 0) {
-                              datosExistentes[indiceExistente].usarCredito =
-                                true;
+                                datosExistentes[indiceExistente].usarCredito =
+                                  false;
                               } else {
                                 datosExistentes.push({
                                   tramite: selectedTramiteId,
                                   estadoCivil: estadoCivil,
-                                usarCredito: true,
-                                tipoPersona: tipoPersona,
+                                  usarCredito: false,
+                                  tipoPersona: tipoPersona,
                                   valorInmueble: valorInmueble,
                                   fechaCalculo: new Date().toISOString(),
                                   id: `temp-${Date.now()}`,
@@ -773,91 +830,55 @@ export function TramiteAdviceModal({
                                 JSON.stringify(datosExistentes)
                               );
                             }}
-                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
-                            usarCredito
-                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
-                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                          }`}
-                        >
-                          Sí
-                          </button>
-                          <button
-                            onClick={() => {
-                            setUsarCredito(false);
-                              // Guardar inmediatamente en localStorage
-                              const datosExistentes = JSON.parse(
-                                localStorage.getItem("arancelesCalculados") ||
-                                  "[]"
-                              );
-                              const indiceExistente = datosExistentes.findIndex(
-                                (item: any) =>
-                                  item.tramite === selectedTramiteId
-                              );
-                              if (indiceExistente >= 0) {
-                              datosExistentes[indiceExistente].usarCredito =
-                                false;
-                              } else {
-                                datosExistentes.push({
-                                  tramite: selectedTramiteId,
-                                  estadoCivil: estadoCivil,
-                                usarCredito: false,
-                                tipoPersona: tipoPersona,
-                                  valorInmueble: valorInmueble,
-                                  fechaCalculo: new Date().toISOString(),
-                                  id: `temp-${Date.now()}`,
-                                });
-                              }
-                              localStorage.setItem(
-                                "arancelesCalculados",
-                                JSON.stringify(datosExistentes)
-                              );
-                            }}
-                          className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
-                            !usarCredito
-                              ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
-                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
-                          }`}
-                        >
-                          No
+                            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded border transition-all duration-200 ${
+                              !usarCredito
+                                ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                                : "bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                            }`}
+                          >
+                            No
                           </button>
                         </div>
                       </div>
-                  </>
-                )}
-              </div>
+                    </>
+                  )}
+                </div>
 
-              {/* Columna derecha - Documentos requeridos */}
-              <div className="bg-blue-50 p-3 rounded border border-blue-200">
-                <ul className="space-y-1">
-                      {(tramite.id === "compraventa"
-                        ? obtenerDocumentosDinamicos(tramite.id)
-                        : tramite.requirements.map((req) => ({
-                            texto: req,
-                            tooltip: "",
-                          }))
-                      ).map((req, index) => (
-                    <li key={index} className="flex items-start gap-1.5 p-1.5 bg-white rounded border border-blue-200">
-                      <CheckCircle className="h-3 w-3 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-blue-800 leading-relaxed">
-                              {req.texto}
-                            </span>
-                            {req.tooltip && (
-                              <div className="group relative">
-                            <div className="w-3 h-3 rounded-full bg-blue-300 text-blue-700 text-xs flex items-center justify-center cursor-help hover:bg-blue-400 transition-colors">
-                                  ?
-                                </div>
-                            <div className="absolute left-0 top-4 z-10 w-48 p-2 bg-blue-800 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                                  {req.tooltip}
-                                </div>
+                {/* Columna derecha - Documentos requeridos */}
+                <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                  <ul className="space-y-1">
+                    {(tramite.id === "compraventa"
+                      ? obtenerDocumentosDinamicos(tramite.id)
+                      : tramite.requirements.map((req) => ({
+                          texto: req,
+                          tooltip: "",
+                        }))
+                    ).map((req, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-1.5 p-1.5 bg-white rounded border border-blue-200"
+                      >
+                        <CheckCircle className="h-3 w-3 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-blue-800 leading-relaxed">
+                            {req.texto}
+                          </span>
+                          {req.tooltip && (
+                            <div className="group relative">
+                              <div className="w-3 h-3 rounded-full bg-blue-300 text-blue-700 text-xs flex items-center justify-center cursor-help hover:bg-blue-400 transition-colors">
+                                ?
                               </div>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                              <div className="absolute left-0 top-4 z-10 w-48 p-2 bg-blue-800 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                {req.tooltip}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </div>
             )}
 
             {/* Calculadora de Aranceles - Solo para compraventa y después del análisis */}
@@ -867,7 +888,7 @@ export function TramiteAdviceModal({
                   <span className="text-base font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded-full">
                     ¡Calcula los aranceles del trámite!
                   </span>
-                    </div>
+                </div>
                 <div className="p-3">
                   {/* Valor del Inmueble */}
                   <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-2">
@@ -876,258 +897,360 @@ export function TramiteAdviceModal({
                       Valor del Inmueble
                     </h4>
 
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <label className="text-xs font-medium text-blue-700 whitespace-nowrap min-w-[100px]">
-                          Precio de venta:
-                        </label>
-                        <Input
-                          value={valorInmueble}
-                          onChange={(e) => {
-                            setValorInmueble(e.target.value);
-                            // Guardar inmediatamente en localStorage
-                            const datosExistentes = JSON.parse(
-                              localStorage.getItem("arancelesCalculados") ||
-                                "[]"
+                        Precio de venta:
+                      </label>
+                      <Input
+                        value={displayValue}
+                        onChange={(e) => {
+                          // Permitir solo números y comas
+                          const rawValue = e.target.value.replace(
+                            /[^0-9,]/g,
+                            ""
+                          );
+                          setDisplayValue(rawValue);
+
+                          // Convertir a número para cálculos
+                          const numericValue = rawValue.replace(/,/g, "");
+                          setValorInmueble(numericValue);
+
+                          // Guardar inmediatamente en localStorage
+                          const datosExistentes = JSON.parse(
+                            localStorage.getItem("arancelesCalculados") || "[]"
+                          );
+                          const indiceExistente = datosExistentes.findIndex(
+                            (item: any) => item.tramite === selectedTramiteId
+                          );
+                          if (indiceExistente >= 0) {
+                            datosExistentes[indiceExistente].valorInmueble =
+                              numericValue;
+                          } else {
+                            datosExistentes.push({
+                              tramite: selectedTramiteId,
+                              zonaInmueble: zonaInmueble,
+                              estadoCivil: estadoCivil,
+                              usarCredito: usarCredito,
+                              tipoPersona: tipoPersona,
+                              valorInmueble: numericValue,
+                              fechaCalculo: new Date().toISOString(),
+                              id: `temp-${Date.now()}`,
+                            });
+                          }
+                          localStorage.setItem(
+                            "arancelesCalculados",
+                            JSON.stringify(datosExistentes)
+                          );
+                          console.log(
+                            "Valor inmueble guardado inmediatamente:",
+                            numericValue
+                          );
+                        }}
+                        onFocus={() => {
+                          // Al hacer focus, mostrar solo números para facilitar edición
+                          if (
+                            valorInmueble &&
+                            !isNaN(parseFloat(valorInmueble))
+                          ) {
+                            setDisplayValue(valorInmueble);
+                          }
+                        }}
+                        onBlur={() => {
+                          // Al salir del focus, formatear como moneda
+                          if (
+                            valorInmueble &&
+                            !isNaN(parseFloat(valorInmueble))
+                          ) {
+                            setDisplayValue(
+                              formatPesoMexicano(parseFloat(valorInmueble))
                             );
-                            const indiceExistente = datosExistentes.findIndex(
-                              (item: any) => item.tramite === selectedTramiteId
-                            );
-                            if (indiceExistente >= 0) {
-                              datosExistentes[indiceExistente].valorInmueble =
-                                e.target.value;
-                            } else {
-                              datosExistentes.push({
-                                tramite: selectedTramiteId,
-                                zonaInmueble: zonaInmueble,
-                                estadoCivil: estadoCivil,
-                                usarCredito: usarCredito,
-                                tipoPersona: tipoPersona,
-                                valorInmueble: e.target.value,
-                                fechaCalculo: new Date().toISOString(),
-                                id: `temp-${Date.now()}`,
-                              });
-                            }
-                            localStorage.setItem(
-                              "arancelesCalculados",
-                              JSON.stringify(datosExistentes)
-                            );
-                            console.log(
-                              "Valor inmueble guardado inmediatamente:",
-                              e.target.value
-                            );
-                          }}
-                          placeholder="Ej: $1,500,000"
-                        className="h-8 text-xs flex-1 border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                        />
+                          }
+                        }}
+                        placeholder="$1,500,000.00"
+                        className="h-8 text-xs flex-1 border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
+                      />
                     </div>
                   </div>
 
                   {/* Desglose de Costos */}
-                    {valorInmueble &&
-                      !isNaN(
-                        parseFloat(valorInmueble.replace(/[$,]/g, ""))
-                      ) && (
-                        <div className="bg-white border border-blue-200 rounded p-3 shadow-sm">
-                          {(() => {
-                            const valor = parseFloat(
-                              valorInmueble.replace(/[$,]/g, "")
-                            );
-                            const isai = calcularISAI(valor);
-                            const honorarios = calcularHonorariosNotariales(
-                              valor,
-                              usarCredito
-                            );
-                            const rppc = calcularCostosRPPC();
+                  {valorInmueble &&
+                    !isNaN(parseFloat(valorInmueble.replace(/[$,]/g, ""))) && (
+                      <div className="bg-white border border-blue-200 rounded p-3 shadow-sm">
+                        {(() => {
+                          const valor = parseFloat(
+                            valorInmueble.replace(/[$,]/g, "")
+                          );
+                          const isai = calcularISAI(valor);
+                          const honorarios = calcularHonorariosNotariales(
+                            valor,
+                            usarCredito
+                          );
+                          const rppc = calcularCostosRPPC();
 
-                            const totalAranceles =
-                              isai.total +
-                              honorarios.total +
-                              rppc.inscripcionCompraventa +
-                              (usarCredito ? rppc.inscripcionHipoteca : 0);
+                          const totalAranceles =
+                            isai.total +
+                            honorarios.total +
+                            rppc.inscripcionCompraventa +
+                            (usarCredito ? rppc.inscripcionHipoteca : 0);
 
-                            return (
-                                <div className="space-y-1">
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-0.5">
-                                  {/* ISAI */}
-                                  <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
-                                    <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
+                          return (
+                            <div className="space-y-1">
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-0.5">
+                                {/* ISAI */}
+                                <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
+                                  <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
                                     ISAI
                                   </div>
-                                    <div className="space-y-0.5">
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">Por tramos:</span>
-                                        <span className="font-semibold text-blue-800">${isai.isai.toLocaleString()}</span>
+                                  <div className="space-y-0.5">
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        Por tramos:
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(isai.isai)}
+                                      </span>
                                     </div>
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">Sobretasa 0.4%:</span>
-                                        <span className="font-semibold text-blue-800">${isai.sobretasa.toLocaleString()}</span>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        Sobretasa 0.4%:
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(isai.sobretasa)}
+                                      </span>
                                     </div>
-                                      <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
-                                        <span className="text-blue-700">Subtotal:</span>
-                                        <span className="text-blue-900">${isai.total.toLocaleString()}</span>
+                                    <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
+                                      <span className="text-blue-700">
+                                        Subtotal:
+                                      </span>
+                                      <span className="text-blue-900">
+                                        {formatPesoMexicano(isai.total)}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
 
                                 {/* Honorarios Notariales */}
-                                  <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
-                                    <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
+                                <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
+                                  <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
                                     Honorarios
                                   </div>
-                                    <div className="space-y-0.5">
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">Compraventa (1.0%):</span>
-                                        <span className="font-semibold text-blue-800">${honorarios.compraventa.toLocaleString()}</span>
+                                  <div className="space-y-0.5">
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        Compraventa (1.0%):
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(
+                                          honorarios.compraventa
+                                        )}
+                                      </span>
                                     </div>
                                     {usarCredito && (
-                                        <div className="flex justify-between text-xs">
-                                          <span className="text-blue-600">Hipoteca (0.5%):</span>
-                                          <span className="font-semibold text-blue-800">${honorarios.hipoteca.toLocaleString()}</span>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">
+                                          Hipoteca (0.5%):
+                                        </span>
+                                        <span className="font-semibold text-blue-800">
+                                          {formatPesoMexicano(
+                                            honorarios.hipoteca
+                                          )}
+                                        </span>
                                       </div>
                                     )}
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">IVA (16%):</span>
-                                        <span className="font-semibold text-blue-800">${honorarios.iva.toLocaleString()}</span>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        IVA (16%):
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(honorarios.iva)}
+                                      </span>
                                     </div>
-                                      <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
-                                        <span className="text-blue-700">Total:</span>
-                                        <span className="text-blue-900">${honorarios.total.toLocaleString()}</span>
+                                    <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
+                                      <span className="text-blue-700">
+                                        Total:
+                                      </span>
+                                      <span className="text-blue-900">
+                                        {formatPesoMexicano(honorarios.total)}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
 
                                 {/* RPPC */}
-                                  <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
-                                    <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
+                                <div className="bg-blue-50 p-0.5 rounded border border-blue-200">
+                                  <div className="text-xs font-semibold text-blue-700 mb-0.5 uppercase tracking-wide">
                                     RPPC
                                   </div>
-                                    <div className="space-y-0.5">
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">Análisis:</span>
-                                        <span className="font-semibold text-blue-800">${rppc.analisis.toLocaleString()}</span>
+                                  <div className="space-y-0.5">
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        Análisis:
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(rppc.analisis)}
+                                      </span>
                                     </div>
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">Inscripción:</span>
-                                        <span className="font-semibold text-blue-800">${rppc.inscripcionCompraventa.toLocaleString()}</span>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        Inscripción:
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(
+                                          rppc.inscripcionCompraventa
+                                        )}
+                                      </span>
                                     </div>
                                     {usarCredito && (
-                                        <div className="flex justify-between text-xs">
-                                          <span className="text-blue-600">Hipoteca:</span>
-                                          <span className="font-semibold text-blue-800">${rppc.inscripcionHipoteca.toLocaleString()}</span>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-blue-600">
+                                          Hipoteca:
+                                        </span>
+                                        <span className="font-semibold text-blue-800">
+                                          {formatPesoMexicano(
+                                            rppc.inscripcionHipoteca
+                                          )}
+                                        </span>
                                       </div>
                                     )}
-                                      <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600">Certificados:</span>
-                                        <span className="font-semibold text-blue-800">${(
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-blue-600">
+                                        Certificados:
+                                      </span>
+                                      <span className="font-semibold text-blue-800">
+                                        {formatPesoMexicano(
                                           rppc.certificadoInscripcion +
-                                          rppc.certificacionPartida +
-                                          rppc.certificadoNoInscripcion +
-                                          rppc.certificadoNoPropiedad
-                                        ).toLocaleString()}</span>
+                                            rppc.certificacionPartida +
+                                            rppc.certificadoNoInscripcion +
+                                            rppc.certificadoNoPropiedad
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-bold border-t border-blue-300 pt-0.5">
+                                      <span className="text-blue-700">
+                                        Total RPPC:
+                                      </span>
+                                      <span className="text-blue-900">
+                                        {formatPesoMexicano(rppc.total)}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
                               </div>
 
-                          {/* Total */}
-                                <div className="bg-gradient-to-r from-blue-100 to-blue-200 border border-blue-300 rounded p-1">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold text-blue-800">
-                                TOTAL ARANCELES:
-                              </span>
-                                    <span className="text-sm font-bold text-blue-900">
-                                      ${totalAranceles.toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
+                              {/* Total */}
+                              <div className="bg-gradient-to-r from-blue-100 to-blue-200 border border-blue-300 rounded p-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs font-bold text-blue-800">
+                                    TOTAL ARANCELES:
+                                  </span>
+                                  <span className="text-sm font-bold text-blue-900">
+                                    {formatPesoMexicano(totalAranceles)}
+                                  </span>
+                                </div>
                               </div>
-                            );
-                          })()}
-                        </div>
-                      )}
-                  </div>
-                  </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                </div>
+              </div>
             )}
 
             {/* Footer con opciones de acción - Solo mostrar después de subir documento */}
             {mostrarSecciones && (
               <div className="pt-4 mt-4 border-t border-gray-200">
                 <div className="flex flex-wrap gap-2 justify-center">
-                <Button
+                  <Button
                     onClick={() => {
                       // Cerrar el modal primero
                       onClose();
-                      
+
                       // Verificar si ya estamos en la página de iniciar trámite
                       const currentPath = window.location.pathname;
-                      console.log('Modal - Ruta actual:', currentPath);
-                      
-                      if (currentPath === '/iniciar-tramite') {
+                      console.log("Modal - Ruta actual:", currentPath);
+
+                      if (currentPath === "/iniciar-tramite") {
                         // Si ya estamos en iniciar-tramite, solo actualizar la URL con el parámetro
-                        console.log('Modal - Ya en iniciar-tramite, actualizando URL');
-                        window.history.replaceState({}, '', '/iniciar-tramite?tramite=compraventa');
+                        console.log(
+                          "Modal - Ya en iniciar-tramite, actualizando URL"
+                        );
+                        window.history.replaceState(
+                          {},
+                          "",
+                          "/iniciar-tramite?tramite=compraventa"
+                        );
                         // Recargar la página para que detecte el parámetro
                         window.location.reload();
                       } else {
                         // Si no estamos en iniciar-tramite, verificar autenticación
                         if (isAuthenticated) {
                           // Si está logueado, ir directo a iniciar trámite con compraventa pre-seleccionado
-                          console.log('Modal - Usuario autenticado, yendo a iniciar-tramite');
-                          window.location.href = '/iniciar-tramite?tramite=compraventa';
+                          console.log(
+                            "Modal - Usuario autenticado, yendo a iniciar-tramite"
+                          );
+                          window.location.href =
+                            "/iniciar-tramite?tramite=compraventa";
                         } else {
                           // Si no está logueado, ir al login con redirect
-                          console.log('Modal - Usuario no autenticado, yendo al login');
-                          window.location.href = '/login?redirect=' + encodeURIComponent('/iniciar-tramite?tramite=compraventa');
+                          console.log(
+                            "Modal - Usuario no autenticado, yendo al login"
+                          );
+                          window.location.href =
+                            "/login?redirect=" +
+                            encodeURIComponent(
+                              "/iniciar-tramite?tramite=compraventa"
+                            );
                         }
                       }
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs"
-                  size="sm"
-                >
+                    size="sm"
+                  >
                     <FileText className="h-3 w-3 mr-1" />
                     Iniciar Expediente
-                </Button>
-                <Button
+                  </Button>
+                  <Button
                     onClick={() => {
                       // Lógica para agendar cita
                       console.log("Agendar cita");
                     }}
                     className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-xs"
-                  size="sm"
-                >
+                    size="sm"
+                  >
                     <Calendar className="h-3 w-3 mr-1" />
                     Agendar Cita
-                </Button>
-                <Button
+                  </Button>
+                  <Button
                     onClick={() => {
                       // Lógica para WhatsApp
                       window.open("https://wa.me/1234567890", "_blank");
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 text-xs"
-                  size="sm"
-                >
+                    size="sm"
+                  >
                     <MessageCircle className="h-3 w-3 mr-1" />
                     WhatsApp
-                </Button>
-                <Button
+                  </Button>
+                  <Button
                     onClick={() => {
                       // Lógica para email
                       window.location.href = "mailto:contacto@notaria.com";
                     }}
                     className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 text-xs"
-                  size="sm"
-                >
+                    size="sm"
+                  >
                     <Mail className="h-3 w-3 mr-1" />
                     Email
-                </Button>
-              <Button
-                onClick={onClose}
+                  </Button>
+                  <Button
+                    onClick={onClose}
                     className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 text-xs"
-                size="sm"
-              >
-                Cerrar
-              </Button>
-            </div>
+                    size="sm"
+                  >
+                    Cerrar
+                  </Button>
+                </div>
               </div>
             )}
           </div>
