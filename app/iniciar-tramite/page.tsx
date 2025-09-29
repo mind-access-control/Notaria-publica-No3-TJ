@@ -361,16 +361,16 @@ export default function IniciarTramitePage() {
                     {/* Tiempo estimado */}
                     <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                       <Clock className="h-6 w-6 text-blue-600" />
-                      <div>
+                                  <div>
                         <p className="text-sm text-gray-600">Tiempo Estimado</p>
                         <p className="text-lg font-semibold text-blue-900">
                           {tramiteInfo.tiempo}
                         </p>
-                      </div>
-                    </div>
+                                  </div>
+                                  </div>
 
                     {/* Documentos requeridos */}
-                    <div>
+                                  <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
                         Documentos Requeridos
                       </h3>
@@ -385,10 +385,10 @@ export default function IniciarTramitePage() {
                           </li>
                         ))}
                       </ul>
-                    </div>
+                                  </div>
 
                     {/* Requisitos */}
-                    <div>
+                                  <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
                         Requisitos
                       </h3>
@@ -403,7 +403,7 @@ export default function IniciarTramitePage() {
                           </li>
                         ))}
                       </ul>
-                    </div>
+                              </div>
 
                     {/* Costo desglosado */}
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -411,12 +411,12 @@ export default function IniciarTramitePage() {
                         Inversión en tu Trámite
                       </h3>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                                  <div className="flex justify-between">
                           <span className="text-gray-600">
                             Costo base del trámite:
                           </span>
-                          <span className="font-medium">
-                            $
+                                    <span className="font-medium">
+                                      $
                             {Math.round(
                               tramiteInfo.costo.min * 0.6
                             ).toLocaleString("es-MX")}{" "}
@@ -424,14 +424,14 @@ export default function IniciarTramitePage() {
                             {Math.round(
                               tramiteInfo.costo.max * 0.6
                             ).toLocaleString("es-MX")}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
                           <span className="text-gray-600">
                             Aranceles notariales:
                           </span>
-                          <span className="font-medium">
-                            $
+                                    <span className="font-medium">
+                                      $
                             {Math.round(
                               tramiteInfo.costo.min * 0.25
                             ).toLocaleString("es-MX")}{" "}
@@ -439,38 +439,38 @@ export default function IniciarTramitePage() {
                             {Math.round(
                               tramiteInfo.costo.max * 0.25
                             ).toLocaleString("es-MX")}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
                           <span className="text-gray-600">
                             Gastos de gestión:
                           </span>
-                          <span className="font-medium">
-                            $
+                                    <span className="font-medium">
+                                      $
                             {Math.round(
                               tramiteInfo.costo.min * 0.15
                             ).toLocaleString("es-MX")}{" "}
                             - $
                             {Math.round(
                               tramiteInfo.costo.max * 0.15
-                            ).toLocaleString("es-MX")}
-                          </span>
-                        </div>
+                                      ).toLocaleString("es-MX")}
+                                    </span>
+                                  </div>
                         <div className="border-t border-gray-300 pt-2 mt-2">
                           <div className="flex justify-between font-semibold text-lg">
                             <span>Total:</span>
                             <span className="text-emerald-600">
                               ${tramiteInfo.costo.min.toLocaleString("es-MX")} -
                               ${tramiteInfo.costo.max.toLocaleString("es-MX")}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                       <p className="text-xs text-gray-500 mt-2">
                         * Incluye asesoría personalizada, revisión de documentos
                         y seguimiento completo
                       </p>
-                    </div>
+                          </div>
 
                     {/* Botón de crear solicitud */}
                     <div className="pt-4 border-t border-gray-200">
@@ -524,12 +524,12 @@ export default function IniciarTramitePage() {
       <Footer />
 
       {/* Modal de selección de trámites */}
-      <TramiteModal
-        isOpen={showTramiteModal}
-        onClose={handleTramiteModalClose}
-        preselectedTramite={undefined}
-        onTramiteSelect={handleTramiteSelect}
-      />
+        <TramiteModal
+          isOpen={showTramiteModal}
+          onClose={handleTramiteModalClose}
+          preselectedTramite={undefined}
+          onTramiteSelect={handleTramiteSelect}
+        />
     </div>
   );
 }

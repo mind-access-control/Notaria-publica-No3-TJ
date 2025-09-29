@@ -116,6 +116,10 @@ import {
   ExpedienteValidationReport,
 } from "@/lib/ai-validation-service";
 import { NotificationsPanel } from "@/components/notifications-panel";
+import { ProyectoEscrituraViewer } from "@/components/proyecto-escritura-viewer";
+import { FirmaAgendadaViewer } from "@/components/firma-agendada-viewer";
+import { EscrituraFirmaAgendadaViewer } from "@/components/escritura-firma-agendada-viewer";
+import { GenericDocumentViewer } from "@/components/generic-document-viewer";
 
 interface AbogadoKanbanDashboardProps {
   licenciadoId: string;
@@ -2349,15 +2353,15 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       </div>
                     </div>
 
-                {/* Borrador del Contrato - Solo mostrar si NO está en EXPEDIENTE_PRELIMINAR ni en COMPLETADO */}
-                {selectedExpediente.estado !== "EXPEDIENTE_PRELIMINAR" && selectedExpediente.estado !== "COMPLETADO" && (
+                {/* Borrador del Contrato - Solo mostrar si NO está en EXPEDIENTE_PRELIMINAR, COMPLETADO ni LISTO_PARA_FIRMA */}
+                {selectedExpediente.estado !== "EXPEDIENTE_PRELIMINAR" && selectedExpediente.estado !== "COMPLETADO" && selectedExpediente.estado !== "LISTO_PARA_FIRMA" && (
                 <div className="flex items-center justify-between py-3 px-4 bg-gradient-to-r from-blue-200 via-blue-50 to-white border border-blue-200 rounded-lg hover:bg-gradient-to-r hover:from-blue-300 hover:via-blue-100 hover:to-blue-50 cursor-pointer transition-all duration-200 shadow-sm"
                            onClick={() => {
                              const documentoContrato = {
                                id: "contrato-borrador",
                                nombre: selectedExpediente.estado === "PROYECTO_ESCRITURA" 
-                                 ? "Contrato de Compraventa - Proyecto" 
-                                 : "Contrato de Compraventa - Borrador",
+                                 ? "Escritura - Proyecto" 
+                                 : "Escritura - Borrador",
                              descripcion: selectedExpediente.estado === "PROYECTO_ESCRITURA"
                                ? "Documento de proyecto de escritura - Generado automáticamente"
                                : "Documento en expediente preliminar - Generado automáticamente",
@@ -2375,7 +2379,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       <FileText className="h-3 w-3 text-blue-800" />
                           </div>
                     <div>
-                      <h4 className="font-medium text-sm text-blue-900">Contrato de Compraventa</h4>
+                      <h4 className="font-medium text-sm text-blue-900">Escritura</h4>
                       <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 border-blue-300 mt-1 shadow-sm">
                         <Clock className="h-2 w-2 mr-1" />
                           {selectedExpediente.estado === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
@@ -2384,6 +2388,42 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                             </div>
                         </div>
                   <Button variant="outline" size="sm" className="text-xs h-7 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 border-blue-300 hover:bg-gradient-to-r hover:from-blue-200 hover:to-blue-100 shadow-sm">
+                    <Eye className="h-3 w-3 mr-1" />
+                    Ver
+                          </Button>
+                      </div>
+                )}
+
+                {/* Segunda sección de Escritura - Solo mostrar si NO está en EXPEDIENTE_PRELIMINAR, COMPLETADO ni PROYECTO_ESCRITURA */}
+                {selectedExpediente.estado !== "EXPEDIENTE_PRELIMINAR" && selectedExpediente.estado !== "COMPLETADO" && selectedExpediente.estado !== "PROYECTO_ESCRITURA" && (
+                <div className="flex items-center justify-between py-3 px-4 bg-gradient-to-r from-green-200 via-green-50 to-white border border-green-200 rounded-lg hover:bg-gradient-to-r hover:from-green-300 hover:via-green-100 hover:to-green-50 cursor-pointer transition-all duration-200 shadow-sm"
+                           onClick={() => {
+                             // Abrir directamente el visor de documentos con el PDF dummy
+                             setSelectedDocument({
+                               id: "escritura-firma-dummy",
+                               nombre: "Escritura - Firma Dummy",
+                               descripcion: "Documento de escritura dummy para firma - Generado automáticamente",
+                               archivo: "/documentos/escrituras/Escrituras_Firma_Dummy.pdf",
+                               estado: "pendiente",
+                               requerido: true,
+                               fechaSubida: null,
+                             });
+                             setShowDocumentViewer(true);
+                           }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-gradient-to-br from-green-200 to-green-300 rounded flex items-center justify-center shadow-sm">
+                      <FileText className="h-3 w-3 text-green-800" />
+                          </div>
+                    <div>
+                      <h4 className="font-medium text-sm text-green-900">Escritura</h4>
+                      <Badge variant="outline" className="text-xs bg-gradient-to-r from-green-100 to-green-50 text-green-700 border-green-300 mt-1 shadow-sm">
+                        <Clock className="h-2 w-2 mr-1" />
+                          {selectedExpediente.estado === "PROYECTO_ESCRITURA" ? "Proyecto de escritura" : 
+                           selectedExpediente.estado === "LISTO_PARA_FIRMA" ? "Firma agendada" : "Expediente preliminar"}
+                              </Badge>
+                            </div>
+                        </div>
+                  <Button variant="outline" size="sm" className="text-xs h-7 bg-gradient-to-r from-green-100 to-green-50 text-green-700 border-green-300 hover:bg-gradient-to-r hover:from-green-200 hover:to-green-100 shadow-sm">
                     <Eye className="h-3 w-3 mr-1" />
                     Ver
                           </Button>
@@ -2908,11 +2948,11 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       </div>
                     )}
 
-                    {/* Contrato de Compraventa - Al final de Post Firma */}
+                    {/* Escritura - Al final de Post Firma */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <FileText className="h-5 w-5 text-blue-600" />
-                        <h5 className="font-semibold text-gray-900">Contrato de Compraventa</h5>
+                        <h5 className="font-semibold text-gray-900">Escritura</h5>
                         <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
                           Firmado
                         </Badge>
@@ -4667,56 +4707,18 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           <div className="flex-1 flex overflow-hidden">
               {/* Panel izquierdo - Visualizador de documento */}
               <div className={`${selectedExpediente?.estado === "LISTO_PARA_FIRMA" ? "w-full" : "w-3/5"} flex flex-col pdf-viewer-container relative`}>
-                {/* Barra de herramientas para Firma agendada */}
-                {selectedExpediente?.estado === "LISTO_PARA_FIRMA" && (
-                  <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium text-gray-900">Contrato de Compraventa</h3>
-                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-xs">
-                        Firma agendada
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-7"
-                        onClick={() => {
-                          // Simular descarga del documento
-                          console.log(`📥 Descargando contrato para ${selectedExpediente?.numeroSolicitud}`);
-                          const link = document.createElement('a');
-                          link.href = selectedDocument?.archivo || '';
-                          link.download = `Contrato_Compraventa_${selectedExpediente?.numeroSolicitud}.pdf`;
-                          link.click();
-                        }}
-                      >
-                        <Download className="h-3 w-3 mr-1" />
-                        Descargar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-7"
-                        onClick={() => {
-                          // Simular impresión del documento
-                          console.log(`🖨️ Imprimiendo contrato para ${selectedExpediente?.numeroSolicitud}`);
-                          window.print();
-                        }}
-                      >
-                        <Printer className="h-3 w-3 mr-1" />
-                        Imprimir
-                      </Button>
-                    </div>
-                  </div>
+                {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && (
+                  <ProyectoEscrituraViewer numeroSolicitud={selectedExpediente?.numeroSolicitud || ""} />
                 )}
-                
-                <div className="flex-1 overflow-hidden bg-gray-50 relative">
-              <iframe
-                    src={selectedDocument?.archivo || ""}
-                    className="w-full h-full border-0"
-                title="Documento PDF"
-              />
-                </div>
+                {selectedExpediente?.estado === "LISTO_PARA_FIRMA" && (
+                  <EscrituraFirmaAgendadaViewer numeroSolicitud={selectedExpediente?.numeroSolicitud || ""} />
+                )}
+                {selectedExpediente?.estado !== "PROYECTO_ESCRITURA" && selectedExpediente?.estado !== "LISTO_PARA_FIRMA" && (
+                  <GenericDocumentViewer 
+                    documentUrl={selectedDocument?.archivo} 
+                    title="Documento PDF" 
+                  />
+                )}
               </div>
 
                 {/* Panel derecho - Solo mostrar si NO está en Listo para firma */}
