@@ -483,7 +483,7 @@ export function AbogadoKanbanDashboard({
       categoria: "Documentos del Comprador",
       nombre: "Identificación Oficial",
       descripcion: "INE o pasaporte vigente",
-      archivo: "http://localhost:3000/documentos_legales/Identificacion_Oficial.pdf",
+      archivo: "/documentos_legales/Identificacion_Oficial.pdf",
       estado: "pendiente",
       requerido: true,
       fechaSubida: null,
@@ -493,7 +493,7 @@ export function AbogadoKanbanDashboard({
       categoria: "Documentos del Comprador",
       nombre: "CURP",
       descripcion: "Clave Única de Registro de Población",
-      archivo: "http://localhost:3000/documentos_legales/CURP.pdf",
+      archivo: "/documentos_legales/CURP.pdf",
       estado: "pendiente",
       requerido: true,
       fechaSubida: null,
@@ -503,7 +503,7 @@ export function AbogadoKanbanDashboard({
       categoria: "Documentos del Comprador",
       nombre: "RFC y Constancia de Situación Fiscal (CSF)",
       descripcion: "Registro Federal de Contribuyentes y constancia de situación fiscal",
-      archivo: "http://localhost:3000/documentos_legales/RFC_y_Constancia_Situacion_Fiscal.pdf",
+      archivo: "/documentos_legales/RFC_y_Constancia_Situacion_Fiscal.pdf",
       estado: "pendiente",
       requerido: true,
       fechaSubida: null,
@@ -513,7 +513,7 @@ export function AbogadoKanbanDashboard({
       categoria: "Documentos del Comprador",
       nombre: "Acta de Nacimiento",
       descripcion: "Acta de nacimiento reciente o legible",
-      archivo: "http://localhost:3000/documentos_legales/Acta_de_Nacimiento.pdf",
+      archivo: "/documentos_legales/Acta_de_Nacimiento.pdf",
       estado: "pendiente",
       requerido: true,
       fechaSubida: null,
@@ -523,7 +523,7 @@ export function AbogadoKanbanDashboard({
       categoria: "Documentos del Comprador",
       nombre: "Comprobante de Domicilio",
       descripcion: "Agua/luz/estado de cuenta, no mayor a 3 meses",
-      archivo: "http://localhost:3000/documentos_legales/Comprobante_de_Domicilio.pdf",
+      archivo: "/documentos_legales/Comprobante_de_Domicilio.pdf",
       estado: "pendiente",
       requerido: true,
       fechaSubida: null,
@@ -722,16 +722,16 @@ export function AbogadoKanbanDashboard({
 
   // Lista de PDFs dummy disponibles para rotación
   const dummyPDFs = [
-    "http://localhost:3000/documentos_legales/Acta_de_Nacimiento.pdf",
-    "http://localhost:3000/documentos_legales/Comprobante_de_Domicilio.pdf",
-    "http://localhost:3000/documentos_legales/1_Acta_de_Nacimiento_HEGJ860702HMCRNN07.pdf",
-    "http://localhost:3000/documentos_legales/2_Identificación_Oficial.pdf",
-    "http://localhost:3000/documentos_legales/3_Cédula_profesional.pdf",
-    "http://localhost:3000/documentos_legales/4_Comprobante_de_domicilio_Luz.pdf",
-    "http://localhost:3000/documentos_legales/7_CEDULA_DE_IDENTIFICACION_FISCAL.pdf",
-    "http://localhost:3000/documentos_legales/10._Constancia_de_situación_Fiscal.pdf",
-    "http://localhost:3000/documentos_legales/11_RFC.pdf",
-    "http://localhost:3000/documentos_legales/12_EstadoDeCuentaBanorte.pdf"
+    "/documentos_legales/Acta_de_Nacimiento.pdf",
+    "/documentos_legales/Comprobante_de_Domicilio.pdf",
+    "/documentos_legales/1_Acta_de_Nacimiento_HEGJ860702HMCRNN07.pdf",
+    "/documentos_legales/2_Identificación_Oficial.pdf",
+    "/documentos_legales/3_Cédula_profesional.pdf",
+    "/documentos_legales/4_Comprobante_de_domicilio_Luz.pdf",
+    "/documentos_legales/7_CEDULA_DE_IDENTIFICACION_FISCAL.pdf",
+    "/documentos_legales/10._Constancia_de_situación_Fiscal.pdf",
+    "/documentos_legales/11_RFC.pdf",
+    "/documentos_legales/12_EstadoDeCuentaBanorte.pdf"
   ];
 
   // Función para obtener PDF dummy basado en el ID del documento
@@ -2369,7 +2369,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                                : "Documento en expediente preliminar - Generado automáticamente",
                                archivo: (selectedExpediente.estado as any) === "PROYECTO_ESCRITURA"
                                  ? "/contrato-compraventa.md"
-                                 : "http://localhost:3000/documentos_legales/Contrato_Compraventa_Borrador.pdf",
+                                 : "/documentos_legales/Contrato_Compraventa_Borrador.pdf",
                                estado: "pendiente",
                                requerido: true,
                                fechaSubida: null,
