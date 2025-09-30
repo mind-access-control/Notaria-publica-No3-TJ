@@ -45,10 +45,10 @@ export default function SeguimientoPage() {
     if (numeroSolicitud === "NT3-2025-00123") {
       const solicitudDemo = {
         numeroSolicitud: "NT3-2025-00123",
-        tipoTramite: "Compraventa de Inmuebles",
-        costoTotal: 25000,
+        tipoTramite: "Compraventa de inmuebles",
+        costoTotal: 48402.83,
         saldoPendiente: 0,
-        pagosRealizados: 25000,
+        pagosRealizados: 48402.83,
         estatusActual: "EN_REVISION_INTERNA",
         documentosRequeridos: [
           {
@@ -132,6 +132,48 @@ export default function SeguimientoPage() {
             extractedData: {
               documentType: "DATOS_BANCARIOS",
               data: { banco: "BBVA", cuenta: "1234567890" },
+            },
+            validado: true,
+          },
+          {
+            nombre: "Contrato de compraventa",
+            descripcion: "Contrato principal del inmueble",
+            subido: true,
+            archivo: {
+              name: "Contrato_Compraventa.pdf",
+              url: "/sample-documents/identificacion.pdf",
+            },
+            extractedData: {
+              documentType: "CONTRATO_COMPRAVENTA",
+              data: { valorInmueble: "853500", fechaContrato: "15/09/2025" },
+            },
+            validado: true,
+          },
+          {
+            nombre: "Avalúo del inmueble",
+            descripcion: "Avalúo certificado del inmueble",
+            subido: true,
+            archivo: {
+              name: "Avaluo_Inmueble.pdf",
+              url: "/sample-documents/identificacion.pdf",
+            },
+            extractedData: {
+              documentType: "AVALUO_INMUEBLE",
+              data: { valorAvaluo: "853500", fechaAvaluo: "10/09/2025" },
+            },
+            validado: true,
+          },
+          {
+            nombre: "Certificado de libertad de gravámenes",
+            descripcion: "Certificado del Registro Público",
+            subido: true,
+            archivo: {
+              name: "Certificado_Libertad.pdf",
+              url: "/sample-documents/identificacion.pdf",
+            },
+            extractedData: {
+              documentType: "CERTIFICADO_LIBERTAD",
+              data: { numeroCertificado: "CL-2025-001", fecha: "12/09/2025" },
             },
             validado: true,
           },
@@ -567,20 +609,13 @@ export default function SeguimientoPage() {
 
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Documentos:</span>
-                    <span className="text-sm font-medium">
-                      {
-                        solicitud.documentosRequeridos.filter(
-                          (doc: any) => doc.subido
-                        ).length
-                      }{" "}
-                      / {solicitud.documentosRequeridos.length}
-                    </span>
+                    <span className="text-sm font-medium">8 / 8</span>
                   </div>
 
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Pago:</span>
                     <span className="text-sm font-medium text-green-600">
-                      ${solicitud.pagosRealizados.toLocaleString("es-MX")}
+                      $48,402.83
                     </span>
                   </div>
                 </div>

@@ -47,18 +47,116 @@ export default function MiCuentaPage() {
   const user = {
     id: "user-hardcoded",
     nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
-    email: "juan.perez@email.com",
+    email: "tu-email@ejemplo.com",
     telefono: "+52 664 123 4567",
     role: "cliente" as const,
   };
+
+  // Función para calcular ISAI (Impuesto Sobre Adquisición de Inmuebles) - Tijuana
+  const calcularISAI = (valorInmueble: number) => {
+    const tramos = [
+      { limite: 0, porcentaje: 0 },
+      { limite: 100000, porcentaje: 0.015 }, // 1.5%
+      { limite: 200000, porcentaje: 0.02 }, // 2.0%
+      { limite: 300000, porcentaje: 0.025 }, // 2.5%
+      { limite: 400000, porcentaje: 0.03 }, // 3.0%
+      { limite: 500000, porcentaje: 0.035 }, // 3.5%
+      { limite: 600000, porcentaje: 0.04 }, // 4.0%
+      { limite: 700000, porcentaje: 0.045 }, // 4.5%
+    ];
+
+    let isai = 0;
+    let valorRestante = valorInmueble;
+
+    for (let i = 1; i < tramos.length; i++) {
+      const tramoAnterior = tramos[i - 1];
+      const tramoActual = tramos[i];
+
+      if (valorRestante <= 0) break;
+
+      const baseTramo = Math.min(
+        valorRestante,
+        tramoActual.limite - tramoAnterior.limite
+      );
+      isai += baseTramo * tramoActual.porcentaje;
+      valorRestante -= baseTramo;
+    }
+
+    // Adicional sobretasa 0.4%
+    const sobretasa = valorInmueble * 0.004;
+
+    return {
+      isai: isai,
+      sobretasa: sobretasa,
+      total: isai + sobretasa,
+    };
+  };
+
+  // Función para calcular honorarios notariales
+  const calcularHonorariosNotariales = (
+    valorInmueble: number,
+    usarCredito: boolean
+  ) => {
+    // Honorarios compraventa: 1.0% del valor (POC)
+    const honorariosCompraventa = valorInmueble * 0.01;
+
+    // Honorarios hipoteca: 0.5% del valor del inmueble (POC)
+    const honorariosHipoteca = usarCredito ? valorInmueble * 0.005 : 0;
+
+    const subtotal = honorariosCompraventa + honorariosHipoteca;
+    const iva = subtotal * 0.16; // IVA 16%
+
+    return {
+      compraventa: honorariosCompraventa,
+      hipoteca: honorariosHipoteca,
+      subtotal: subtotal,
+      iva: iva,
+      total: subtotal + iva,
+    };
+  };
+
+  // Función para calcular costos RPPC (Registro Público de la Propiedad y del Comercio)
+  const calcularCostosRPPC = () => {
+    const certificados = 483.12 + 520.33 + 1223.46 + 83.62;
+    return {
+      analisis: 379.1,
+      inscripcionCompraventa: 11398.6,
+      inscripcionHipoteca: 11398.6,
+      certificadoInscripcion: 483.12,
+      certificacionPartida: 520.33,
+      certificadoNoInscripcion: 1223.46,
+      certificadoNoPropiedad: 83.62,
+      totalCertificados: certificados,
+      total: 379.1 + 11398.6 + certificados, // Análisis + Inscripción + Certificados
+    };
+  };
+
+  // Calcular el total real usando los mismos cálculos del modal
+  const calcularTotalReal = () => {
+    const valorInmueble = 853500; // Valor por defecto para compraventa
+    const usarCredito = false;
+
+    const isai = calcularISAI(valorInmueble);
+    const honorarios = calcularHonorariosNotariales(valorInmueble, usarCredito);
+    const rppc = calcularCostosRPPC();
+
+    return {
+      isai,
+      honorarios,
+      rppc,
+      total: isai.total + honorarios.total + rppc.total,
+    };
+  };
+
+  const costosCalculados = calcularTotalReal();
 
   // Solicitud hardcodeada de compraventa
   const solicitudHardcodeada = {
     numeroSolicitud: "NT3-2025-00123",
     tipoTramite: "Compraventa de Inmuebles",
-    costoTotal: 25000,
+    costoTotal: costosCalculados.total,
     saldoPendiente: 0,
-    pagosRealizados: 25000,
+    pagosRealizados: costosCalculados.total,
     estatusActual: "EN_REVISION_INTERNA" as const,
     documentosRequeridos: [
       {
@@ -570,26 +668,20 @@ export default function MiCuentaPage() {
                           <div className="flex justify-between">
                             <span className="text-gray-600">Valor:</span>
                             <span className="font-medium">
-                              {formatPesoMexicano(1500000)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Zona:</span>
-                            <span className="font-medium capitalize">
-                              Centro
+                              {formatPesoMexicano(853500)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Estado civil:</span>
                             <span className="font-medium capitalize">
-                              Soltero
+                              Casado
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">
                               Crédito bancario:
                             </span>
-                            <span className="font-medium">Sí</span>
+                            <span className="font-medium">No</span>
                           </div>
                         </div>
                       </div>
@@ -603,25 +695,27 @@ export default function MiCuentaPage() {
                           <div className="flex justify-between">
                             <span className="text-gray-600">ISAI:</span>
                             <span className="font-medium">
-                              {formatPesoMexicano(15000)}
+                              {formatPesoMexicano(costosCalculados.isai.total)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Honorarios:</span>
                             <span className="font-medium">
-                              {formatPesoMexicano(8500)}
+                              {formatPesoMexicano(
+                                costosCalculados.honorarios.total
+                              )}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">RPPC:</span>
                             <span className="font-medium">
-                              {formatPesoMexicano(1500)}
+                              {formatPesoMexicano(costosCalculados.rppc.total)}
                             </span>
                           </div>
                           <div className="flex justify-between border-t pt-2 font-bold text-lg">
                             <span className="text-gray-900">Total:</span>
                             <span className="text-blue-600">
-                              {formatPesoMexicano(25000)}
+                              {formatPesoMexicano(costosCalculados.total)}
                             </span>
                           </div>
                         </div>

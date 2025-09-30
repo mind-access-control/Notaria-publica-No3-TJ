@@ -129,7 +129,7 @@ export const solicitudes: Solicitud[] = [
     cliente: {
       id: "user-1",
       nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
-      email: "juan.perez@email.com",
+      email: "jon@jon.com",
       telefono: "+52 664 123 4567",
     },
     notario: {

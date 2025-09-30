@@ -2,10 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { formatPesoMexicano } from "@/lib/formatters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   FileText,
   Calendar,
@@ -14,15 +23,117 @@ import {
   User,
   LogOut,
   ArrowLeft,
+  Mail,
 } from "lucide-react";
 
 export default function AgendarCitaPage() {
   const params = useParams();
+  const { user } = useAuth();
   const numeroSolicitud = params.numeroSolicitud as string;
   const [solicitud, setSolicitud] = useState<any>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<string>("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [availableAppointments, setAvailableAppointments] = useState<any[]>([]);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmedAppointment, setConfirmedAppointment] = useState<any>(null);
+
+  // Función para calcular ISAI (Impuesto Sobre Adquisición de Inmuebles) - Tijuana
+  const calcularISAI = (valorInmueble: number) => {
+    const tramos = [
+      { limite: 0, porcentaje: 0 },
+      { limite: 100000, porcentaje: 0.015 }, // 1.5%
+      { limite: 200000, porcentaje: 0.02 }, // 2.0%
+      { limite: 300000, porcentaje: 0.025 }, // 2.5%
+      { limite: 400000, porcentaje: 0.03 }, // 3.0%
+      { limite: 500000, porcentaje: 0.035 }, // 3.5%
+      { limite: 600000, porcentaje: 0.04 }, // 4.0%
+      { limite: 700000, porcentaje: 0.045 }, // 4.5%
+    ];
+
+    let isai = 0;
+    let valorRestante = valorInmueble;
+
+    for (let i = 1; i < tramos.length; i++) {
+      const tramoAnterior = tramos[i - 1];
+      const tramoActual = tramos[i];
+
+      if (valorRestante <= 0) break;
+
+      const baseTramo = Math.min(
+        valorRestante,
+        tramoActual.limite - tramoAnterior.limite
+      );
+      isai += baseTramo * tramoActual.porcentaje;
+      valorRestante -= baseTramo;
+    }
+
+    // Adicional sobretasa 0.4%
+    const sobretasa = valorInmueble * 0.004;
+
+    return {
+      isai: isai,
+      sobretasa: sobretasa,
+      total: isai + sobretasa,
+    };
+  };
+
+  // Función para calcular honorarios notariales
+  const calcularHonorariosNotariales = (
+    valorInmueble: number,
+    usarCredito: boolean
+  ) => {
+    // Honorarios compraventa: 1.0% del valor (POC)
+    const honorariosCompraventa = valorInmueble * 0.01;
+
+    // Honorarios hipoteca: 0.5% del valor del inmueble (POC)
+    const honorariosHipoteca = usarCredito ? valorInmueble * 0.005 : 0;
+
+    const subtotal = honorariosCompraventa + honorariosHipoteca;
+    const iva = subtotal * 0.16; // IVA 16%
+
+    return {
+      compraventa: honorariosCompraventa,
+      hipoteca: honorariosHipoteca,
+      subtotal: subtotal,
+      iva: iva,
+      total: subtotal + iva,
+    };
+  };
+
+  // Función para calcular costos RPPC (Registro Público de la Propiedad y del Comercio)
+  const calcularCostosRPPC = () => {
+    const certificados = 483.12 + 520.33 + 1223.46 + 83.62;
+    return {
+      analisis: 379.1,
+      inscripcionCompraventa: 11398.6,
+      inscripcionHipoteca: 11398.6,
+      certificadoInscripcion: 483.12,
+      certificacionPartida: 520.33,
+      certificadoNoInscripcion: 1223.46,
+      certificadoNoPropiedad: 83.62,
+      totalCertificados: certificados,
+      total: 379.1 + 11398.6 + certificados, // Análisis + Inscripción + Certificados
+    };
+  };
+
+  // Calcular el total real usando los mismos cálculos del modal
+  const calcularTotalReal = () => {
+    const valorInmueble = 853500; // Valor por defecto para compraventa
+    const usarCredito = false;
+
+    const isai = calcularISAI(valorInmueble);
+    const honorarios = calcularHonorariosNotariales(valorInmueble, usarCredito);
+    const rppc = calcularCostosRPPC();
+
+    return {
+      isai,
+      honorarios,
+      rppc,
+      total: isai.total + honorarios.total + rppc.total,
+    };
+  };
+
+  const costosCalculados = calcularTotalReal();
 
   // Generar citas disponibles (fecha + hora combinadas) - distribuidas mejor
   const generateAvailableAppointments = () => {
@@ -119,9 +230,9 @@ export default function AgendarCitaPage() {
       const solicitudDemo = {
         numeroSolicitud: "NT3-2025-00123",
         tipoTramite: "Compraventa de Inmuebles",
-        costoTotal: 25000,
+        costoTotal: costosCalculados.total,
         saldoPendiente: 0,
-        pagosRealizados: 25000,
+        pagosRealizados: costosCalculados.total,
         estatusActual: "CITA_AGENDADA",
         documentosRequeridos: [
           {
@@ -251,7 +362,7 @@ export default function AgendarCitaPage() {
         cliente: {
           id: "user-hardcoded",
           nombre: "HERNANDEZ GONZALEZ JONATHAN RUBEN",
-          email: "juan.perez@email.com",
+          email: "tu-email@ejemplo.com",
           telefono: "+52 664 123 4567",
         },
         notario: {
@@ -296,14 +407,16 @@ export default function AgendarCitaPage() {
       (apt) => apt.id === selectedAppointment
     );
 
-    alert(
-      `¡Cita agendada exitosamente!\n\nFecha: ${appointment?.label}\nHora: ${appointment?.timeLabel}\n\nTe hemos enviado un correo de confirmación.`
-    );
+    setConfirmedAppointment(appointment);
+    setShowConfirmationModal(true);
+  };
 
+  const handleFinalizarConfirmacion = () => {
+    setShowConfirmationModal(false);
     // Simular agendamiento exitoso y redirigir a Mi Cuenta
     setTimeout(() => {
       window.location.href = `/mi-cuenta`;
-    }, 2000);
+    }, 1000);
   };
 
   if (!solicitud) {
@@ -500,8 +613,7 @@ export default function AgendarCitaPage() {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Pago:</span>
                     <span className="text-sm font-medium text-green-600">
-                      ${solicitud.pagosRealizados.toLocaleString("es-MX")}{" "}
-                      Pagado
+                      {formatPesoMexicano(solicitud.pagosRealizados)} Pagado
                     </span>
                   </div>
 
@@ -569,6 +681,92 @@ export default function AgendarCitaPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de cita */}
+      <Dialog
+        open={showConfirmationModal}
+        onOpenChange={setShowConfirmationModal}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-6 w-6" />
+              ¡Cita Agendada Exitosamente!
+            </DialogTitle>
+            <DialogDescription>
+              Tu cita ha sido confirmada. Te hemos enviado un correo de
+              confirmación.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Detalles de la cita */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-semibold text-green-900 mb-3">
+                Detalles de tu cita:
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Fecha:</span>
+                  <span>{confirmedAppointment?.label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Hora:</span>
+                  <span>{confirmedAppointment?.timeLabel}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Ubicación:</span>
+                  <span>Notaría Pública No. 3, Tijuana</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Duración:</span>
+                  <span>30-45 minutos</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Información adicional */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Mail className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-blue-900">
+                  Correo de confirmación enviado
+                </span>
+              </div>
+              <p className="text-sm text-blue-800">
+                Hemos enviado un correo de confirmación a tu dirección de email
+                con todos los detalles de la cita.
+              </p>
+            </div>
+
+            {/* Instrucciones */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="font-semibold text-yellow-900 mb-2">
+                Recuerda llevar:
+              </h4>
+              <ul className="text-sm text-yellow-800 space-y-1">
+                <li>• Identificación oficial</li>
+                <li>• Todos los documentos originales</li>
+                <li>• Llegar 10 minutos antes</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              onClick={handleFinalizarConfirmacion}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
