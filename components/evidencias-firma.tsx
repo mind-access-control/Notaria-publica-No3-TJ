@@ -29,7 +29,7 @@ interface Evidencia {
   id: string;
   tipo: "copia_firmada" | "huella_digital";
   firmante: string;
-  rol: "comprador" | "vendedor";
+  rol: "comprador" | "vendedor" | "ambas_partes";
   documentos: DocumentoEvidencia[];
   estado: "pendiente" | "completada";
 }
@@ -44,18 +44,10 @@ interface EvidenciasFirmaProps {
 export function EvidenciasFirma({ comprador, vendedor, onEvidenciasCompletas, onEvidenciasStateChange }: EvidenciasFirmaProps) {
   const [evidencias, setEvidencias] = useState<Evidencia[]>([
     {
-      id: "copia-comprador",
+      id: "copia-contrato",
       tipo: "copia_firmada",
-      firmante: comprador,
-      rol: "comprador",
-      documentos: [],
-      estado: "pendiente"
-    },
-    {
-      id: "copia-vendedor",
-      tipo: "copia_firmada",
-      firmante: vendedor,
-      rol: "vendedor",
+      firmante: `${comprador} y ${vendedor}`,
+      rol: "ambas_partes",
       documentos: [],
       estado: "pendiente"
     },
@@ -189,7 +181,16 @@ export function EvidenciasFirma({ comprador, vendedor, onEvidenciasCompletas, on
   };
 
   const getRolText = (rol: string) => {
-    return rol === "comprador" ? "Comprador" : "Vendedor";
+    switch (rol) {
+      case "comprador":
+        return "Comprador";
+      case "vendedor":
+        return "Vendedor";
+      case "ambas_partes":
+        return "Ambas partes";
+      default:
+        return "Firmante";
+    }
   };
 
   const evidenciasCompletadas = evidencias.filter(ev => ev.estado === "completada").length;
