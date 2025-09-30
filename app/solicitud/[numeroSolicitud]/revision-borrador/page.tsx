@@ -34,8 +34,8 @@ export default function RevisionBorradorPage() {
     fechaUltimaActualizacion: "2025-01-20",
     cliente: {
       id: "user-123",
-      nombre: "Graciela Rodriguez Lopez",
-      email: "graciela.rodriguez@email.com",
+      nombre: "JONATHAN RUBEN HERNANDEZ GONZALEZ",
+      email: "jon@jon.com",
       telefono: "+52 664 123 4567",
     },
     documentosRequeridos: [
