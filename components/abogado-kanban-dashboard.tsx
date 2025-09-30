@@ -119,6 +119,7 @@ import { NotificationsPanel } from "@/components/notifications-panel";
 import { FirmaAgendadaViewer } from "@/components/firma-agendada-viewer";
 import { EscrituraFirmaAgendadaViewer } from "@/components/escritura-firma-agendada-viewer";
 import { EvidenciasFirma } from "@/components/evidencias-firma";
+import { GenericDocumentViewer } from "@/components/generic-document-viewer";
 
 interface AbogadoKanbanDashboardProps {
   licenciadoId: string;
@@ -473,6 +474,7 @@ export function AbogadoKanbanDashboard({
   // Estado para el documento real del contrato
   const [documentoContratoReal, setDocumentoContratoReal] = useState<string>("");
   const [cargandoDocumento, setCargandoDocumento] = useState(false);
+  const [documentoContratoHTML, setDocumentoContratoHTML] = useState<string>("");
 
   // Lista completa de documentos para compraventa con documentos reales
   const documentosCompraventa = [
@@ -868,17 +870,25 @@ export function AbogadoKanbanDashboard({
   };
 
 
-  // Inicializar el texto destacado cuando se abre el modal del contrato
+  // Inicializar el texto destacado cuando se abre el modal del contrato (SOLO EN PROYECTO_ESCRITURA)
   useEffect(() => {
-    if (selectedDocument?.id === "contrato-borrador" && contractSearchData.length > 0) {
+    if (showDocumentViewer && 
+        selectedExpediente?.estado === "PROYECTO_ESCRITURA" && 
+        selectedDocument?.id === "contrato-borrador" && 
+        contractSearchData.length > 0) {
+      console.log('🔄 Inicializando texto destacado para contrato-borrador en PROYECTO_ESCRITURA');
       setHighlightedText(contractSearchData[0].text);
       setCurrentSearchIndex(0);
     }
-  }, [selectedDocument?.id]);
+  }, [selectedDocument?.id, showDocumentViewer, selectedExpediente?.estado]);
 
-  // Mostrar automáticamente el texto resaltado cuando cambie el índice de búsqueda
+  // Mostrar automáticamente el texto resaltado cuando cambie el índice de búsqueda (SOLO EN PROYECTO_ESCRITURA)
   useEffect(() => {
-    if (selectedDocument?.id === "contrato-borrador" && contractSearchData.length > 0) {
+    if (showDocumentViewer && 
+        selectedExpediente?.estado === "PROYECTO_ESCRITURA" && 
+        selectedDocument?.id === "contrato-borrador" && 
+        contractSearchData.length > 0) {
+      console.log('🔄 Actualizando texto resaltado, índice:', currentSearchIndex);
       // Asegurar que el índice esté dentro del rango válido
       const validIndex = Math.max(0, Math.min(currentSearchIndex, contractSearchData.length - 1));
       
@@ -890,7 +900,7 @@ export function AbogadoKanbanDashboard({
         mostrarTextoResaltado(validIndex);
       }, 500);
     }
-  }, [currentSearchIndex, selectedDocument?.id]);
+  }, [currentSearchIndex, selectedDocument?.id, showDocumentViewer, selectedExpediente?.estado]);
 
   // Función para abrir documento
   const handleOpenDocument = (documento: any) => {
@@ -914,13 +924,21 @@ export function AbogadoKanbanDashboard({
   const cargarDocumentoReal = async () => {
     if (documentoContratoReal) return; // Ya está cargado
     
+    console.log('🔍 Iniciando carga del documento del contrato...');
     setCargandoDocumento(true);
     try {
       const response = await fetch('/documento-contrato-real.txt');
+      console.log('📡 Respuesta del fetch:', response.status, response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
       const texto = await response.text();
+      console.log('✅ Documento cargado exitosamente. Longitud:', texto.length);
       setDocumentoContratoReal(texto);
     } catch (error) {
-      console.error('Error al cargar el documento:', error);
+      console.error('❌ Error al cargar el documento:', error);
       // Fallback con contenido del documento
       const contenidoFallback = `INSTRUMENTO NÚMERO TREINTA Y DOS MIL SEISCIENTOS OCHENTA Y NUEVE
 
@@ -948,17 +966,19 @@ TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "CO
     setCargandoDocumento(false);
   };
 
-  // Función para limpiar overlays de texto resaltado
+  // Función para limpiar resaltado (ahora solo limpia el estado)
   const limpiarOverlaysTexto = () => {
-    const documentContainer = document.querySelector('.pdf-viewer-container');
-    if (documentContainer) {
-      const existingHighlights = documentContainer.querySelectorAll('.text-highlight-overlay');
-      existingHighlights.forEach(highlight => highlight.remove());
-    }
+    console.log('🧹 Limpiando resaltado del contrato');
+    setDocumentoContratoHTML("");
   };
 
-  // Función para mostrar el texto resaltado automáticamente
+  // Función para mostrar el texto resaltado automáticamente (SOLO PARA PROYECTO_ESCRITURA)
   const mostrarTextoResaltado = async (forceIndex?: number) => {
+    // Solo ejecutar si estamos en PROYECTO_ESCRITURA con contrato-borrador
+    if (selectedExpediente?.estado !== "PROYECTO_ESCRITURA" || selectedDocument?.id !== "contrato-borrador") {
+      console.log('⚠️ mostrarTextoResaltado: No es PROYECTO_ESCRITURA + contrato-borrador, abortando');
+      return;
+    }
     
     // Cargar el documento real si no está cargado
     if (!documentoContratoReal) {
@@ -977,36 +997,28 @@ TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "CO
     // Debug temporal para verificar la secuencia
     console.log(`Mostrando sección ${validIndex + 1}/${contractSearchData.length}: ${currentItem.type}`);
     
-    // Buscar el texto en el documento real
-    const documentContainer = document.querySelector('.pdf-viewer-container');
-    if (documentContainer) {
-      // Remover resaltados anteriores
-      const existingHighlights = documentContainer.querySelectorAll('.text-highlight-overlay');
-      existingHighlights.forEach(highlight => highlight.remove());
-      
-      // Buscar el elemento de texto dentro del contenedor y resaltarlo directamente
-      const textElement = documentContainer.querySelector('.text-sm.font-mono');
-      if (textElement) {
-        // Obtener el texto original sin resaltado
-        const originalText = documentoContratoReal || textElement.textContent || '';
-        
-        // Resaltar el texto específico directamente en el elemento existente
-        const highlightedText = originalText.replace(
-          new RegExp(currentItem.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-          `<mark style="background-color: #fef08a; padding: 2px 4px; border-radius: 2px; font-weight: bold; color: #92400e;">$&</mark>`
-        );
-        
-        textElement.innerHTML = highlightedText;
-        
-        // Hacer scroll al texto resaltado
-        setTimeout(() => {
-          const highlightedElement = textElement.querySelector('mark');
-          if (highlightedElement) {
-            highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
+    // Crear el HTML con resaltado usando React state en lugar de manipulación directa del DOM
+    const originalText = documentoContratoReal;
+    
+    // Resaltar el texto específico
+    const highlightedHTML = originalText.replace(
+      new RegExp(currentItem.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+      `<mark style="background-color: #fef08a; padding: 2px 4px; border-radius: 2px; font-weight: bold; color: #92400e;">$&</mark>`
+    );
+    
+    // Actualizar el estado en lugar de manipular el DOM directamente
+    setDocumentoContratoHTML(highlightedHTML);
+    
+    // Hacer scroll al texto resaltado después de que React renderice
+    setTimeout(() => {
+      const highlightedElement = document.querySelector('.pdf-viewer-container mark');
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
       }
-    }
+    }, 100);
   };
 
   // Función para ir al texto específico en el documento real (mantener para compatibilidad)
@@ -1430,12 +1442,32 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
     }
   }, [licenciadoId || ""]);
 
-  // Cargar documento real cuando se seleccione el contrato
+  // Cargar documento real cuando se seleccione el contrato (SOLO EN PROYECTO_ESCRITURA)
   useEffect(() => {
-    if (selectedDocument?.id === "contrato-borrador" && !documentoContratoReal && !cargandoDocumento) {
+    console.log('🔄 useEffect verificando carga de documento:', {
+      estado: selectedExpediente?.estado,
+      esContratoBorrador: selectedDocument?.id === "contrato-borrador",
+      documentoCargado: !!documentoContratoReal,
+      estaCargando: cargandoDocumento
+    });
+    
+    if (selectedExpediente?.estado === "PROYECTO_ESCRITURA" && 
+        selectedDocument?.id === "contrato-borrador" && 
+        !documentoContratoReal && 
+        !cargandoDocumento) {
+      console.log('✅ Condiciones cumplidas (PROYECTO_ESCRITURA), llamando cargarDocumentoReal()');
       cargarDocumentoReal();
     }
-  }, [selectedDocument]);
+  }, [selectedDocument, documentoContratoReal, cargandoDocumento, selectedExpediente?.estado]);
+
+  // Limpiar HTML cuando se cierra el modal o cambia el documento
+  useEffect(() => {
+    if (!showDocumentViewer || 
+        selectedExpediente?.estado !== "PROYECTO_ESCRITURA" || 
+        selectedDocument?.id !== "contrato-borrador") {
+      setDocumentoContratoHTML("");
+    }
+  }, [showDocumentViewer, selectedDocument?.id, selectedExpediente?.estado]);
 
   useEffect(() => {
     // Filtrar expedientes
@@ -4696,21 +4728,49 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           <div className="flex-1 flex overflow-hidden">
               {/* Panel izquierdo - Visualizador de documento */}
               <div className={`${selectedExpediente?.estado === "LISTO_PARA_FIRMA" ? "w-full" : "w-3/5"} flex flex-col pdf-viewer-container relative`}>
-                {/* ProyectoEscrituraViewer eliminado - solo mostrar texto resaltado */}
+                {/* Caso 1: Escritura lista para firma */}
                 {selectedExpediente?.estado === "LISTO_PARA_FIRMA" && (
                   <EscrituraFirmaAgendadaViewer numeroSolicitud={selectedExpediente?.numeroSolicitud || ""} />
                 )}
-                {/* Mostrar texto del contrato para validación */}
-                {selectedExpediente?.estado !== "LISTO_PARA_FIRMA" && (
+                
+                {/* Caso 2: Contrato borrador en PROYECTO_ESCRITURA - mostrar texto para validación */}
+                {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador" && (
                   <div className="flex-1 overflow-hidden bg-gray-50 relative pdf-viewer-container">
                     <div className="h-full w-full p-4 overflow-y-auto">
                       <div className="bg-white rounded-lg shadow-sm p-6">
-                        <div className="text-sm font-mono leading-relaxed whitespace-pre-wrap">
-                          {documentoContratoReal || "Cargando documento del contrato..."}
-                        </div>
+                        {cargandoDocumento ? (
+                          <div className="flex items-center justify-center h-64">
+                            <div className="text-center">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                              <p className="text-gray-600">Cargando documento del contrato...</p>
+                            </div>
+                          </div>
+                        ) : documentoContratoReal ? (
+                          <div 
+                            className="text-sm font-mono leading-relaxed whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{ 
+                              __html: documentoContratoHTML || documentoContratoReal 
+                            }}
+                          />
+                        ) : (
+                          <div className="text-center text-red-600">
+                            Error: No se pudo cargar el documento
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
+                )}
+                
+                {/* Caso 3: Todos los demás documentos (incluyendo contrato en EXPEDIENTE_PRELIMINAR) - mostrar PDF */}
+                {selectedExpediente?.estado !== "LISTO_PARA_FIRMA" && 
+                 !(selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador") && 
+                 selectedDocument && (
+                  <GenericDocumentViewer 
+                    documentUrl={selectedDocument.archivo}
+                    title={selectedDocument.nombre}
+                    showToolbar={true}
+                  />
                 )}
               </div>
 
@@ -4721,11 +4781,11 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                       <h3 className="text-base font-semibold text-blue-900">
-                        {selectedDocument?.id === "contrato-borrador" ? "Validación del Contrato" : 
+                        {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador" ? "Validación del Contrato" : 
                          selectedDocument?.nombre === "CURP" ? "Datos de la CURP" : 
                          selectedDocument?.nombre === "RFC y Constancia de Situación Fiscal (CSF)" ? "Datos del RFC" : "Extracción de Datos con IA"}
                       </h3>
-                        {selectedDocument?.id === "contrato-borrador" && selectedExpediente && (
+                        {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador" && selectedExpediente && (
                           <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 text-xs">
                             {(() => {
                               const contractCount = getContractValidationCount(selectedExpediente.id);
@@ -4734,7 +4794,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                           </Badge>
                 )}
                       </div>
-                      {selectedDocument?.id !== "contrato-borrador" && (
+                      {!(selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador") && (
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -4757,7 +4817,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                       )}
                     </div>
                     <p className="text-xs text-blue-600 mt-1">
-                      {selectedDocument?.id === "contrato-borrador" 
+                      {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador" 
                         ? "Validación guiada del borrador del contrato de compraventa"
                         : selectedDocument?.nombre === "CURP"
                         ? "Información extraída de la constancia CURP"
@@ -4768,7 +4828,7 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
                     </p>
           </div>
 
-                  {selectedDocument?.id === "contrato-borrador" ? (
+                  {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && selectedDocument?.id === "contrato-borrador" ? (
                     /* Panel de Validación Guiada para el Contrato */
                     <div className="flex-1 overflow-y-auto p-3 space-y-3">
                       {/* Botón de validación del contrato */}
