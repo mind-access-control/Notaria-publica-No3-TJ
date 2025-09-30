@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { formatPesoMexicano } from "@/lib/formatters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,9 +82,7 @@ export default function PagoPage() {
 
     const monto = parseFloat(montoPago);
     if (monto < montoMinimo) {
-      alert(
-        `El monto mínimo requerido es $${montoMinimo.toLocaleString("es-MX")}`
-      );
+      alert(`El monto mínimo requerido es ${formatPesoMexicano(montoMinimo)}`);
       return;
     }
 
@@ -128,13 +127,13 @@ export default function PagoPage() {
       // Agregar entrada al historial
       const descripcionPago =
         nuevoSaldoPendiente > 0
-          ? `Pago parcial de $${monto.toLocaleString(
-              "es-MX"
-            )} realizado. Saldo pendiente: $${nuevoSaldoPendiente.toLocaleString(
-              "es-MX"
+          ? `Pago parcial de ${formatPesoMexicano(
+              monto
+            )} realizado. Saldo pendiente: ${formatPesoMexicano(
+              nuevoSaldoPendiente
             )}`
-          : `Pago completo de $${monto.toLocaleString(
-              "es-MX"
+          : `Pago completo de ${formatPesoMexicano(
+              monto
             )} realizado. Trámite enviado a revisión interna.`;
 
       solicitudes[solicitudIndex].historial.push({
@@ -254,7 +253,7 @@ export default function PagoPage() {
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Costo base:</span>
                   <span className="text-sm">
-                    ${(solicitud.costoTotal * 0.8).toLocaleString("es-MX")}
+                    {formatPesoMexicano(solicitud.costoTotal * 0.8)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -262,7 +261,7 @@ export default function PagoPage() {
                     Honorarios notariales:
                   </span>
                   <span className="text-sm">
-                    ${(solicitud.costoTotal * 0.15).toLocaleString("es-MX")}
+                    {formatPesoMexicano(solicitud.costoTotal * 0.15)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -270,14 +269,14 @@ export default function PagoPage() {
                     Gastos de registro:
                   </span>
                   <span className="text-sm">
-                    ${(solicitud.costoTotal * 0.05).toLocaleString("es-MX")}
+                    {formatPesoMexicano(solicitud.costoTotal * 0.05)}
                   </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total a pagar:</span>
                   <span className="text-blue-600">
-                    ${solicitud.costoTotal.toLocaleString("es-MX")}
+                    {formatPesoMexicano(solicitud.costoTotal)}
                   </span>
                 </div>
 
@@ -287,7 +286,7 @@ export default function PagoPage() {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Ya pagado:</span>
                       <span className="text-sm text-green-600">
-                        ${solicitud.pagosRealizados.toLocaleString("es-MX")}
+                        {formatPesoMexicano(solicitud.pagosRealizados)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -295,7 +294,7 @@ export default function PagoPage() {
                         Saldo pendiente:
                       </span>
                       <span className="text-sm text-red-600">
-                        ${solicitud.saldoPendiente.toLocaleString("es-MX")}
+                        {formatPesoMexicano(solicitud.saldoPendiente)}
                       </span>
                     </div>
                   </>
@@ -342,20 +341,20 @@ export default function PagoPage() {
                     <p>
                       Monto mínimo requerido:{" "}
                       <span className="font-semibold text-red-600">
-                        ${montoMinimo.toLocaleString("es-MX")}
+                        {formatPesoMexicano(montoMinimo)}
                       </span>
                     </p>
                     <p>
                       Saldo pendiente:{" "}
                       <span className="font-semibold text-blue-600">
-                        ${montoMaximo.toLocaleString("es-MX")}
+                        {formatPesoMexicano(montoMaximo)}
                       </span>
                     </p>
                     {solicitud.pagosRealizados > 0 && (
                       <p>
                         Ya pagado:{" "}
                         <span className="font-semibold text-green-600">
-                          ${solicitud.pagosRealizados.toLocaleString("es-MX")}
+                          {formatPesoMexicano(solicitud.pagosRealizados)}
                         </span>
                       </p>
                     )}
@@ -373,7 +372,7 @@ export default function PagoPage() {
                         <div className="flex justify-between">
                           <span className="text-gray-600">Monto a pagar:</span>
                           <span className="font-medium">
-                            ${montoIngresado.toLocaleString("es-MX")}
+                            {formatPesoMexicano(montoIngresado)}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -394,9 +393,7 @@ export default function PagoPage() {
                           <div className="text-xs text-amber-600 mt-2">
                             ⚠️ Este es un pago parcial. Podrás realizar pagos
                             adicionales más tarde. Saldo restante: $
-                            {(montoMaximo - montoIngresado).toLocaleString(
-                              "es-MX"
-                            )}
+                            {formatPesoMexicano(montoMaximo - montoIngresado)}
                           </div>
                         )}
                       </div>
@@ -525,7 +522,7 @@ export default function PagoPage() {
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4 mr-2" />
-                    Confirmar Pago - ${montoIngresado.toLocaleString("es-MX")}
+                    Confirmar Pago - {formatPesoMexicano(montoIngresado)}
                   </>
                 )}
               </Button>

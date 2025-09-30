@@ -160,7 +160,7 @@ export function TramiteAdviceModal({
       setTimeout(() => {
         console.log("Análisis completado, extrayendo datos...");
         // Simular datos extraídos del contrato
-        const precioSimulado = "2950000"; // Precio predeterminado
+        const precioSimulado = "853500"; // Precio predeterminado
         const estadoCivilSimulado = "casado";
         const tipoPersonaSimulado = "comprador";
 
@@ -990,7 +990,7 @@ export function TramiteAdviceModal({
                           const totalAranceles =
                             isai.total +
                             honorarios.total +
-                            rppc.inscripcionCompraventa +
+                            rppc.total +
                             (usarCredito ? rppc.inscripcionHipoteca : 0);
 
                           return (

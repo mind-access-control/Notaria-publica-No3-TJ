@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getSolicitudByNumber, Solicitud, solicitudes } from "@/lib/mock-data";
 import { useAuth } from "@/contexts/auth-context";
+import { formatPesoMexicano } from "@/lib/formatters";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { StatusTracker } from "@/components/status-tracker";
@@ -1328,7 +1329,7 @@ function AIValidationStep({
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-green-600 mb-2">
-                      Costo total: $25,000
+                      Costo total: {formatPesoMexicano(25000)}
                     </div>
                     <Button
                       onClick={() => {

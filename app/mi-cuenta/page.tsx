@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { formatPesoMexicano } from "@/lib/formatters";
 import {
   Card,
   CardContent,
@@ -478,8 +479,8 @@ export default function MiCuentaPage() {
                         <div className="flex items-center gap-2 text-sm text-green-600">
                           <CheckCircle className="h-4 w-4" />
                           <span>
-                            Pago liquidado: $
-                            {solicitud.pagosRealizados.toLocaleString("es-MX")}
+                            Pago liquidado:{" "}
+                            {formatPesoMexicano(solicitud.pagosRealizados)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-green-600">
@@ -568,7 +569,9 @@ export default function MiCuentaPage() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Valor:</span>
-                            <span className="font-medium">$1,500,000</span>
+                            <span className="font-medium">
+                              {formatPesoMexicano(1500000)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Zona:</span>
@@ -599,19 +602,27 @@ export default function MiCuentaPage() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">ISAI:</span>
-                            <span className="font-medium">$15,000</span>
+                            <span className="font-medium">
+                              {formatPesoMexicano(15000)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Honorarios:</span>
-                            <span className="font-medium">$8,500</span>
+                            <span className="font-medium">
+                              {formatPesoMexicano(8500)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">RPPC:</span>
-                            <span className="font-medium">$1,500</span>
+                            <span className="font-medium">
+                              {formatPesoMexicano(1500)}
+                            </span>
                           </div>
                           <div className="flex justify-between border-t pt-2 font-bold text-lg">
                             <span className="text-gray-900">Total:</span>
-                            <span className="text-blue-600">$25,000</span>
+                            <span className="text-blue-600">
+                              {formatPesoMexicano(25000)}
+                            </span>
                           </div>
                         </div>
                       </div>
