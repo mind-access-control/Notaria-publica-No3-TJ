@@ -23,6 +23,10 @@ import {
   User,
   AlertCircle,
   Plus,
+  Settings,
+  LogOut,
+  Bell,
+  Home,
 } from "lucide-react";
 
 // Usar los datos compartidos de trámites
@@ -76,6 +80,7 @@ export default function IniciarTramitePage() {
   const [isCreandoSolicitud, setIsCreandoSolicitud] = useState(false);
   const [showTramiteModal, setShowTramiteModal] = useState(false);
   const [arancelesCalculados, setArancelesCalculados] = useState<any[]>([]);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const tramitePreseleccionado = searchParams.get("tramite");
 
@@ -177,6 +182,44 @@ export default function IniciarTramitePage() {
         console.log("Cantidad de aranceles:", datos.length);
         console.log("Trámite seleccionado:", tramiteSeleccionado);
 
+        // Si no hay datos en localStorage, crear un arancel de ejemplo para compraventa
+        if (datos.length === 0 && tramiteSeleccionado === "compraventa") {
+          console.log("🆕 Creando arancel de ejemplo para compraventa");
+          const arancelEjemplo = {
+            tramite: "compraventa",
+            valorInmueble: "853500",
+            estadoCivil: "casado",
+            usarCredito: false,
+            zonaInmueble: "centro",
+            costosCalculados: {
+              isai: { isai: 21000, sobretasa: 3414, total: 24414 },
+              honorarios: {
+                compraventa: 8535,
+                hipoteca: 0,
+                subtotal: 8535,
+                iva: 1365.6,
+                total: 9900.6,
+              },
+              rppc: {
+                analisis: 379.1,
+                inscripcionCompraventa: 11398.6,
+                inscripcionHipoteca: 11398.6,
+                certificadoInscripcion: 483.12,
+                certificacionPartida: 520.33,
+                certificadoNoInscripcion: 1223.46,
+                certificadoNoPropiedad: 83.62,
+                totalCertificados: 2310.53,
+                total: 14088.23,
+              },
+              total: 48402.83,
+            },
+          };
+
+          datos.push(arancelEjemplo);
+          localStorage.setItem("arancelesCalculados", JSON.stringify(datos));
+          console.log("✅ Arancel de ejemplo creado y guardado");
+        }
+
         if (datos.length > 0) {
           console.log("Aranceles encontrados:");
           datos.forEach((arancel: any, index: number) => {
@@ -196,6 +239,152 @@ export default function IniciarTramitePage() {
     };
     cargarAranceles();
   }, [tramiteSeleccionado]); // Agregar tramiteSeleccionado como dependencia
+
+  // Efecto para recalcular aranceles si es necesario
+  useEffect(() => {
+    if (!tramiteSeleccionado || arancelesCalculados.length === 0) return;
+
+    const arancelCalculado = arancelesCalculados.find(
+      (arancel) => arancel.tramite === tramiteSeleccionado
+    );
+
+    if (!arancelCalculado) return;
+
+    const valorEnModal = 853500; // Valor correcto del modal
+    const valorActual = parseFloat(
+      arancelCalculado.valorInmueble.replace(/[,$]/g, "")
+    );
+
+    // Si no tiene costos calculados o el valor no coincide, recalcular
+    if (!arancelCalculado.costosCalculados || valorActual !== valorEnModal) {
+      console.log(
+        "⚠️ Forzando recálculo - Valor actual:",
+        valorActual,
+        "Valor correcto:",
+        valorEnModal
+      );
+
+      // Funciones de cálculo del modal
+      const calcularISAI = (valorInmueble: number) => {
+        const tramos = [
+          { limite: 0, porcentaje: 0 },
+          { limite: 100000, porcentaje: 0.015 },
+          { limite: 200000, porcentaje: 0.02 },
+          { limite: 300000, porcentaje: 0.025 },
+          { limite: 400000, porcentaje: 0.03 },
+          { limite: 500000, porcentaje: 0.035 },
+          { limite: 600000, porcentaje: 0.04 },
+          { limite: 700000, porcentaje: 0.045 },
+        ];
+
+        let isai = 0;
+        let valorRestante = valorInmueble;
+
+        for (let i = 1; i < tramos.length; i++) {
+          const tramoAnterior = tramos[i - 1];
+          const tramoActual = tramos[i];
+
+          if (valorRestante <= 0) break;
+
+          const baseTramo = Math.min(
+            valorRestante,
+            tramoActual.limite - tramoAnterior.limite
+          );
+          isai += baseTramo * tramoActual.porcentaje;
+          valorRestante -= baseTramo;
+        }
+
+        const sobretasa = valorInmueble * 0.004;
+        return { isai, sobretasa, total: isai + sobretasa };
+      };
+
+      const calcularHonorariosNotariales = (
+        valorInmueble: number,
+        usarCredito: boolean
+      ) => {
+        const honorariosCompraventa = valorInmueble * 0.01;
+        const honorariosHipoteca = usarCredito ? valorInmueble * 0.005 : 0;
+        const subtotal = honorariosCompraventa + honorariosHipoteca;
+        const iva = subtotal * 0.16;
+        return {
+          compraventa: honorariosCompraventa,
+          hipoteca: honorariosHipoteca,
+          subtotal,
+          iva,
+          total: subtotal + iva,
+        };
+      };
+
+      const calcularCostosRPPC = () => {
+        const certificados = 483.12 + 520.33 + 1223.46 + 83.62;
+        return {
+          analisis: 379.1,
+          inscripcionCompraventa: 11398.6,
+          inscripcionHipoteca: 11398.6,
+          certificadoInscripcion: 483.12,
+          certificacionPartida: 520.33,
+          certificadoNoInscripcion: 1223.46,
+          certificadoNoPropiedad: 83.62,
+          totalCertificados: certificados,
+          total: 379.1 + 11398.6 + certificados,
+        };
+      };
+
+      try {
+        // Usar el valor correcto del modal (853,500)
+        const valor = valorEnModal;
+
+        // Actualizar también el valor en el objeto
+        arancelCalculado.valorInmueble = valor.toString();
+
+        console.log("🔄 Recalculando con valor correcto:", valor);
+        console.log("🔄 Usar crédito:", arancelCalculado.usarCredito);
+
+        const isai = calcularISAI(valor);
+        const honorarios = calcularHonorariosNotariales(
+          valor,
+          arancelCalculado.usarCredito
+        );
+        const rppc = calcularCostosRPPC();
+        const totalAranceles =
+          isai.total +
+          honorarios.total +
+          rppc.total +
+          (arancelCalculado.usarCredito ? rppc.inscripcionHipoteca : 0);
+
+        console.log("📊 Cálculos realizados:");
+        console.log("- ISAI:", isai);
+        console.log("- Honorarios:", honorarios);
+        console.log("- RPPC:", rppc);
+        console.log("- Total:", totalAranceles);
+
+        // Actualizar el arancel con los costos calculados
+        arancelCalculado.costosCalculados = {
+          isai,
+          honorarios,
+          rppc,
+          total: totalAranceles,
+        };
+
+        // Guardar de vuelta en localStorage
+        const datosActualizados = arancelesCalculados.map((arancel) =>
+          arancel.tramite === tramiteSeleccionado ? arancelCalculado : arancel
+        );
+        localStorage.setItem(
+          "arancelesCalculados",
+          JSON.stringify(datosActualizados)
+        );
+        setArancelesCalculados(datosActualizados);
+
+        console.log(
+          "✅ Costos recalculados y guardados:",
+          arancelCalculado.costosCalculados
+        );
+      } catch (error) {
+        console.error("❌ Error recalculando costos:", error);
+      }
+    }
+  }, [tramiteSeleccionado, arancelesCalculados]);
 
   const handleSeleccionarTramite = (tramiteId: string) => {
     setTramiteSeleccionado(tramiteId);
@@ -242,6 +431,23 @@ export default function IniciarTramitePage() {
     }
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    // Limpiar localStorage completamente
+    localStorage.removeItem("auth");
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    localStorage.clear();
+
+    // Esperar un momento para que se procese la limpieza
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Redirigir a la página principal
+    window.location.href = "/";
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -268,18 +474,59 @@ export default function IniciarTramitePage() {
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                <FileText className="h-6 w-6 text-emerald-600" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Iniciar Nuevo Trámite
+                  </h1>
+                  <p className="text-gray-600">
+                    Bienvenido, {user.nombre}. Selecciona el trámite que deseas
+                    realizar.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Iniciar Nuevo Trámite
-                </h1>
-                <p className="text-gray-600">
-                  Bienvenido, {user.nombre}. Selecciona el trámite que deseas
-                  realizar.
-                </p>
+
+              {/* Opciones de navegación para usuarios autenticados */}
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/")}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="h-4 w-4" />
+                  Inicio
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/mi-cuenta")}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Mi Cuenta
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configuración
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Bell className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+                </Button>
               </div>
             </div>
 
@@ -369,198 +616,9 @@ export default function IniciarTramitePage() {
                   <CardContent className="space-y-6">
                     {/* Mostrar datos calculados si existen */}
                     {(() => {
-                      console.log("=== DEBUG: Buscando arancel calculado ===");
-                      console.log("Trámite seleccionado:", tramiteSeleccionado);
-                      console.log("Aranceles calculados:", arancelesCalculados);
-
                       const arancelCalculado = arancelesCalculados.find(
                         (arancel) => arancel.tramite === tramiteSeleccionado
                       );
-
-                      console.log(
-                        "Arancel calculado encontrado:",
-                        arancelCalculado
-                      );
-
-                      if (arancelCalculado) {
-                        console.log(
-                          "Zona en arancel:",
-                          arancelCalculado.zonaInmueble
-                        );
-                        console.log(
-                          "Estado civil en arancel:",
-                          arancelCalculado.estadoCivil
-                        );
-                        console.log(
-                          "Usar crédito en arancel:",
-                          arancelCalculado.usarCredito
-                        );
-                        console.log(
-                          "Valor inmueble en arancel:",
-                          arancelCalculado.valorInmueble
-                        );
-                        console.log(
-                          "Costos calculados:",
-                          arancelCalculado.costosCalculados
-                        );
-                      }
-
-                      // Si hay arancel pero no tiene costos calculados, intentar recalcular
-                      // O si los valores no coinciden con el modal, forzar recálculo
-                      const valorEnModal = 853500; // Valor correcto del modal
-                      const valorActual = arancelCalculado
-                        ? parseFloat(
-                            arancelCalculado.valorInmueble.replace(/[,$]/g, "")
-                          )
-                        : 0;
-
-                      if (
-                        arancelCalculado &&
-                        (!arancelCalculado.costosCalculados ||
-                          valorActual !== valorEnModal)
-                      ) {
-                        console.log(
-                          "⚠️ Forzando recálculo - Valor actual:",
-                          valorActual,
-                          "Valor correcto:",
-                          valorEnModal
-                        );
-
-                        // Importar las funciones de cálculo del modal
-                        const calcularISAI = (valorInmueble: number) => {
-                          const tramos = [
-                            { limite: 0, porcentaje: 0 },
-                            { limite: 100000, porcentaje: 0.015 },
-                            { limite: 200000, porcentaje: 0.02 },
-                            { limite: 300000, porcentaje: 0.025 },
-                            { limite: 400000, porcentaje: 0.03 },
-                            { limite: 500000, porcentaje: 0.035 },
-                            { limite: 600000, porcentaje: 0.04 },
-                            { limite: 700000, porcentaje: 0.045 },
-                          ];
-
-                          let isai = 0;
-                          let valorRestante = valorInmueble;
-
-                          for (let i = 1; i < tramos.length; i++) {
-                            const tramoAnterior = tramos[i - 1];
-                            const tramoActual = tramos[i];
-
-                            if (valorRestante <= 0) break;
-
-                            const baseTramo = Math.min(
-                              valorRestante,
-                              tramoActual.limite - tramoAnterior.limite
-                            );
-                            isai += baseTramo * tramoActual.porcentaje;
-                            valorRestante -= baseTramo;
-                          }
-
-                          const sobretasa = valorInmueble * 0.004;
-                          return { isai, sobretasa, total: isai + sobretasa };
-                        };
-
-                        const calcularHonorariosNotariales = (
-                          valorInmueble: number,
-                          usarCredito: boolean
-                        ) => {
-                          const honorariosCompraventa = valorInmueble * 0.01;
-                          const honorariosHipoteca = usarCredito
-                            ? valorInmueble * 0.005
-                            : 0;
-                          const subtotal =
-                            honorariosCompraventa + honorariosHipoteca;
-                          const iva = subtotal * 0.16;
-                          return {
-                            compraventa: honorariosCompraventa,
-                            hipoteca: honorariosHipoteca,
-                            subtotal,
-                            iva,
-                            total: subtotal + iva,
-                          };
-                        };
-
-                        const calcularCostosRPPC = () => {
-                          const certificados =
-                            483.12 + 520.33 + 1223.46 + 83.62;
-                          return {
-                            analisis: 379.1,
-                            inscripcionCompraventa: 11398.6,
-                            inscripcionHipoteca: 11398.6,
-                            certificadoInscripcion: 483.12,
-                            certificacionPartida: 520.33,
-                            certificadoNoInscripcion: 1223.46,
-                            certificadoNoPropiedad: 83.62,
-                            totalCertificados: certificados,
-                            total: 379.1 + 11398.6 + certificados,
-                          };
-                        };
-
-                        try {
-                          // Usar el valor correcto del modal (853,500)
-                          const valor = valorEnModal;
-
-                          // Actualizar también el valor en el objeto
-                          arancelCalculado.valorInmueble = valor.toString();
-
-                          console.log(
-                            "🔄 Recalculando con valor correcto:",
-                            valor
-                          );
-                          console.log(
-                            "🔄 Usar crédito:",
-                            arancelCalculado.usarCredito
-                          );
-
-                          const isai = calcularISAI(valor);
-                          const honorarios = calcularHonorariosNotariales(
-                            valor,
-                            arancelCalculado.usarCredito
-                          );
-                          const rppc = calcularCostosRPPC();
-                          const totalAranceles =
-                            isai.total +
-                            honorarios.total +
-                            rppc.total +
-                            (arancelCalculado.usarCredito
-                              ? rppc.inscripcionHipoteca
-                              : 0);
-
-                          console.log("📊 Cálculos realizados:");
-                          console.log("- ISAI:", isai);
-                          console.log("- Honorarios:", honorarios);
-                          console.log("- RPPC:", rppc);
-                          console.log("- Total:", totalAranceles);
-
-                          // Actualizar el arancel con los costos calculados
-                          arancelCalculado.costosCalculados = {
-                            isai,
-                            honorarios,
-                            rppc,
-                            total: totalAranceles,
-                          };
-
-                          // Guardar de vuelta en localStorage
-                          const datosActualizados = arancelesCalculados.map(
-                            (arancel) =>
-                              arancel.tramite === tramiteSeleccionado
-                                ? arancelCalculado
-                                : arancel
-                          );
-                          localStorage.setItem(
-                            "arancelesCalculados",
-                            JSON.stringify(datosActualizados)
-                          );
-                          setArancelesCalculados(datosActualizados);
-
-                          console.log(
-                            "✅ Costos recalculados y guardados:",
-                            arancelCalculado.costosCalculados
-                          );
-                        } catch (error) {
-                          console.error("❌ Error recalculando costos:", error);
-                        }
-                      }
 
                       if (
                         arancelCalculado &&
@@ -657,25 +715,6 @@ export default function IniciarTramitePage() {
                               </div>
                             </div>
                           </div>
-                        );
-                      }
-
-                      // Debug: Mostrar mensaje si no hay aranceles calculados
-                      if (
-                        tramiteSeleccionado &&
-                        arancelesCalculados.length === 0
-                      ) {
-                        console.log(
-                          "❌ No hay aranceles calculados en localStorage"
-                        );
-                      } else if (tramiteSeleccionado && !arancelCalculado) {
-                        console.log(
-                          "❌ No se encontró arancel para el trámite:",
-                          tramiteSeleccionado
-                        );
-                        console.log(
-                          "Trámites disponibles en localStorage:",
-                          arancelesCalculados.map((a) => a.tramite)
                         );
                       }
 

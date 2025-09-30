@@ -559,18 +559,11 @@ export default function SolicitudStatusPage() {
             </div>
           </div>
 
-          {/* Contenido principal según el paso actual */}
-          {solicitud.estatusActual === "ARMANDO_EXPEDIENTE" ? (
-            <DocumentUploadStep
-              solicitud={solicitud}
-              onSolicitudUpdate={handleSolicitudUpdate}
-            />
-          ) : (
-            <AIValidationStep
-              solicitud={solicitud}
-              onSolicitudUpdate={handleSolicitudUpdate}
-            />
-          )}
+          {/* Contenido principal - solo mostrar DocumentUploadStep */}
+          <DocumentUploadStep
+            solicitud={solicitud}
+            onSolicitudUpdate={handleSolicitudUpdate}
+          />
         </div>
       </div>
       <Footer />
@@ -605,6 +598,10 @@ function DocumentUploadStep({
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionComplete, setExtractionComplete] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<any>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [modalPhase, setModalPhase] = useState<"validating" | "success">(
+    "validating"
+  );
 
   // Función helper para verificar si un archivo coincide con un documento requerido
   const doesFileMatchDocument = (
@@ -664,17 +661,31 @@ function DocumentUploadStep({
         url: URL.createObjectURL(file),
       }));
       setUploadedFiles((prev) => [...prev, ...newFiles]);
+
+      // Iniciar validación automática después de subir documentos
+      setTimeout(() => {
+        handleAutomaticValidation();
+      }, 1000);
     };
     input.click();
   };
 
-  const handleExtractInformation = async () => {
-    setIsExtracting(true);
+  // Función para iniciar validación manual si es necesario
+  const handleStartValidation = () => {
+    if (uploadedFiles.length > 0) {
+      handleAutomaticValidation();
+    }
+  };
 
-    // Simular proceso de OCR con diferentes estados
+  // Nueva función para validación automática
+  const handleAutomaticValidation = async () => {
+    if (uploadedFiles.length === 0) return;
+
+    setIsExtracting(true);
+    setExtractionComplete(false);
+
+    // Paso 1: Extraer información de documentos
     const filesWithExtraction = uploadedFiles.map((file, index) => {
-      // Simular diferentes estados de procesamiento
-      let extractionStatus = "TERMINADO";
       let documentType = "OTRO";
 
       if (
@@ -682,65 +693,97 @@ function DocumentUploadStep({
         file.name.toLowerCase().includes("identificacion")
       ) {
         documentType = "INE";
-        extractionStatus = index === 0 ? "EXTRAYENDO" : "TERMINADO";
       } else if (file.name.toLowerCase().includes("curp")) {
         documentType = "CURP";
-        extractionStatus = "TERMINADO";
       } else if (
         file.name.toLowerCase().includes("domicilio") ||
         file.name.toLowerCase().includes("comprobante")
       ) {
         documentType = "DOMICILIO";
-        extractionStatus = "TERMINADO";
       } else if (
         file.name.toLowerCase().includes("acta") ||
         file.name.toLowerCase().includes("nacimiento")
       ) {
         documentType = "ACTA_NACIMIENTO";
-        extractionStatus = "TERMINADO";
       } else if (
         file.name.toLowerCase().includes("rfc") ||
         file.name.toLowerCase().includes("fiscal")
       ) {
         documentType = "RFC";
-        extractionStatus = "TERMINADO";
       } else if (
         file.name.toLowerCase().includes("bancario") ||
         file.name.toLowerCase().includes("cuenta")
       ) {
         documentType = "DATOS_BANCARIOS";
-        extractionStatus = "TERMINADO";
-      } else {
-        extractionStatus =
-          index === uploadedFiles.length - 1 ? "NO_IDENTIFICADO" : "TERMINADO";
       }
 
       return {
         ...file,
         status: "extracted",
-        extractionStatus,
+        extractionStatus: "TERMINADO",
         documentType,
-        extractedData:
-          extractionStatus === "TERMINADO"
-            ? {
-                documentType,
-                confidence: Math.random() * 0.3 + 0.7, // 70-100%
-                data: {
-                  nombre: "GRACIELA RODRIGUEZ LOPEZ",
-                  fechaNacimiento: "01/12/1988",
-                  domicilio: "CUARZO 105, COLONIA SAN PEDRITO PEÑUELAS",
-                },
-              }
-            : null,
+        extractedData: {
+          documentType,
+          confidence: Math.random() * 0.3 + 0.7, // 70-100%
+          data: {
+            nombre: "GRACIELA RODRIGUEZ LOPEZ",
+            fechaNacimiento: "01/12/1988",
+            domicilio: "CUARZO 105, COLONIA SAN PEDRITO PEÑUELAS",
+          },
+        },
       };
     });
 
-    // Simular tiempo de procesamiento
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // Simular tiempo de extracción
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     setUploadedFiles(filesWithExtraction);
     setIsExtracting(false);
     setExtractionComplete(true);
+
+    // Paso 2: Validación automática con IA
+    setTimeout(() => {
+      handleAutomaticAIValidation(filesWithExtraction);
+    }, 500);
+  };
+
+  // Nueva función para validación automática con IA
+  const handleAutomaticAIValidation = async (filesWithData: any[]) => {
+    // Mostrar modal de validación inmediatamente
+    setModalPhase("validating");
+    setShowSuccessModal(true);
+
+    // Simular tiempo de validación con IA
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Cambiar a fase de éxito
+    setModalPhase("success");
+
+    // Actualizar solicitud directamente a PAGO_PENDIENTE
+    const updatedSolicitud = {
+      ...solicitud,
+      estatusActual: "PAGO_PENDIENTE",
+      documentosRequeridos: solicitud.documentosRequeridos.map((doc: any) => {
+        const uploadedFile = filesWithData.find((f) =>
+          doesFileMatchDocument(f.name, doc.nombre)
+        );
+        return {
+          ...doc,
+          subido: !!uploadedFile,
+          archivo: uploadedFile,
+          extractedData: uploadedFile?.extractedData || null,
+          validado: true, // Marcar como validado automáticamente
+        };
+      }),
+      fechaUltimaActualizacion: new Date().toISOString().split("T")[0],
+    };
+
+    onSolicitudUpdate(updatedSolicitud);
+
+    // Redirigir automáticamente después de mostrar el mensaje de éxito (más tiempo para leer)
+    setTimeout(() => {
+      window.location.href = `/solicitud/${solicitud.numeroSolicitud}/pago`;
+    }, 5000);
   };
 
   const handleDeleteFile = (fileId: string) => {
@@ -881,7 +924,7 @@ function DocumentUploadStep({
               </Button>
             </CardContent>
           </Card>
-        ) : !extractionComplete ? (
+        ) : (
           <Card>
             <CardContent className="p-4">
               <div className="space-y-3">
@@ -894,7 +937,13 @@ function DocumentUploadStep({
                       <FileText className="h-5 w-5 text-blue-600" />
                       <div>
                         <p className="font-medium text-sm">{file.name}</p>
-                        <p className="text-xs text-gray-500">Subido</p>
+                        <p className="text-xs text-gray-500">
+                          {isExtracting
+                            ? "Procesando..."
+                            : extractionComplete
+                            ? "Validado ✓"
+                            : "Subido"}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -917,129 +966,68 @@ function DocumentUploadStep({
                 ))}
               </div>
 
-              <div className="mt-4 pt-4 border-t">
-                <Button
-                  onClick={handleExtractInformation}
-                  disabled={isExtracting}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  {isExtracting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Extrayendo información...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Extraer información
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              {/* Tabla de documentos procesados */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Documento
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Etiqueta
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Estatus
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {uploadedFiles.map((file) => (
-                      <tr key={file.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-blue-600 mr-3" />
-                            <div className="text-sm font-medium text-gray-900">
-                              {file.name}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          {file.documentType && file.documentType !== "OTRO" ? (
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                              {file.documentType}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-500">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              file.extractionStatus === "TERMINADO"
-                                ? "bg-green-100 text-green-800"
-                                : file.extractionStatus === "EXTRAYENDO"
-                                ? "bg-orange-100 text-orange-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {file.extractionStatus}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditFile(file.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-4 w-4 text-gray-400" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleViewDocument(file)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-4 w-4 text-gray-400" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteFile(file.id)}
-                              className={`h-8 w-8 p-0 ${
-                                file.extractionStatus === "TERMINADO"
-                                  ? "text-purple-500"
-                                  : "text-gray-400"
-                              }`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {/* Mostrar estado del proceso automático */}
+              {isExtracting && (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span className="text-sm text-blue-600 font-medium">
+                        Procesando documentos automáticamente...
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Extrayendo información y validando con IA
+                    </p>
+                  </div>
+                </div>
+              )}
 
-              <div className="p-4 border-t bg-gray-50">
-                <Button
-                  onClick={handleConfirmDocuments}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Confirmar documentos
-                </Button>
-              </div>
+              {extractionComplete && !isExtracting && (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      <span className="text-sm text-green-600 font-medium">
+                        ¡Validación exitosa!
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Todos los documentos han sido validados correctamente
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      Redirigiendo al pago...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Botón para continuar si hay documentos pero no se ha iniciado validación */}
+              {uploadedFiles.length > 0 &&
+                !isExtracting &&
+                !extractionComplete && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="text-center space-y-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <span className="text-sm text-blue-600 font-medium">
+                          Documentos listos para validar
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Haz clic en continuar para procesar automáticamente tus
+                        documentos
+                      </p>
+                      <Button
+                        onClick={handleStartValidation}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Continuar con Validación
+                      </Button>
+                    </div>
+                  </div>
+                )}
             </CardContent>
           </Card>
         )}
@@ -1051,345 +1039,63 @@ function DocumentUploadStep({
         onClose={handleCloseDocumentViewer}
         document={viewingDocument}
       />
+
+      {/* Modal de validación */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <div className="text-center">
+              {modalPhase === "validating" ? (
+                <>
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Validando con IA...
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Nuestro sistema está analizando y comparando tus documentos
+                    contra el contrato de compraventa.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
+                    <span>Procesando...</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    ¡Validación Exitosa!
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Tus documentos se procesaron y se compararon los datos
+                    contra el contrato de compraventa. Todo cuadra
+                    perfectamente. Ahora procederemos al pago.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span>Redirigiendo al pago...</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// Nuevo componente para validación automática con IA
-function AIValidationStep({
+// Componente eliminado - ya no se usa
+function AIValidationStep_ELIMINADO({
   solicitud,
   onSolicitudUpdate,
 }: {
   solicitud: any;
   onSolicitudUpdate: (solicitud: any) => void;
 }) {
-  const [validationResult, setValidationResult] =
-    useState<ValidationResult | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
-  const [validationComplete, setValidationComplete] = useState(false);
-
-  // Función para ejecutar validación automática con IA
-  const handleAIValidation = async () => {
-    setIsValidating(true);
-
-    // Simular tiempo de procesamiento de IA
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // Obtener documentos con información extraída
-    const documentsWithData = solicitud.documentosRequeridos
-      .filter((doc: any) => doc.extractedData?.data)
-      .map((doc: any) => ({
-        documentType: doc.extractedData.documentType,
-        data: doc.extractedData.data,
-      }));
-
-    // Ejecutar validación con IA
-    const result = validateDocumentsWithAI(documentsWithData);
-    setValidationResult(result);
-    setValidationComplete(true);
-    setIsValidating(false);
-
-    console.log("Resultado de validación IA:", result);
-  };
-
-  // Extraer información de documentos procesados
-  const extractedInfo = solicitud.documentosRequeridos
-    .filter((doc: any) => doc.extractedData?.data)
-    .map((doc: any) => ({
-      id: doc.id,
-      nombre: doc.nombre,
-      tipo: doc.extractedData.documentType,
-      datos: doc.extractedData.data,
-      validado: doc.validado,
-      archivo: doc.archivo,
-    }));
-
-  return (
-    <div className="space-y-6">
-      {/* Sistema de validación automática con IA */}
-      {!validationComplete ? (
-        <div>
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Validación Automática de Documentos
-            </h3>
-            <p className="text-sm text-gray-600">
-              Nuestro sistema de IA validará automáticamente la consistencia de
-              tus documentos
-            </p>
-          </div>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              {!isValidating ? (
-                <div className="space-y-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                    <CheckCircle className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                      Listo para validar
-                    </h4>
-                    <p className="text-gray-600 mb-4">
-                      Documentos detectados: {extractedInfo.length}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleAIValidation}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
-                  >
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    Iniciar Validación con IA
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                      Validando documentos...
-                    </h4>
-                    <p className="text-gray-600">
-                      La IA está analizando la consistencia de tus documentos
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        <div>
-          {/* Resultados de la validación */}
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Resultados de Validación
-            </h3>
-            <div className="flex items-center gap-2 mt-2">
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  validationResult?.isValid ? "bg-green-500" : "bg-red-500"
-                }`}
-              ></div>
-              <span
-                className={`text-sm font-medium ${
-                  validationResult?.isValid ? "text-green-700" : "text-red-700"
-                }`}
-              >
-                Puntuación: {validationResult?.overallScore}%
-              </span>
-            </div>
-          </div>
-
-          {/* Inconsistencias detectadas */}
-          {validationResult?.inconsistencies &&
-            validationResult.inconsistencies.length > 0 && (
-              <Card className="border-red-200 bg-red-50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <XCircle className="h-5 w-5 text-red-600" />
-                    <h4 className="text-lg font-semibold text-red-900">
-                      Inconsistencias Detectadas
-                    </h4>
-                  </div>
-
-                  <div className="space-y-4">
-                    {validationResult.inconsistencies.map(
-                      (inconsistency, index) => (
-                        <div
-                          key={index}
-                          className="border border-red-200 rounded-lg p-4 bg-white"
-                        >
-                          <div className="flex items-start gap-3">
-                            <AlertTriangle
-                              className={`h-5 w-5 mt-0.5 ${
-                                inconsistency.severity === "critical"
-                                  ? "text-red-600"
-                                  : inconsistency.severity === "high"
-                                  ? "text-orange-600"
-                                  : inconsistency.severity === "medium"
-                                  ? "text-yellow-600"
-                                  : "text-blue-600"
-                              }`}
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span
-                                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                    inconsistency.severity === "critical"
-                                      ? "bg-red-100 text-red-800"
-                                      : inconsistency.severity === "high"
-                                      ? "bg-orange-100 text-orange-800"
-                                      : inconsistency.severity === "medium"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : "bg-blue-100 text-blue-800"
-                                  }`}
-                                >
-                                  {inconsistency.severity.toUpperCase()}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {inconsistency.documents.join(" vs ")}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-900 font-medium">
-                                {inconsistency.description}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-          {/* Sugerencias de corrección */}
-          {validationResult?.suggestions &&
-            validationResult.suggestions.length > 0 && (
-              <Card className="border-yellow-200 bg-yellow-50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Info className="h-5 w-5 text-yellow-600" />
-                    <h4 className="text-lg font-semibold text-yellow-900">
-                      Recomendaciones de Corrección
-                    </h4>
-                  </div>
-
-                  <div className="space-y-4">
-                    {validationResult.suggestions.map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className="border border-yellow-200 rounded-lg p-4 bg-white"
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-semibold text-gray-900">
-                              {suggestion.institution}
-                            </h5>
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                suggestion.urgency === "high"
-                                  ? "bg-red-100 text-red-800"
-                                  : suggestion.urgency === "medium"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-green-100 text-green-800"
-                              }`}
-                            >
-                              {suggestion.urgency === "high"
-                                ? "URGENTE"
-                                : suggestion.urgency === "medium"
-                                ? "IMPORTANTE"
-                                : "BAJA PRIORIDAD"}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700">
-                            <strong>Acción requerida:</strong>{" "}
-                            {suggestion.action}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {suggestion.description}
-                          </p>
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>
-                              Tiempo estimado: {suggestion.estimatedTime}
-                            </span>
-                            {suggestion.cost && (
-                              <span>Costo: {suggestion.cost}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-          {/* Botón de continuar o corregir */}
-          {validationResult?.isValid ? (
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-green-900">
-                        ¡Validación Exitosa!
-                      </h3>
-                      <p className="text-sm text-green-700">
-                        Todos los documentos han sido validados correctamente
-                        por la IA. Puedes continuar con el pago.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-green-600 mb-2">
-                      Costo total: {formatPesoMexicano(25000)}
-                    </div>
-                    <Button
-                      onClick={() => {
-                        // Actualizar estado a PAGO_PENDIENTE
-                        const updatedSolicitud = {
-                          ...solicitud,
-                          estatusActual: "PAGO_PENDIENTE",
-                          fechaUltimaActualizacion: new Date()
-                            .toISOString()
-                            .split("T")[0],
-                        };
-                        onSolicitudUpdate(updatedSolicitud);
-                        // Redirigir a la página de pago
-                        window.location.href = `/solicitud/${solicitud.numeroSolicitud}/pago`;
-                      }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3"
-                    >
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      Realizar Pago
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <XCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-red-900 mb-2">
-                    Correcciones Requeridas
-                  </h3>
-                  <p className="text-sm text-red-700 mb-4">
-                    Se han detectado inconsistencias que requieren corrección
-                    antes de continuar. Revisa las recomendaciones anteriores y
-                    vuelve a subir los documentos corregidos.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      // Regresar al paso anterior para corregir documentos
-                      const updatedSolicitud = {
-                        ...solicitud,
-                        estatusActual: "ARMANDO_EXPEDIENTE",
-                        fechaUltimaActualizacion: new Date()
-                          .toISOString()
-                          .split("T")[0],
-                      };
-                      onSolicitudUpdate(updatedSolicitud);
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Volver a Subir Documentos
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  // Componente deshabilitado - ya no se usa
+  return null;
 }
