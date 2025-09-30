@@ -31,12 +31,138 @@ export default function PagoPage() {
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [montoPago, setMontoPago] = useState<string>("");
   const [esPagoParcial, setEsPagoParcial] = useState(false);
+  const [arancelData, setArancelData] = useState<any>(null);
+  const [displayMonto, setDisplayMonto] = useState<string>("");
+
+  // Función para calcular ISAI (Impuesto Sobre Adquisición de Inmuebles) - Tijuana
+  const calcularISAI = (valorInmueble: number) => {
+    const tramos = [
+      { limite: 0, porcentaje: 0 },
+      { limite: 100000, porcentaje: 0.015 }, // 1.5%
+      { limite: 200000, porcentaje: 0.02 }, // 2.0%
+      { limite: 300000, porcentaje: 0.025 }, // 2.5%
+      { limite: 400000, porcentaje: 0.03 }, // 3.0%
+      { limite: 500000, porcentaje: 0.035 }, // 3.5%
+      { limite: 600000, porcentaje: 0.04 }, // 4.0%
+      { limite: 700000, porcentaje: 0.045 }, // 4.5%
+    ];
+
+    let isai = 0;
+    let valorRestante = valorInmueble;
+
+    for (let i = 1; i < tramos.length; i++) {
+      const tramoAnterior = tramos[i - 1];
+      const tramoActual = tramos[i];
+
+      if (valorRestante <= 0) break;
+
+      const baseTramo = Math.min(
+        valorRestante,
+        tramoActual.limite - tramoAnterior.limite
+      );
+      isai += baseTramo * tramoActual.porcentaje;
+      valorRestante -= baseTramo;
+    }
+
+    // Adicional sobretasa 0.4%
+    const sobretasa = valorInmueble * 0.004;
+
+    return {
+      isai: isai,
+      sobretasa: sobretasa,
+      total: isai + sobretasa,
+    };
+  };
+
+  // Función para calcular honorarios notariales
+  const calcularHonorariosNotariales = (
+    valorInmueble: number,
+    usarCredito: boolean
+  ) => {
+    // Honorarios compraventa: 1.0% del valor (POC)
+    const honorariosCompraventa = valorInmueble * 0.01;
+
+    // Honorarios hipoteca: 0.5% del valor del inmueble (POC)
+    const honorariosHipoteca = usarCredito ? valorInmueble * 0.005 : 0;
+
+    const subtotal = honorariosCompraventa + honorariosHipoteca;
+    const iva = subtotal * 0.16; // IVA 16%
+
+    return {
+      compraventa: honorariosCompraventa,
+      hipoteca: honorariosHipoteca,
+      subtotal: subtotal,
+      iva: iva,
+      total: subtotal + iva,
+    };
+  };
+
+  // Función para calcular costos RPPC (Registro Público de la Propiedad y del Comercio)
+  const calcularCostosRPPC = () => {
+    const certificados = 483.12 + 520.33 + 1223.46 + 83.62;
+    return {
+      analisis: 379.1,
+      inscripcionCompraventa: 11398.6,
+      inscripcionHipoteca: 11398.6,
+      certificadoInscripcion: 483.12,
+      certificacionPartida: 520.33,
+      certificadoNoInscripcion: 1223.46,
+      certificadoNoPropiedad: 83.62,
+      totalCertificados: certificados,
+      total: 379.1 + 11398.6 + certificados, // Análisis + Inscripción + Certificados
+    };
+  };
+
+  // Cargar datos del localStorage de forma segura
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const arancelesCalculados = JSON.parse(
+          localStorage.getItem("arancelesCalculados") || "[]"
+        );
+        const arancelCalculado = arancelesCalculados.find(
+          (a: any) => a.tramite === "compraventa"
+        );
+        setArancelData(arancelCalculado);
+      } catch (error) {
+        console.error("Error al cargar datos del localStorage:", error);
+        setArancelData(null);
+      }
+    }
+  }, []);
+
+  // Calcular el total real usando los mismos cálculos del modal
+  const calcularTotalReal = () => {
+    if (!arancelData) {
+      // Valores por defecto si no hay datos
+      const valorInmueble = 853500;
+      const usarCredito = false;
+
+      const isai = calcularISAI(valorInmueble);
+      const honorarios = calcularHonorariosNotariales(
+        valorInmueble,
+        usarCredito
+      );
+      const rppc = calcularCostosRPPC();
+
+      return isai.total + honorarios.total + rppc.total;
+    }
+
+    const valorInmueble = parseFloat(arancelData.valorInmueble);
+    const usarCredito = arancelData.usarCredito;
+
+    const isai = calcularISAI(valorInmueble);
+    const honorarios = calcularHonorariosNotariales(valorInmueble, usarCredito);
+    const rppc = calcularCostosRPPC();
+
+    return isai.total + honorarios.total + rppc.total;
+  };
+
+  const totalReal = calcularTotalReal();
 
   // Calcular el mínimo requerido (30% del total) y el máximo (saldo pendiente)
-  const montoMinimo = solicitud ? Math.ceil(solicitud.costoTotal * 0.3) : 0;
-  const saldoPendiente = solicitud
-    ? solicitud.saldoPendiente || solicitud.costoTotal
-    : 0;
+  const montoMinimo = Math.ceil(totalReal * 0.3);
+  const saldoPendiente = totalReal; // Saldo pendiente es el total completo
   const montoMaximo = saldoPendiente;
   const montoIngresado = parseFloat(montoPago) || 0;
 
@@ -55,26 +181,38 @@ export default function PagoPage() {
 
     if (solicitudEncontrada) {
       setSolicitud(solicitudEncontrada);
-      // Establecer el monto inicial como el saldo pendiente
-      const saldoPendiente =
-        solicitudEncontrada.saldoPendiente || solicitudEncontrada.costoTotal;
-      setMontoPago(saldoPendiente.toString());
+      // Establecer el monto inicial como el total real (sin pagos previos)
+      setMontoPago(totalReal.toString());
+      setDisplayMonto(formatPesoMexicano(totalReal));
     } else {
       // Si no encuentra la solicitud, usar la primera disponible para testing
       console.log(
         "No se encontró la solicitud, usando la primera disponible para testing"
       );
       setSolicitud(solicitudes[0]);
-      const saldoPendiente =
-        solicitudes[0].saldoPendiente || solicitudes[0].costoTotal;
-      setMontoPago(saldoPendiente.toString());
+      setMontoPago(totalReal.toString());
+      setDisplayMonto(formatPesoMexicano(totalReal));
     }
   }, [numeroSolicitud]);
 
   const handleMontoChange = (value: string) => {
-    setMontoPago(value);
-    const monto = parseFloat(value) || 0;
+    // Remover formato de moneda para obtener solo números
+    const numericValue = value.replace(/[^0-9.]/g, "");
+    setMontoPago(numericValue);
+    setDisplayMonto(numericValue);
+    const monto = parseFloat(numericValue) || 0;
     setEsPagoParcial(monto < montoMaximo);
+  };
+
+  const handleMontoFocus = () => {
+    // Al hacer focus, mostrar solo el número
+    setDisplayMonto(montoPago);
+  };
+
+  const handleMontoBlur = () => {
+    // Al salir del focus, formatear como moneda
+    const monto = parseFloat(montoPago) || 0;
+    setDisplayMonto(formatPesoMexicano(monto));
   };
 
   const handlePago = async () => {
@@ -103,10 +241,9 @@ export default function PagoPage() {
     if (solicitudIndex !== -1) {
       const solicitudActualizada = solicitudes[solicitudIndex];
 
-      // Calcular el saldo pendiente correctamente
-      const totalPagadoHastaAhora = solicitudActualizada.pagosRealizados || 0;
-      const nuevoSaldoPendiente =
-        solicitudActualizada.costoTotal - (totalPagadoHastaAhora + monto);
+      // Calcular el saldo pendiente correctamente usando el total real
+      const totalPagadoHastaAhora = 0; // Sin pagos previos
+      const nuevoSaldoPendiente = totalReal - (totalPagadoHastaAhora + monto);
       const nuevosPagosRealizados = totalPagadoHastaAhora + monto;
 
       // Determinar el nuevo estatus
@@ -214,7 +351,7 @@ export default function PagoPage() {
             <h1 className="text-3xl font-bold text-gray-900">Compraventa</h1>
           </div>
           <p className="text-gray-600">
-            Solicitud #{solicitud.numeroSolicitud} - {solicitud.tipoTramite}
+            Solicitud #{solicitud.numeroSolicitud} - Compraventa de inmuebles
           </p>
         </div>
 
@@ -230,75 +367,85 @@ export default function PagoPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Tipo de trámite:</span>
-                <Badge variant="outline">{solicitud.tipoTramite}</Badge>
+                <Badge variant="outline">Compraventa de inmuebles</Badge>
               </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">
                   Documentos subidos:
                 </span>
-                <span className="text-sm font-medium">
-                  {
-                    solicitud.documentosRequeridos.filter(
-                      (doc: any) => doc.subido
-                    ).length
-                  }{" "}
-                  / {solicitud.documentosRequeridos.length}
-                </span>
+                <span className="text-sm font-medium">8 / 8</span>
               </div>
 
               <Separator />
 
               <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Costo base:</span>
-                  <span className="text-sm">
-                    {formatPesoMexicano(solicitud.costoTotal * 0.8)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">
-                    Honorarios notariales:
-                  </span>
-                  <span className="text-sm">
-                    {formatPesoMexicano(solicitud.costoTotal * 0.15)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">
-                    Gastos de registro:
-                  </span>
-                  <span className="text-sm">
-                    {formatPesoMexicano(solicitud.costoTotal * 0.05)}
-                  </span>
-                </div>
+                {(() => {
+                  // Usar el valor del inmueble del estado si está disponible
+                  const valorInmueble = arancelData
+                    ? parseFloat(arancelData.valorInmueble)
+                    : 853500;
+                  const usarCredito = arancelData
+                    ? arancelData.usarCredito
+                    : false;
+
+                  const isai = calcularISAI(valorInmueble);
+                  const honorarios = calcularHonorariosNotariales(
+                    valorInmueble,
+                    usarCredito
+                  );
+                  const rppc = calcularCostosRPPC();
+
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">ISAI:</span>
+                        <span className="text-sm">
+                          {formatPesoMexicano(isai.total)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">
+                          Honorarios notariales:
+                        </span>
+                        <span className="text-sm">
+                          {formatPesoMexicano(honorarios.total)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">
+                          Gastos de registro (RPPC):
+                        </span>
+                        <span className="text-sm">
+                          {formatPesoMexicano(rppc.total)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total a pagar:</span>
                   <span className="text-blue-600">
-                    {formatPesoMexicano(solicitud.costoTotal)}
+                    {formatPesoMexicano(totalReal)}
                   </span>
                 </div>
 
-                {solicitud.pagosRealizados > 0 && (
-                  <>
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Ya pagado:</span>
-                      <span className="text-sm text-green-600">
-                        {formatPesoMexicano(solicitud.pagosRealizados)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">
-                        Saldo pendiente:
-                      </span>
-                      <span className="text-sm text-red-600">
-                        {formatPesoMexicano(solicitud.saldoPendiente)}
-                      </span>
-                    </div>
-                  </>
-                )}
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Ya pagado:</span>
+                  <span className="text-sm text-green-600">
+                    {formatPesoMexicano(0)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">
+                    Saldo pendiente:
+                  </span>
+                  <span className="text-sm text-red-600">
+                    {formatPesoMexicano(totalReal)}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -328,12 +475,12 @@ export default function PagoPage() {
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
-                      type="number"
-                      value={montoPago}
+                      type="text"
+                      value={displayMonto}
                       onChange={(e) => handleMontoChange(e.target.value)}
-                      placeholder="0"
-                      min={montoMinimo}
-                      max={montoMaximo}
+                      onFocus={handleMontoFocus}
+                      onBlur={handleMontoBlur}
+                      placeholder={formatPesoMexicano(montoMinimo)}
                       className="pl-10"
                     />
                   </div>
@@ -350,14 +497,12 @@ export default function PagoPage() {
                         {formatPesoMexicano(montoMaximo)}
                       </span>
                     </p>
-                    {solicitud.pagosRealizados > 0 && (
-                      <p>
-                        Ya pagado:{" "}
-                        <span className="font-semibold text-green-600">
-                          {formatPesoMexicano(solicitud.pagosRealizados)}
-                        </span>
-                      </p>
-                    )}
+                    <p>
+                      Ya pagado:{" "}
+                      <span className="font-semibold text-green-600">
+                        {formatPesoMexicano(0)}
+                      </span>
+                    </p>
                   </div>
 
                   {montoIngresado > 0 && (
@@ -380,19 +525,15 @@ export default function PagoPage() {
                             Saldo después del pago:
                           </span>
                           <span className="font-medium text-red-600">
-                            $
-                            {Math.max(
-                              0,
-                              montoMaximo -
-                                (solicitud.pagosRealizados || 0) -
-                                montoIngresado
-                            ).toLocaleString("es-MX")}
+                            {formatPesoMexicano(
+                              Math.max(0, totalReal - montoIngresado)
+                            )}
                           </span>
                         </div>
                         {montoIngresado < montoMaximo && (
                           <div className="text-xs text-amber-600 mt-2">
                             ⚠️ Este es un pago parcial. Podrás realizar pagos
-                            adicionales más tarde. Saldo restante: $
+                            adicionales más tarde. Saldo restante:{" "}
                             {formatPesoMexicano(montoMaximo - montoIngresado)}
                           </div>
                         )}
