@@ -116,10 +116,8 @@ import {
   ExpedienteValidationReport,
 } from "@/lib/ai-validation-service";
 import { NotificationsPanel } from "@/components/notifications-panel";
-import { ProyectoEscrituraViewer } from "@/components/proyecto-escritura-viewer";
 import { FirmaAgendadaViewer } from "@/components/firma-agendada-viewer";
 import { EscrituraFirmaAgendadaViewer } from "@/components/escritura-firma-agendada-viewer";
-import { GenericDocumentViewer } from "@/components/generic-document-viewer";
 import { EvidenciasFirma } from "@/components/evidencias-firma";
 
 interface AbogadoKanbanDashboardProps {
@@ -950,8 +948,18 @@ TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "CO
     setCargandoDocumento(false);
   };
 
+  // Función para limpiar overlays de texto resaltado
+  const limpiarOverlaysTexto = () => {
+    const documentContainer = document.querySelector('.pdf-viewer-container');
+    if (documentContainer) {
+      const existingHighlights = documentContainer.querySelectorAll('.text-highlight-overlay');
+      existingHighlights.forEach(highlight => highlight.remove());
+    }
+  };
+
   // Función para mostrar el texto resaltado automáticamente
   const mostrarTextoResaltado = async (forceIndex?: number) => {
+    
     // Cargar el documento real si no está cargado
     if (!documentoContratoReal) {
       await cargarDocumentoReal();
@@ -976,74 +984,28 @@ TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "CO
       const existingHighlights = documentContainer.querySelectorAll('.text-highlight-overlay');
       existingHighlights.forEach(highlight => highlight.remove());
       
-      // Crear un overlay con el documento real para resaltar el texto
-      const overlay = document.createElement('div');
-      overlay.className = 'text-highlight-overlay';
-      overlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.95);
-        z-index: 1000;
-        padding: 20px;
-        overflow-y: auto;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        line-height: 1.4;
-        white-space: pre-wrap;
-      `;
-      
-      // Crear contenido del documento con resaltado
-      const documentContent = documentoContratoReal || `INSTRUMENTO NÚMERO TREINTA Y DOS MIL SEISCIENTOS OCHENTA Y NUEVE
-
-VOLUMEN ORDINARIO NÚMERO MIL TRESCIENTOS NOVENTA Y SIETE
-
-En la ciudad de Tijuana, Baja California, a los siete días del mes de marzo del año dos mil dieciocho, Yo, Doctor en Derecho XAVIER IBAÑEZ VERAMENDI, Titular de la Notaría Pública número Tres del Estado de Baja California, hago constar:
-
-I.- EL CONTRATO DE COMPRAVENTA que celebran por una parte la sociedad mercantil denominada "DESARROLLOS INMOBILIARIOS SADASI", SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, representado en este acto por la Contadora MARIA TERESA VIEYRA MALPICA, de cuya personalidad más adelante haré mérito, a quien en lo sucesivo se le denominará la "PARTE VENDEDORA", y de la otra, JONATHAN RUBEN HERNANDEZ GONZALEZ, a quien en lo sucesivo se le denominará la "PARTE COMPRADORA".
-
-II.- EL CONTRATO DE APERTURA DE CRÉDITO SIMPLE CON INTERÉS, QUE CELEBRAN DE UNA PARTE SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, a quien en el presente se le denominará el "BANCO" o el "ACREDITANTE", representado por las Licenciadas MA. GUADALUPE TINAJERO SANCHEZ Y CLEMENTINA CLAUDIA GUERRERO LEGASPI, y de otra parte JONATHAN RUBEN HERNANDEZ GONZALEZ, a quien en lo sucesivo se denominará como EL "ACREDITADO".
-
-CLÁUSULAS
-
-PRIMERA.- la sociedad mercantil denominada "DESARROLLOS INMOBILIARIOS SADASI", SOCIEDAD ANÓNIMA DE CAPITAL VARIABLE, representada como ha quedado dicho en el proemio, enajena a JONATHAN RUBEN HERNANDEZ GONZALEZ, quien adquiere para sí, libre de todo gravamen y responsabilidad y sin reserva, ni limitación alguna, la vivienda de interés social marcada con el número UNO, del lote SIETE, edificio UNO, NIVEL PLANTA BAJA, de la manzana SEIS, ubicada en la calle CAPULÍN NUMERO TREINTA Y TRES, perteneciente al Conjunto Urbano de tipo Habitacional de interés social denominado "BOSQUES DE LOS HÉROES" ubicado en el Municipio de Tecamac, Estado de México.
-
-SEGUNDA.- El precio pactado por ambas partes como el justo y legitimo de la compraventa consignada en la cláusula anterior es la cantidad de $853,500.00 (OCHOCIENTOS CINCUENTA Y TRES MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL) que la parte vendedora recibe en el acto de la firma del presente instrumento de la parte compradora.
-
-PRIMERA.- MONTO DEL CRÉDITO.- SCOTIABANK INVERLAT, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, con el carácter de "ACREDITANTE", otorga en favor de JONATHAN RUBEN HERNANDEZ GONZALEZ en su carácter de "ACREDITADO" y en su caso, de "COACREDITADO" un crédito simple hasta por la cantidad de $788,500.00 (SETECIENTOS OCHENTA Y OCHO MIL QUINIENTOS PESOS 00/100 MONEDA NACIONAL).
-
-TERCERA.- PAGOS MENSUALES Y LUGAR DE PAGO.- EL "ACREDITADO" Y EN SU CASO, EL "COACREDITADO" SE OBLIGA(N) A PAGAR AL "ACREDITANTE" EL CAPITAL, LOS INTERESES Y DEMÁS PRESTACIONES DERIVADAS DE ESTE CONTRATO, EN UN PLAZO MÁXIMO E IMPRORROGABLE DE VEINTE AÑOS, CONTADOS A PARTIR DE LA FECHA DE FIRMA DE ESTE INSTRUMENTO.`;
-      
-      // Resaltar el texto específico
-      const highlightedContent = documentContent.replace(
-        new RegExp(currentItem.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-        `<mark style="background-color: #fef08a; padding: 2px 4px; border-radius: 2px; font-weight: bold; color: #92400e;">$&</mark>`
-      );
-      
-      overlay.innerHTML = `
-        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px;">
-          ${highlightedContent}
-        </div>
-      `;
-      
-      documentContainer.appendChild(overlay);
-      
-      // Hacer scroll al texto resaltado
-      setTimeout(() => {
-        const highlightedElement = overlay.querySelector('mark');
-        if (highlightedElement) {
-          highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-      
-      // Cerrar automáticamente después de 3 segundos
-      setTimeout(() => {
-        if (overlay.parentNode) {
-          overlay.remove();
-        }
-      }, 3000);
+      // Buscar el elemento de texto dentro del contenedor y resaltarlo directamente
+      const textElement = documentContainer.querySelector('.text-sm.font-mono');
+      if (textElement) {
+        // Obtener el texto original sin resaltado
+        const originalText = documentoContratoReal || textElement.textContent || '';
+        
+        // Resaltar el texto específico directamente en el elemento existente
+        const highlightedText = originalText.replace(
+          new RegExp(currentItem.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+          `<mark style="background-color: #fef08a; padding: 2px 4px; border-radius: 2px; font-weight: bold; color: #92400e;">$&</mark>`
+        );
+        
+        textElement.innerHTML = highlightedText;
+        
+        // Hacer scroll al texto resaltado
+        setTimeout(() => {
+          const highlightedElement = textElement.querySelector('mark');
+          if (highlightedElement) {
+            highlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
     }
   };
 
@@ -1660,6 +1622,9 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
   const handleExpedienteClick = (expediente: ExpedienteCompraventa) => {
     setSelectedExpediente(expediente);
     setShowExpedienteModal(true);
+    
+    // Limpiar overlays de texto resaltado al abrir cualquier expediente
+    limpiarOverlaysTexto();
     
     // Si el expediente está en PROYECTO_ESCRITURA, marcar automáticamente todos los documentos como validados
     if (expediente.estado === "PROYECTO_ESCRITURA") {
@@ -4731,17 +4696,21 @@ Por favor, proporciona los documentos corregidos o la información solicitada.`;
           <div className="flex-1 flex overflow-hidden">
               {/* Panel izquierdo - Visualizador de documento */}
               <div className={`${selectedExpediente?.estado === "LISTO_PARA_FIRMA" ? "w-full" : "w-3/5"} flex flex-col pdf-viewer-container relative`}>
-                {selectedExpediente?.estado === "PROYECTO_ESCRITURA" && (
-                  <ProyectoEscrituraViewer numeroSolicitud={selectedExpediente?.numeroSolicitud || ""} />
-                )}
+                {/* ProyectoEscrituraViewer eliminado - solo mostrar texto resaltado */}
                 {selectedExpediente?.estado === "LISTO_PARA_FIRMA" && (
                   <EscrituraFirmaAgendadaViewer numeroSolicitud={selectedExpediente?.numeroSolicitud || ""} />
                 )}
-                {selectedExpediente?.estado !== "PROYECTO_ESCRITURA" && selectedExpediente?.estado !== "LISTO_PARA_FIRMA" && (
-                  <GenericDocumentViewer 
-                    documentUrl={selectedDocument?.archivo} 
-                    title="Documento PDF" 
-                  />
+                {/* Mostrar texto del contrato para validación */}
+                {selectedExpediente?.estado !== "LISTO_PARA_FIRMA" && (
+                  <div className="flex-1 overflow-hidden bg-gray-50 relative pdf-viewer-container">
+                    <div className="h-full w-full p-4 overflow-y-auto">
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        <div className="text-sm font-mono leading-relaxed whitespace-pre-wrap">
+                          {documentoContratoReal || "Cargando documento del contrato..."}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 

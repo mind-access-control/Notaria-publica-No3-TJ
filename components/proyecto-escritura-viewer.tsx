@@ -3,22 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, FileText } from "lucide-react";
 
 interface ProyectoEscrituraViewerProps {
   numeroSolicitud: string;
 }
 
 export function ProyectoEscrituraViewer({ numeroSolicitud }: ProyectoEscrituraViewerProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(true); // Cambiar a true para permitir inyección de contenido
   const [iframeKey, setIframeKey] = useState(Date.now());
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Forzar limpieza completa del iframe
+  // Efecto para limpiar contenido al montar
   useEffect(() => {
     console.log("🔄 PROYECTO ESCRITURA - Componente montado");
     
-    // Limpiar cualquier iframe existente
+    // Limpiar solo iframes, no el contenido de texto
     if (containerRef.current) {
       const existingIframes = containerRef.current.querySelectorAll('iframe');
       existingIframes.forEach(iframe => {
@@ -27,26 +27,8 @@ export function ProyectoEscrituraViewer({ numeroSolicitud }: ProyectoEscrituraVi
       });
     }
 
-    setIsLoaded(false);
-    setIframeKey(Date.now());
-    
-    // Delay más largo para asegurar limpieza completa
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-      console.log("✅ PROYECTO ESCRITURA - Iframe listo para cargar");
-    }, 200);
-
     return () => {
-      clearTimeout(timer);
       console.log("🧹 PROYECTO ESCRITURA - Componente desmontado");
-      
-      // Limpieza adicional al desmontar
-      if (containerRef.current) {
-        const iframes = containerRef.current.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-          iframe.src = 'about:blank';
-        });
-      }
     };
   }, []);
 
@@ -95,25 +77,12 @@ export function ProyectoEscrituraViewer({ numeroSolicitud }: ProyectoEscrituraVi
         </div>
       </div>
 
-      {/* Visor de documento */}
-      <div ref={containerRef} className="flex-1 overflow-hidden bg-gray-50 relative">
-        {!isLoaded ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Cargando proyecto de escritura...</p>
-            </div>
-          </div>
-        ) : (
-          <iframe
-            key={`proyecto-escritura-${iframeKey}`}
-            src="/documentos_legales/Contrato_Compraventa_Borrador.pdf"
-            className="w-full h-full border-0"
-            title="Proyecto de Escritura PDF"
-            onLoad={() => console.log("✅ PROYECTO ESCRITURA - Iframe cargado correctamente")}
-            onError={() => console.log("❌ PROYECTO ESCRITURA - Error cargando iframe")}
-          />
-        )}
+      {/* Visor de documento - Permitir inyección de texto resaltado */}
+      <div ref={containerRef} className="flex-1 overflow-hidden bg-gray-50 relative pdf-viewer-container">
+        {/* El contenido del contrato con resaltado se inyectará aquí via JavaScript */}
+        <div className="h-full w-full">
+          {/* Contenido dinámico se inyectará aquí */}
+        </div>
       </div>
     </>
   );

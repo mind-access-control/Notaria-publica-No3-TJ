@@ -197,15 +197,25 @@ export function EvidenciasFirma({ comprador, vendedor, onEvidenciasCompletas, on
   const totalEvidencias = evidencias.length;
   const todasCompletas = evidenciasCompletadas === totalEvidencias;
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [userHasManuallyToggled, setUserHasManuallyToggled] = useState(false);
 
-  // Notificar cambios en el estado de las evidencias y controlar colapso
+  // Notificar cambios en el estado de las evidencias y controlar colapso automático
   useEffect(() => {
     if (onEvidenciasStateChange) {
       onEvidenciasStateChange(todasCompletas);
     }
-    // Colapsar automáticamente cuando todas las evidencias estén completas
-    setIsCollapsed(todasCompletas);
+    
+    // Colapsar automáticamente cuando se complete la carga de documentos
+    if (todasCompletas) {
+      setIsCollapsed(true);
+    }
   }, [todasCompletas, onEvidenciasStateChange]);
+
+  // Manejar el toggle manual del usuario
+  const handleToggle = (open: boolean) => {
+    setUserHasManuallyToggled(true);
+    setIsCollapsed(!open);
+  };
 
   // Verificar evidencias faltantes
   const evidenciasFaltantes = evidencias.filter(ev => ev.estado === "pendiente");
@@ -235,7 +245,7 @@ export function EvidenciasFirma({ comprador, vendedor, onEvidenciasCompletas, on
 
   return (
     <Card className="w-full bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-      <Collapsible open={!isCollapsed} onOpenChange={setIsCollapsed}>
+      <Collapsible open={!isCollapsed} onOpenChange={handleToggle}>
         <CardHeader className="pb-2">
           <CollapsibleTrigger asChild>
             <div className="flex items-center justify-between w-full cursor-pointer">
